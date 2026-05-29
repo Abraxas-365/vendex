@@ -1,14 +1,13 @@
 package orderapi
 
 import (
-	"encoding/json"
-	"net/http"
 	"strconv"
 
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/order"
 	"github.com/Abraxas-365/hada-commerce/internal/order/ordersrv"
+	"github.com/gofiber/fiber/v2"
 )
 
 // Handler exposes HTTP endpoints for the order domain.
@@ -21,13 +20,14 @@ func NewHandler(svc *ordersrv.Service) *Handler {
 	return &Handler{svc: svc}
 }
 
-// RegisterRoutes registers all order routes on the given mux.
-func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("POST /orders", h.Create)
-	mux.HandleFunc("GET /orders/{id}", h.GetByID)
-	mux.HandleFunc("GET /orders", h.List)
-	mux.HandleFunc("PUT /orders/{id}/status", h.UpdateStatus)
-	mux.HandleFunc("POST /orders/{id}/cancel", h.Cancel)
+// RegisterRoutes registers all order routes on the given router.
+func (h *Handler) RegisterRoutes(router fiber.Router) {
+	g := router.Group("/orders")
+	g.Post("/", h.Create)
+	g.Get("/:id", h.GetByID)
+	g.Get("/", h.List)
+	g.Put("/:id/status", h.UpdateStatus)
+	g.Post("/:id/cancel", h.Cancel)
 }
 
 type createItemRequest struct {
@@ -45,13 +45,12 @@ type createRequest struct {
 }
 
 // Create handles POST /orders.
-func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
-	tenantID := tenantFromRequest(r)
+func (h *Handler) Create(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
 
 	var req createRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
-		return
+	if err := c.BodyParser(&req); err != nil {
+		return errx.New("invalid request body", errx.TypeValidation)
 	}
 
 	items := make([]ordersrv.CreateItemInput, len(req.Items))
@@ -64,117 +63,101 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	o, err := h.svc.Create(r.Context(), tenantID, ordersrv.CreateInput{
+	o, err := h.svc.Create(c.Context(), authCtx.TenantID, ordersrv.CreateInput{
 		CustomerID:      kernel.CustomerID(req.CustomerID),
 		Items:           items,
 		ShippingAddress: req.Address,
 	})
 	if err != nil {
-		writeErrx(w, err)
-		return
+		return err
 	}
 
-	writeJSON(w, http.StatusCreated, o)
+	return c.Status(fiber.StatusCreated).JSON(o)
 }
 
-// GetByID handles GET /orders/{id}.
-func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
-	tenantID := tenantFromRequest(r)
-	id := kernel.OrderID(r.PathValue("id"))
+// GetByID handles GET /orders/:id.
+func (h *Handler) GetByID(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	id := kernel.OrderID(c.Params("id"))
 
-	o, err := h.svc.GetByID(r.Context(), tenantID, id)
+	o, err := h.svc.GetByID(c.Context(), authCtx.TenantID, id)
 	if err != nil {
-		writeErrx(w, err)
-		return
+		return err
 	}
 
-	writeJSON(w, http.StatusOK, o)
+	return c.JSON(o)
 }
 
 // List handles GET /orders.
-func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
-	tenantID := tenantFromRequest(r)
-	pg := paginationFromQuery(r)
+func (h *Handler) List(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	pg := paginationFromQuery(c)
 
-	customerID := r.URL.Query().Get("customer_id")
-	var result kernel.PaginatedResult[order.Order]
+	customerID := c.Query("customer_id")
+	var result kernel.Paginated[order.Order]
 	var err error
 
 	if customerID != "" {
-		result, err = h.svc.ListByCustomer(r.Context(), tenantID, kernel.CustomerID(customerID), pg)
+		result, err = h.svc.ListByCustomer(c.Context(), authCtx.TenantID, kernel.CustomerID(customerID), pg)
 	} else {
-		result, err = h.svc.List(r.Context(), tenantID, pg)
+		result, err = h.svc.List(c.Context(), authCtx.TenantID, pg)
 	}
 	if err != nil {
-		writeErrx(w, err)
-		return
+		return err
 	}
 
-	writeJSON(w, http.StatusOK, result)
+	return c.JSON(result)
 }
 
 type updateStatusRequest struct {
 	Status string `json:"status"`
 }
 
-// UpdateStatus handles PUT /orders/{id}/status.
-func (h *Handler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
-	tenantID := tenantFromRequest(r)
-	id := kernel.OrderID(r.PathValue("id"))
+// UpdateStatus handles PUT /orders/:id/status.
+func (h *Handler) UpdateStatus(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	id := kernel.OrderID(c.Params("id"))
 
 	var req updateStatusRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
-		return
+	if err := c.BodyParser(&req); err != nil {
+		return errx.New("invalid request body", errx.TypeValidation)
 	}
 
-	o, err := h.svc.UpdateStatus(r.Context(), tenantID, id, order.OrderStatus(req.Status))
+	o, err := h.svc.UpdateStatus(c.Context(), authCtx.TenantID, id, order.OrderStatus(req.Status))
 	if err != nil {
-		writeErrx(w, err)
-		return
+		return err
 	}
 
-	writeJSON(w, http.StatusOK, o)
+	return c.JSON(o)
 }
 
-// Cancel handles POST /orders/{id}/cancel.
-func (h *Handler) Cancel(w http.ResponseWriter, r *http.Request) {
-	tenantID := tenantFromRequest(r)
-	id := kernel.OrderID(r.PathValue("id"))
+// Cancel handles POST /orders/:id/cancel.
+func (h *Handler) Cancel(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	id := kernel.OrderID(c.Params("id"))
 
-	o, err := h.svc.Cancel(r.Context(), tenantID, id)
+	o, err := h.svc.Cancel(c.Context(), authCtx.TenantID, id)
 	if err != nil {
-		writeErrx(w, err)
-		return
+		return err
 	}
 
-	writeJSON(w, http.StatusOK, o)
+	return c.JSON(o)
 }
 
 // --- helpers ---
 
-func tenantFromRequest(r *http.Request) kernel.TenantID {
-	return kernel.TenantID(r.Header.Get("X-Tenant-ID"))
-}
-
-func paginationFromQuery(r *http.Request) kernel.Pagination {
-	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
-	pageSize, _ := strconv.Atoi(r.URL.Query().Get("page_size"))
-	return kernel.NewPagination(page, pageSize)
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
-}
-
-func writeError(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, map[string]string{"error": msg})
-}
-
-func writeErrx(w http.ResponseWriter, err error) {
-	status := errx.HTTPStatus(err)
-	msg := errx.Message(err)
-	writeJSON(w, status, map[string]string{"error": msg, "code": errx.Code(err)})
+func paginationFromQuery(c *fiber.Ctx) kernel.PaginationOptions {
+	page, _ := strconv.Atoi(c.Query("page"))
+	pageSize, _ := strconv.Atoi(c.Query("page_size"))
+	opts := kernel.PaginationOptions{Page: page, PageSize: pageSize}
+	if opts.Page < 1 {
+		opts.Page = 1
+	}
+	if opts.PageSize < 1 {
+		opts.PageSize = 20
+	}
+	if opts.PageSize > 100 {
+		opts.PageSize = 100
+	}
+	return opts
 }

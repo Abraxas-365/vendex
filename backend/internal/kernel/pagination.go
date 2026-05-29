@@ -49,3 +49,61 @@ func NewPaginatedResult[T any](items []T, total int, p Pagination) PaginatedResu
 		TotalPages: totalPages,
 	}
 }
+
+// PaginationOptions is the manifesto-style pagination parameter type.
+type PaginationOptions struct {
+	Page     int
+	PageSize int
+}
+
+func (p PaginationOptions) Offset() int {
+	pg := p.normalized()
+	return (pg.Page - 1) * pg.PageSize
+}
+
+func (p PaginationOptions) Limit() int {
+	return p.normalized().PageSize
+}
+
+func (p PaginationOptions) normalized() PaginationOptions {
+	if p.Page < 1 {
+		p.Page = 1
+	}
+	if p.PageSize < 1 {
+		p.PageSize = 20
+	}
+	if p.PageSize > 100 {
+		p.PageSize = 100
+	}
+	return p
+}
+
+// Paginated is the manifesto-style paginated result type.
+type Paginated[T any] struct {
+	Items      []T `json:"items"`
+	Total      int `json:"total"`
+	Page       int `json:"page"`
+	PageSize   int `json:"page_size"`
+	TotalPages int `json:"total_pages"`
+}
+
+// NewPaginated builds a Paginated result from items, pagination params, and total count.
+func NewPaginated[T any](items []T, page, pageSize, total int) Paginated[T] {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 20
+	}
+	totalPages := total / pageSize
+	if total%pageSize > 0 {
+		totalPages++
+	}
+	return Paginated[T]{
+		Items:      items,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
+	}
+}

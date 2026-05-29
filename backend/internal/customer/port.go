@@ -13,5 +13,5 @@ type Repository interface {
 	GetByEmail(ctx context.Context, tenantID kernel.TenantID, email kernel.Email) (*Customer, error)
 	Update(ctx context.Context, c *Customer) error
 	Delete(ctx context.Context, tenantID kernel.TenantID, id kernel.CustomerID) error
-	List(ctx context.Context, tenantID kernel.TenantID, pg kernel.Pagination) (kernel.PaginatedResult[Customer], error)
+	List(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[Customer], error)
 }

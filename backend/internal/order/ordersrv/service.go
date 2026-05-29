@@ -115,12 +115,12 @@ func (s *Service) Cancel(ctx context.Context, tenantID kernel.TenantID, id kerne
 }
 
 // List returns a paginated list of orders for a tenant.
-func (s *Service) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.Pagination) (kernel.PaginatedResult[order.Order], error) {
+func (s *Service) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[order.Order], error) {
 	return s.repo.List(ctx, tenantID, pg)
 }
 
 // ListByCustomer returns orders for a specific customer.
-func (s *Service) ListByCustomer(ctx context.Context, tenantID kernel.TenantID, customerID kernel.CustomerID, pg kernel.Pagination) (kernel.PaginatedResult[order.Order], error) {
+func (s *Service) ListByCustomer(ctx context.Context, tenantID kernel.TenantID, customerID kernel.CustomerID, pg kernel.PaginationOptions) (kernel.Paginated[order.Order], error) {
 	return s.repo.ListByCustomer(ctx, tenantID, customerID, pg)
 }
 

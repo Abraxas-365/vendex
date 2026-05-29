@@ -16,6 +16,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/promo/promocontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/settings/settingscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontcontainer"
+	"github.com/jmoiron/sqlx"
 )
 
 // Container is the top-level DI container that wires all domain containers together.
@@ -37,11 +38,14 @@ type Container struct {
 // Domains that are independent of each other are built first; domains with
 // cross-domain dependencies (if any are added later) come after.
 func NewContainer(db *sql.DB, cfg *config.Config) (*Container, error) {
+	// Wrap *sql.DB as *sqlx.DB for manifesto-migrated domains (product, order, customer).
+	dbx := sqlx.NewDb(db, "postgres")
+
 	// Independent domain containers — order doesn't matter today,
 	// but we group them logically: core commerce, then CMS.
-	product := productcontainer.New(db)
-	order := ordercontainer.New(db)
-	customer := customercontainer.New(db)
+	product := productcontainer.New(dbx)
+	order := ordercontainer.New(dbx)
+	customer := customercontainer.New(dbx)
 	catalog := catalogcontainer.New(db)
 
 	// CMS domains

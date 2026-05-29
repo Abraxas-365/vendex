@@ -5,11 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/Abraxas-365/hada-commerce/internal/config"
 
@@ -43,43 +41,22 @@ func run() error {
 		return fmt.Errorf("building container: %w", err)
 	}
 
-	// Build HTTP handler and server.
-	handler := newServeMux(ctr)
-	srv := newHTTPServer(":"+cfg.Port, handler)
+	// Build Fiber app with all routes registered.
+	app := newApp(ctr)
 
-	// Start server in a goroutine so we can listen for shutdown signals.
-	errCh := make(chan error, 1)
-	go func() {
-		log.Printf("hada-commerce listening on :%s", cfg.Port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			errCh <- err
-		}
-		close(errCh)
-	}()
-
-	// Wait for interrupt or server error.
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-
-	select {
-	case sig := <-sigCh:
-		log.Printf("received %v, shutting down...", sig)
-	case err := <-errCh:
-		if err != nil {
-			return fmt.Errorf("server error: %w", err)
-		}
-	}
-
-	// Graceful shutdown — give in-flight requests up to 15 seconds.
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	// Listen for OS shutdown signals.
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
-		return fmt.Errorf("graceful shutdown: %w", err)
-	}
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigCh
+		log.Printf("received %v, initiating graceful shutdown...", sig)
+		cancel()
+	}()
 
-	log.Println("server stopped")
-	return nil
+	return runServer(ctx, app, ":"+cfg.Port)
 }
 
 // openDB opens a PostgreSQL connection pool and verifies connectivity.
@@ -92,17 +69,6 @@ func openDB(dsn string) (*sql.DB, error) {
 	// Connection pool tuning.
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(5)
-	db.SetConnMaxLifetime(5 * time.Minute)
-	db.SetConnMaxIdleTime(1 * time.Minute)
-
-	// Verify connectivity with a short deadline.
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := db.PingContext(ctx); err != nil {
-		db.Close()
-		return nil, fmt.Errorf("ping: %w", err)
-	}
 
 	return db, nil
 }
