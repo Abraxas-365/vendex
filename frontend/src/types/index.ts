@@ -275,3 +275,82 @@ export interface PluginManifest {
   tools: Array<{ name: string; description: string }>
   migrations: string[]
 }
+
+// ---------------------------------------------------------------------------
+// Analytics
+// ---------------------------------------------------------------------------
+
+export interface DashboardStats {
+  total_products: number
+  total_orders: number
+  total_customers: number
+  total_revenue: number
+  currency: string
+  pending_orders: number
+  active_promos: number
+  pending_pages: number
+}
+
+export interface RevenuePoint {
+  date: string
+  amount: number
+}
+
+export interface TopProduct {
+  product_id: string
+  product_name: string
+  total_sold: number
+  revenue: number
+}
+
+export interface OrderStatusBreakdown {
+  status: string
+  count: number
+}
+
+export interface RecentOrder {
+  id: string
+  customer_id: string
+  status: string
+  total_amount: number
+  currency: string
+  created_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Settings
+// ---------------------------------------------------------------------------
+
+export interface StoreAddress {
+  street: string
+  city: string
+  state: string
+  country: string
+  zip: string
+}
+
+export interface SocialLinks {
+  instagram: string
+  twitter: string
+  facebook: string
+}
+
+export interface CheckoutConfig {
+  guest_checkout: boolean
+  require_phone: boolean
+}
+
+export interface StoreSettings {
+  tenant_id: string
+  store_name: string
+  store_email: string
+  store_phone: string
+  currency: string
+  timezone: string
+  address: StoreAddress
+  logo_url: string
+  favicon_url: string
+  social_links: SocialLinks
+  checkout_config: CheckoutConfig
+  updated_at: string
+}

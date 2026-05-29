@@ -17,6 +17,7 @@ import {
   ExternalLink,
   Store,
   Puzzle,
+  Settings2,
 } from 'lucide-react'
 
 // Store pages
@@ -42,6 +43,7 @@ import AgentChat from './pages/admin/AgentChat'
 import Marketplace from './pages/admin/Marketplace'
 import PluginView from './pages/admin/PluginView'
 import Catalog from './pages/admin/Catalog'
+import Settings from './pages/admin/Settings'
 
 // ─── Root route (bare) ───────────────────────────────────────────────────────
 
@@ -88,6 +90,7 @@ const adminNavItems: NavItem[] = [
   { to: '/admin/media', label: 'Media', icon: Image },
   { to: '/admin/agent', label: 'Agent Chat', icon: Bot },
   { to: '/admin/marketplace', label: 'Marketplace', icon: Puzzle },
+  { to: '/admin/settings', label: 'Settings', icon: Settings2 },
 ]
 
 function AdminLayout() {
@@ -270,6 +273,12 @@ const adminPluginViewRoute = createRoute({
   component: PluginView,
 })
 
+const adminSettingsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/settings',
+  component: Settings,
+})
+
 // ─── Route tree ───────────────────────────────────────────────────────────────
 
 const storeTree = storeLayoutRoute.addChildren([
@@ -295,6 +304,7 @@ const adminTree = adminLayoutRoute.addChildren([
   adminAgentRoute,
   adminMarketplaceRoute,
   adminPluginViewRoute,
+  adminSettingsRoute,
 ])
 
 export const routeTree = rootRoute.addChildren([storeTree, adminTree])

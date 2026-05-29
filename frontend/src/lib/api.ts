@@ -14,6 +14,12 @@ import type {
   PluginVersion,
   PluginInstallation,
   PluginManifest,
+  DashboardStats,
+  RevenuePoint,
+  TopProduct,
+  OrderStatusBreakdown,
+  RecentOrder,
+  StoreSettings,
 } from '../types'
 
 // ---------------------------------------------------------------------------
@@ -344,4 +350,40 @@ export function listPluginManifests(): Promise<PluginManifest[]> {
 
 export function getPluginManifest(name: string): Promise<PluginManifest> {
   return get<PluginManifest>(`/plugins/${name}/manifest`)
+}
+
+// ---------------------------------------------------------------------------
+// Analytics
+// ---------------------------------------------------------------------------
+
+export function getDashboardStats(): Promise<DashboardStats> {
+  return get<DashboardStats>('/analytics/dashboard')
+}
+
+export function getRevenueTimeline(days: number = 30): Promise<RevenuePoint[]> {
+  return get<RevenuePoint[]>('/analytics/revenue', { days })
+}
+
+export function getTopProducts(limit: number = 5): Promise<TopProduct[]> {
+  return get<TopProduct[]>('/analytics/top-products', { limit })
+}
+
+export function getOrderStatusBreakdown(): Promise<OrderStatusBreakdown[]> {
+  return get<OrderStatusBreakdown[]>('/analytics/order-status')
+}
+
+export function getRecentOrders(limit: number = 5): Promise<RecentOrder[]> {
+  return get<RecentOrder[]>('/analytics/recent-orders', { limit })
+}
+
+// ---------------------------------------------------------------------------
+// Settings
+// ---------------------------------------------------------------------------
+
+export function getSettings(): Promise<StoreSettings> {
+  return get<StoreSettings>('/settings')
+}
+
+export function updateSettings(data: Partial<StoreSettings>): Promise<StoreSettings> {
+  return put<StoreSettings>('/settings', data)
 }

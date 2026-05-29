@@ -25,6 +25,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /products", h.Create)
 	mux.HandleFunc("GET /products/{id}", h.GetByID)
 	mux.HandleFunc("GET /products", h.List)
+	mux.HandleFunc("PUT /products/{id}", h.Update)
 	mux.HandleFunc("DELETE /products/{id}", h.Delete)
 }
 
@@ -95,6 +96,40 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, result)
+}
+
+// Update handles PUT /products/{id}.
+func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+	tenantID := tenantFromRequest(r)
+	id := kernel.ProductID(r.PathValue("id"))
+
+	existing, err := h.svc.GetByID(r.Context(), tenantID, id)
+	if err != nil {
+		writeErrx(w, err)
+		return
+	}
+
+	var req createRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	existing.Name = req.Name
+	existing.Description = req.Description
+	existing.Price = kernel.NewMoney(req.PriceAmount, req.Currency)
+	existing.SKU = req.SKU
+	existing.Images = req.Images
+	existing.CategoryID = kernel.CategoryID(req.CategoryID)
+	existing.Tags = req.Tags
+	existing.Stock = req.Stock
+
+	if err := h.svc.Update(r.Context(), existing); err != nil {
+		writeErrx(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, existing)
 }
 
 // Delete handles DELETE /products/{id}.

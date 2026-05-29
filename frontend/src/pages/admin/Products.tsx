@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus, Pencil, Trash2, X, Search, Package } from 'lucide-react'
 import type { Product, ProductStatus } from '../../types'
-import { useProducts, useCreateProduct, useDeleteProduct } from '../../lib/hooks'
+import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from '../../lib/hooks'
 
 const statusColors: Record<ProductStatus, string> = {
   draft: 'bg-gray-100 text-gray-800',
@@ -39,6 +39,7 @@ export default function Products() {
 
   const { data, isLoading } = useProducts()
   const createProduct = useCreateProduct()
+  const updateProduct = useUpdateProduct()
   const deleteProduct = useDeleteProduct()
 
   const products: Product[] = data?.items ?? []
@@ -66,7 +67,7 @@ export default function Products() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    createProduct.mutate({
+    const payload = {
       name: formData.name,
       sku: formData.sku,
       description: formData.description,
@@ -76,7 +77,12 @@ export default function Products() {
       category_id: formData.category_id,
       tags: formData.tags.split(',').map((t) => t.trim()).filter(Boolean),
       images: [],
-    })
+    }
+    if (editingId) {
+      updateProduct.mutate({ id: editingId, data: payload })
+    } else {
+      createProduct.mutate(payload)
+    }
     setShowForm(false)
     setFormData(emptyForm)
     setEditingId(null)

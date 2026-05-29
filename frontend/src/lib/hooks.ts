@@ -20,6 +20,12 @@ import type {
   Plugin,
   PluginInstallation,
   PluginManifest,
+  DashboardStats,
+  RevenuePoint,
+  TopProduct,
+  OrderStatusBreakdown,
+  RecentOrder,
+  StoreSettings,
 } from '../types'
 import * as api from './api'
 import type { PaginationParams } from './api'
@@ -492,5 +498,65 @@ export function usePluginManifests(): UseQueryResult<PluginManifest[]> {
   return useQuery({
     queryKey: ['plugins', 'manifests'],
     queryFn: () => api.listPluginManifests(),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Analytics
+// ---------------------------------------------------------------------------
+
+export function useDashboardStats(): UseQueryResult<DashboardStats> {
+  return useQuery({
+    queryKey: ['analytics', 'dashboard'],
+    queryFn: () => api.getDashboardStats(),
+  })
+}
+
+export function useRevenueTimeline(days: number = 30): UseQueryResult<RevenuePoint[]> {
+  return useQuery({
+    queryKey: ['analytics', 'revenue', days],
+    queryFn: () => api.getRevenueTimeline(days),
+  })
+}
+
+export function useTopProducts(limit: number = 5): UseQueryResult<TopProduct[]> {
+  return useQuery({
+    queryKey: ['analytics', 'top-products', limit],
+    queryFn: () => api.getTopProducts(limit),
+  })
+}
+
+export function useOrderStatusBreakdown(): UseQueryResult<OrderStatusBreakdown[]> {
+  return useQuery({
+    queryKey: ['analytics', 'order-status'],
+    queryFn: () => api.getOrderStatusBreakdown(),
+  })
+}
+
+export function useRecentOrders(limit: number = 5): UseQueryResult<RecentOrder[]> {
+  return useQuery({
+    queryKey: ['analytics', 'recent-orders', limit],
+    queryFn: () => api.getRecentOrders(limit),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Settings
+// ---------------------------------------------------------------------------
+
+export function useSettings(): UseQueryResult<StoreSettings> {
+  return useQuery({
+    queryKey: ['settings'],
+    queryFn: () => api.getSettings(),
+  })
+}
+
+export function useUpdateSettings(): UseMutationResult<StoreSettings, Error, Partial<StoreSettings>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: Partial<StoreSettings>) => api.updateSettings(data),
+    onSuccess: (updated) => {
+      qc.setQueryData(['settings'], updated)
+    },
   })
 }

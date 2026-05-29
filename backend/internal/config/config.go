@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -23,17 +22,13 @@ type Config struct {
 func Load() (*Config, error) {
 	cfg := &Config{
 		Port:         envOr("PORT", "8080"),
-		DatabaseURL:  envOr("DATABASE_URL", "postgres://hada:hada@localhost:5432/hada?sslmode=disable"),
+		DatabaseURL:  envOr("DATABASE_URL", "postgres://hada:hada@localhost:5433/hada?sslmode=disable"),
 		RedisURL:     envOr("REDIS_URL", "redis://localhost:6379"),
 		AnthropicKey: os.Getenv("ANTHROPIC_API_KEY"),
 		AIModel:      envOr("AI_MODEL", "claude-sonnet-4-6"),
 		MediaStorage: envOr("MEDIA_STORAGE", "local"),
 		S3Bucket:     os.Getenv("S3_BUCKET"),
 		S3Region:     os.Getenv("S3_REGION"),
-	}
-
-	if cfg.AnthropicKey == "" {
-		return nil, fmt.Errorf("ANTHROPIC_API_KEY is required")
 	}
 
 	return cfg, nil

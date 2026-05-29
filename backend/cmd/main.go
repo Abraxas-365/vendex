@@ -13,8 +13,7 @@ import (
 
 	"github.com/Abraxas-365/hada-commerce/internal/config"
 
-	// PostgreSQL driver — uncomment once github.com/lib/pq is in go.mod:
-	// _ "github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 func main() {
