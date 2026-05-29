@@ -17,7 +17,7 @@ type MediaRepository interface {
 	// Delete removes a media metadata record.
 	Delete(ctx context.Context, tenantID kernel.TenantID, id kernel.MediaID) error
 	// List returns all media records for a tenant with pagination.
-	List(ctx context.Context, tenantID kernel.TenantID, p kernel.Pagination) (kernel.PaginatedResult[Media], error)
+	List(ctx context.Context, tenantID kernel.TenantID, p kernel.PaginationOptions) (kernel.Paginated[Media], error)
 }
 
 // StorageProvider abstracts file storage backends (local filesystem, S3, etc.).

@@ -1,8 +1,8 @@
 package settingscontainer
 
 import (
-	"database/sql"
-	"net/http"
+	"github.com/gofiber/fiber/v2"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/Abraxas-365/hada-commerce/internal/settings/settingsapi"
 	"github.com/Abraxas-365/hada-commerce/internal/settings/settingsinfra"
@@ -16,7 +16,7 @@ type Container struct {
 }
 
 // New creates a fully-wired settings container.
-func New(db *sql.DB) *Container {
+func New(db *sqlx.DB) *Container {
 	repo := settingsinfra.NewPostgresRepo(db)
 	svc := settingssrv.New(repo)
 	handler := settingsapi.NewHandler(svc)
@@ -26,7 +26,7 @@ func New(db *sql.DB) *Container {
 	}
 }
 
-// RegisterRoutes registers settings HTTP routes on the given mux.
-func (c *Container) RegisterRoutes(mux *http.ServeMux) {
-	c.Handler.RegisterRoutes(mux)
+// RegisterRoutes registers settings HTTP routes on the given Fiber router.
+func (c *Container) RegisterRoutes(router fiber.Router) {
+	c.Handler.RegisterRoutes(router)
 }

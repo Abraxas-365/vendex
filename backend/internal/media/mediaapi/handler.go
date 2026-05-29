@@ -1,153 +1,117 @@
 package mediaapi
 
 import (
-	"encoding/json"
-	"net/http"
 	"strconv"
 
+	"github.com/gofiber/fiber/v2"
+
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/media"
 	"github.com/Abraxas-365/hada-commerce/internal/media/mediasrv"
 )
 
-const (
-	// maxUploadSize is the maximum file size accepted (32 MiB).
-	maxUploadSize = 32 << 20
-)
-
-// Handler exposes media HTTP endpoints.
+// Handler exposes HTTP endpoints for the media domain.
 type Handler struct {
 	svc *mediasrv.Service
 }
 
-// New creates a new media Handler.
-func New(svc *mediasrv.Service) *Handler {
+// NewHandler creates a new media API handler.
+func NewHandler(svc *mediasrv.Service) *Handler {
 	return &Handler{svc: svc}
 }
 
-// RegisterRoutes wires all media routes onto the provided ServeMux.
-//
-//	POST /admin/media          — multipart file upload
-//	GET  /admin/media          — list media
-//	GET  /admin/media/:id      — get by ID
-//	DELETE /admin/media/:id    — delete
-func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("POST /admin/media", h.upload)
-	mux.HandleFunc("GET /admin/media", h.list)
-	mux.HandleFunc("GET /admin/media/{id}", h.getByID)
-	mux.HandleFunc("DELETE /admin/media/{id}", h.delete)
+// RegisterRoutes registers all media routes on the given Fiber router.
+func (h *Handler) RegisterRoutes(router fiber.Router) {
+	g := router.Group("/media")
+	g.Post("/upload", h.Upload)
+	g.Get("/", h.List)
+	g.Get("/:id", h.GetByID)
+	g.Delete("/:id", h.Delete)
 }
 
-type contextKey string
-
-const contextKeyTenantID contextKey = "tenant_id"
-
-func tenantFromContext(r *http.Request) kernel.TenantID {
-	if v, ok := r.Context().Value(contextKeyTenantID).(string); ok {
-		return kernel.TenantID(v)
-	}
-	return ""
-}
-
-// upload handles multipart/form-data file uploads.
-// Form fields:
-//
-//	file       — the file (required)
-//	alt        — alt text for images (optional)
-//	uploaded_by — identifier of the uploader (optional)
-func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {
-	tenantID := tenantFromContext(r)
-
-	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
-		writeError(w, media.ErrFileTooLarge)
-		return
+// Upload handles POST /media/upload.
+// Accepts a multipart form with a "file" field.
+func (h *Handler) Upload(c *fiber.Ctx) error {
+	authCtx, ok := c.Locals("auth").(*kernel.AuthContext)
+	if !ok || authCtx == nil {
+		return errx.New("unauthorized", errx.TypeAuthorization)
 	}
 
-	file, header, err := r.FormFile("file")
+	file, err := c.FormFile("file")
 	if err != nil {
-		writeError(w, media.ErrInvalidFile)
-		return
-	}
-	defer file.Close()
-
-	alt := r.FormValue("alt")
-	uploadedBy := r.FormValue("uploaded_by")
-	contentType := header.Header.Get("Content-Type")
-	if contentType == "" {
-		contentType = "application/octet-stream"
+		return media.ErrInvalidFile
 	}
 
-	m, err := h.svc.Upload(r.Context(), mediasrv.UploadInput{
-		TenantID:    tenantID,
-		Filename:    header.Filename,
-		ContentType: contentType,
-		Size:        header.Size,
-		Alt:         alt,
-		UploadedBy:  uploadedBy,
-		Data:        file,
+	src, err := file.Open()
+	if err != nil {
+		return media.ErrUploadFailed
+	}
+	defer src.Close()
+
+	altText := c.FormValue("alt")
+	result, err := h.svc.Upload(c.Context(), mediasrv.UploadInput{
+		TenantID:    authCtx.TenantID,
+		Filename:    file.Filename,
+		ContentType: file.Header.Get("Content-Type"),
+		Size:        file.Size,
+		Alt:         altText,
+		UploadedBy:  string(authCtx.UserID),
+		Data:        src,
 	})
 	if err != nil {
-		writeError(w, err)
-		return
+		return err
 	}
-	writeJSON(w, http.StatusCreated, m)
+
+	return c.Status(fiber.StatusCreated).JSON(result)
 }
 
-func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
-	tenantID := tenantFromContext(r)
-	p := paginationFromRequest(r)
+// List handles GET /media.
+func (h *Handler) List(c *fiber.Ctx) error {
+	authCtx, ok := c.Locals("auth").(*kernel.AuthContext)
+	if !ok || authCtx == nil {
+		return errx.New("unauthorized", errx.TypeAuthorization)
+	}
 
-	result, err := h.svc.List(r.Context(), tenantID, p)
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	pageSize, _ := strconv.Atoi(c.Query("page_size", "20"))
+	p := kernel.PaginationOptions{Page: page, PageSize: pageSize}
+
+	result, err := h.svc.List(c.Context(), authCtx.TenantID, p)
 	if err != nil {
-		writeError(w, err)
-		return
+		return err
 	}
-	writeJSON(w, http.StatusOK, result)
+
+	return c.Status(fiber.StatusOK).JSON(result)
 }
 
-func (h *Handler) getByID(w http.ResponseWriter, r *http.Request) {
-	tenantID := tenantFromContext(r)
-	id := kernel.MediaID(r.PathValue("id"))
+// GetByID handles GET /media/:id.
+func (h *Handler) GetByID(c *fiber.Ctx) error {
+	authCtx, ok := c.Locals("auth").(*kernel.AuthContext)
+	if !ok || authCtx == nil {
+		return errx.New("unauthorized", errx.TypeAuthorization)
+	}
 
-	m, err := h.svc.GetByID(r.Context(), tenantID, id)
+	id := kernel.MediaID(c.Params("id"))
+	m, err := h.svc.GetByID(c.Context(), authCtx.TenantID, id)
 	if err != nil {
-		writeError(w, err)
-		return
+		return err
 	}
-	writeJSON(w, http.StatusOK, m)
+
+	return c.Status(fiber.StatusOK).JSON(m)
 }
 
-func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
-	tenantID := tenantFromContext(r)
-	id := kernel.MediaID(r.PathValue("id"))
-
-	if err := h.svc.Delete(r.Context(), tenantID, id); err != nil {
-		writeError(w, err)
-		return
+// Delete handles DELETE /media/:id.
+func (h *Handler) Delete(c *fiber.Ctx) error {
+	authCtx, ok := c.Locals("auth").(*kernel.AuthContext)
+	if !ok || authCtx == nil {
+		return errx.New("unauthorized", errx.TypeAuthorization)
 	}
-	w.WriteHeader(http.StatusNoContent)
-}
 
-// --- helpers ---
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
-}
-
-func writeError(w http.ResponseWriter, err error) {
-	status := errx.HTTPStatus(err)
-	body := map[string]string{
-		"code":    errx.Code(err),
-		"message": errx.Message(err),
+	id := kernel.MediaID(c.Params("id"))
+	if err := h.svc.Delete(c.Context(), authCtx.TenantID, id); err != nil {
+		return err
 	}
-	writeJSON(w, status, body)
-}
 
-func paginationFromRequest(r *http.Request) kernel.Pagination {
-	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
-	size, _ := strconv.Atoi(r.URL.Query().Get("page_size"))
-	return kernel.NewPagination(page, size)
+	return c.SendStatus(fiber.StatusNoContent)
 }

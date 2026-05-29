@@ -6,25 +6,26 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 )
 
-// Repository defines persistence operations for the marketplace domain.
-type Repository interface {
-	// Plugins
-	CreatePlugin(ctx context.Context, p *Plugin) error
-	GetPlugin(ctx context.Context, id kernel.PluginID) (*Plugin, error)
-	GetPluginByName(ctx context.Context, name string) (*Plugin, error)
-	ListPlugins(ctx context.Context, pg kernel.Pagination) (kernel.PaginatedResult[Plugin], error)
-	ListPluginsByCategory(ctx context.Context, cat PluginCategory, pg kernel.Pagination) (kernel.PaginatedResult[Plugin], error)
+// VendorRepository defines persistence operations for Vendor records.
+type VendorRepository interface {
+	Create(ctx context.Context, v Vendor) (Vendor, error)
+	GetByID(ctx context.Context, tenantID kernel.TenantID, id kernel.VendorID) (Vendor, error)
+	Update(ctx context.Context, v Vendor) (Vendor, error)
+	Delete(ctx context.Context, tenantID kernel.TenantID, id kernel.VendorID) error
+	List(ctx context.Context, tenantID kernel.TenantID, p kernel.PaginationOptions) (kernel.Paginated[Vendor], error)
+}
 
-	// Versions
-	CreateVersion(ctx context.Context, v *PluginVersion) error
-	GetVersion(ctx context.Context, id kernel.PluginVersionID) (*PluginVersion, error)
-	GetLatestVersion(ctx context.Context, pluginID kernel.PluginID) (*PluginVersion, error)
-	ListVersions(ctx context.Context, pluginID kernel.PluginID) ([]PluginVersion, error)
+// VendorProductRepository defines persistence for VendorProduct link records.
+type VendorProductRepository interface {
+	Create(ctx context.Context, vp VendorProduct) (VendorProduct, error)
+	GetByID(ctx context.Context, tenantID kernel.TenantID, id string) (VendorProduct, error)
+	Delete(ctx context.Context, tenantID kernel.TenantID, id string) error
+	ListByVendor(ctx context.Context, tenantID kernel.TenantID, vendorID kernel.VendorID, p kernel.PaginationOptions) (kernel.Paginated[VendorProduct], error)
+}
 
-	// Installations
-	CreateInstallation(ctx context.Context, inst *Installation) error
-	GetInstallation(ctx context.Context, tenantID kernel.TenantID, pluginID kernel.PluginID) (*Installation, error)
-	UpdateInstallation(ctx context.Context, inst *Installation) error
-	DeleteInstallation(ctx context.Context, tenantID kernel.TenantID, pluginID kernel.PluginID) error
-	ListInstallations(ctx context.Context, tenantID kernel.TenantID) ([]Installation, error)
+// VendorOrderRepository defines persistence for vendor-order accounting records.
+type VendorOrderRepository interface {
+	Create(ctx context.Context, vo VendorOrder) (VendorOrder, error)
+	GetByID(ctx context.Context, tenantID kernel.TenantID, id string) (VendorOrder, error)
+	ListByVendor(ctx context.Context, tenantID kernel.TenantID, vendorID kernel.VendorID, p kernel.PaginationOptions) (kernel.Paginated[VendorOrder], error)
 }
