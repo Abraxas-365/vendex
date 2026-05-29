@@ -39,25 +39,25 @@ type Address struct {
 
 // OrderItem represents a line item in an order.
 type OrderItem struct {
-	ID          kernel.OrderItemID `json:"id"`
-	ProductID   kernel.ProductID   `json:"product_id"`
-	ProductName string             `json:"product_name"`
-	Quantity    int                `json:"quantity"`
+	ID          kernel.OrderItemID `json:"id" db:"id"`
+	ProductID   kernel.ProductID   `json:"product_id" db:"product_id"`
+	ProductName string             `json:"product_name" db:"product_name"`
+	Quantity    int                `json:"quantity" db:"quantity"`
 	UnitPrice   kernel.Money       `json:"unit_price"`
 	Total       kernel.Money       `json:"total"`
 }
 
 // Order is the aggregate root for a purchase.
 type Order struct {
-	ID              kernel.OrderID    `json:"id"`
-	TenantID        kernel.TenantID   `json:"tenant_id"`
-	CustomerID      kernel.CustomerID `json:"customer_id"`
+	ID              kernel.OrderID    `json:"id" db:"id"`
+	TenantID        kernel.TenantID   `json:"tenant_id" db:"tenant_id"`
+	CustomerID      kernel.CustomerID `json:"customer_id" db:"customer_id"`
 	Items           []OrderItem       `json:"items"`
-	Status          OrderStatus       `json:"status"`
+	Status          OrderStatus       `json:"status" db:"status"`
 	TotalAmount     kernel.Money      `json:"total_amount"`
 	ShippingAddress Address           `json:"shipping_address"`
-	CreatedAt       time.Time         `json:"created_at"`
-	UpdatedAt       time.Time         `json:"updated_at"`
+	CreatedAt       time.Time         `json:"created_at" db:"created_at"`
+	UpdatedAt       time.Time         `json:"updated_at" db:"updated_at"`
 }
 
 // CanTransitionTo checks if the status transition is valid.

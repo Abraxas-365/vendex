@@ -5,32 +5,33 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"time"
 
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/order"
+	"github.com/jmoiron/sqlx"
 )
 
-// PostgresRepo implements order.Repository using database/sql.
+// PostgresRepo implements order.Repository using sqlx.
 type PostgresRepo struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 // NewPostgresRepo creates a new PostgreSQL-backed order repository.
-func NewPostgresRepo(db *sql.DB) *PostgresRepo {
+func NewPostgresRepo(db *sqlx.DB) *PostgresRepo {
 	return &PostgresRepo{db: db}
 }
 
 func (r *PostgresRepo) Create(ctx context.Context, o *order.Order) error {
-	tx, err := r.db.BeginTx(ctx, nil)
+	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("beginning transaction: %w", err)
+		return errx.Wrap(err, "beginning transaction", errx.TypeInternal)
 	}
 	defer tx.Rollback()
 
 	addrJSON, err := json.Marshal(o.ShippingAddress)
 	if err != nil {
-		return fmt.Errorf("marshaling address: %w", err)
+		return errx.Wrap(err, "marshaling address", errx.TypeInternal)
 	}
 
 	_, err = tx.ExecContext(ctx, `
@@ -41,7 +42,7 @@ func (r *PostgresRepo) Create(ctx context.Context, o *order.Order) error {
 		string(addrJSON), o.CreatedAt, o.UpdatedAt,
 	)
 	if err != nil {
-		return fmt.Errorf("inserting order: %w", err)
+		return errx.Wrap(err, "inserting order", errx.TypeInternal)
 	}
 
 	for _, item := range o.Items {
@@ -54,7 +55,7 @@ func (r *PostgresRepo) Create(ctx context.Context, o *order.Order) error {
 			item.Total.Amount, item.Total.Currency,
 		)
 		if err != nil {
-			return fmt.Errorf("inserting order item: %w", err)
+			return errx.Wrap(err, "inserting order item", errx.TypeInternal)
 		}
 	}
 
@@ -83,7 +84,7 @@ func (r *PostgresRepo) GetByID(ctx context.Context, tenantID kernel.TenantID, id
 func (r *PostgresRepo) Update(ctx context.Context, o *order.Order) error {
 	addrJSON, err := json.Marshal(o.ShippingAddress)
 	if err != nil {
-		return fmt.Errorf("marshaling address: %w", err)
+		return errx.Wrap(err, "marshaling address", errx.TypeInternal)
 	}
 
 	_, err = r.db.ExecContext(ctx, `
@@ -94,21 +95,21 @@ func (r *PostgresRepo) Update(ctx context.Context, o *order.Order) error {
 		string(o.ID), string(o.TenantID),
 	)
 	if err != nil {
-		return fmt.Errorf("updating order: %w", err)
+		return errx.Wrap(err, "updating order", errx.TypeInternal)
 	}
 	return nil
 }
 
-func (r *PostgresRepo) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.Pagination) (kernel.PaginatedResult[order.Order], error) {
+func (r *PostgresRepo) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[order.Order], error) {
 	return r.queryOrders(ctx, tenantID, pg, "", nil)
 }
 
-func (r *PostgresRepo) ListByCustomer(ctx context.Context, tenantID kernel.TenantID, customerID kernel.CustomerID, pg kernel.Pagination) (kernel.PaginatedResult[order.Order], error) {
+func (r *PostgresRepo) ListByCustomer(ctx context.Context, tenantID kernel.TenantID, customerID kernel.CustomerID, pg kernel.PaginationOptions) (kernel.Paginated[order.Order], error) {
 	return r.queryOrders(ctx, tenantID, pg, "AND customer_id = $3", []any{string(customerID)})
 }
 
-func (r *PostgresRepo) queryOrders(ctx context.Context, tenantID kernel.TenantID, pg kernel.Pagination, extraWhere string, extraArgs []any) (kernel.PaginatedResult[order.Order], error) {
-	var zero kernel.PaginatedResult[order.Order]
+func (r *PostgresRepo) queryOrders(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions, extraWhere string, extraArgs []any) (kernel.Paginated[order.Order], error) {
+	var zero kernel.Paginated[order.Order]
 
 	baseArgs := []any{string(tenantID)}
 	args := append(baseArgs, extraArgs...)
@@ -116,7 +117,7 @@ func (r *PostgresRepo) queryOrders(ctx context.Context, tenantID kernel.TenantID
 	var total int
 	countQ := "SELECT COUNT(*) FROM orders WHERE tenant_id = $1 " + extraWhere
 	if err := r.db.QueryRowContext(ctx, countQ, args...).Scan(&total); err != nil {
-		return zero, fmt.Errorf("counting orders: %w", err)
+		return zero, errx.Wrap(err, "counting orders", errx.TypeInternal)
 	}
 
 	nextParam := len(args) + 1
@@ -129,7 +130,7 @@ func (r *PostgresRepo) queryOrders(ctx context.Context, tenantID kernel.TenantID
 
 	rows, err := r.db.QueryContext(ctx, dataQ, args...)
 	if err != nil {
-		return zero, fmt.Errorf("querying orders: %w", err)
+		return zero, errx.Wrap(err, "querying orders", errx.TypeInternal)
 	}
 	defer rows.Close()
 
@@ -147,34 +148,31 @@ func (r *PostgresRepo) queryOrders(ctx context.Context, tenantID kernel.TenantID
 		orders = append(orders, *o)
 	}
 	if err := rows.Err(); err != nil {
-		return zero, fmt.Errorf("iterating orders: %w", err)
+		return zero, errx.Wrap(err, "iterating orders", errx.TypeInternal)
 	}
 
-	return kernel.NewPaginatedResult(orders, total, pg), nil
+	return kernel.NewPaginated(orders, pg.Page, pg.PageSize, total), nil
 }
 
 func (r *PostgresRepo) scanOrder(ctx context.Context, query string, args ...any) (*order.Order, error) {
 	row := r.db.QueryRowContext(ctx, query, args...)
 	var o order.Order
 	var id, tenantID, customerID, status, addrJSON string
-	var createdAt, updatedAt time.Time
 
 	err := row.Scan(&id, &tenantID, &customerID, &status,
 		&o.TotalAmount.Amount, &o.TotalAmount.Currency,
-		&addrJSON, &createdAt, &updatedAt)
+		&addrJSON, &o.CreatedAt, &o.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return nil, order.ErrNotFound
 	}
 	if err != nil {
-		return nil, fmt.Errorf("scanning order: %w", err)
+		return nil, errx.Wrap(err, "scanning order", errx.TypeInternal)
 	}
 
 	o.ID = kernel.OrderID(id)
 	o.TenantID = kernel.TenantID(tenantID)
 	o.CustomerID = kernel.CustomerID(customerID)
 	o.Status = order.OrderStatus(status)
-	o.CreatedAt = createdAt
-	o.UpdatedAt = updatedAt
 	_ = json.Unmarshal([]byte(addrJSON), &o.ShippingAddress)
 
 	return &o, nil
@@ -183,21 +181,18 @@ func (r *PostgresRepo) scanOrder(ctx context.Context, query string, args ...any)
 func (r *PostgresRepo) scanOrderRow(rows *sql.Rows) (*order.Order, error) {
 	var o order.Order
 	var id, tenantID, customerID, status, addrJSON string
-	var createdAt, updatedAt time.Time
 
 	err := rows.Scan(&id, &tenantID, &customerID, &status,
 		&o.TotalAmount.Amount, &o.TotalAmount.Currency,
-		&addrJSON, &createdAt, &updatedAt)
+		&addrJSON, &o.CreatedAt, &o.UpdatedAt)
 	if err != nil {
-		return nil, fmt.Errorf("scanning order row: %w", err)
+		return nil, errx.Wrap(err, "scanning order row", errx.TypeInternal)
 	}
 
 	o.ID = kernel.OrderID(id)
 	o.TenantID = kernel.TenantID(tenantID)
 	o.CustomerID = kernel.CustomerID(customerID)
 	o.Status = order.OrderStatus(status)
-	o.CreatedAt = createdAt
-	o.UpdatedAt = updatedAt
 	_ = json.Unmarshal([]byte(addrJSON), &o.ShippingAddress)
 
 	return &o, nil
@@ -210,7 +205,7 @@ func (r *PostgresRepo) loadItems(ctx context.Context, orderID kernel.OrderID) ([
 		string(orderID),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("loading order items: %w", err)
+		return nil, errx.Wrap(err, "loading order items", errx.TypeInternal)
 	}
 	defer rows.Close()
 
@@ -222,14 +217,14 @@ func (r *PostgresRepo) loadItems(ctx context.Context, orderID kernel.OrderID) ([
 			&item.UnitPrice.Amount, &item.UnitPrice.Currency,
 			&item.Total.Amount, &item.Total.Currency)
 		if err != nil {
-			return nil, fmt.Errorf("scanning order item: %w", err)
+			return nil, errx.Wrap(err, "scanning order item", errx.TypeInternal)
 		}
 		item.ID = kernel.OrderItemID(id)
 		item.ProductID = kernel.ProductID(productID)
 		items = append(items, item)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterating order items: %w", err)
+		return nil, errx.Wrap(err, "iterating order items", errx.TypeInternal)
 	}
 
 	if items == nil {

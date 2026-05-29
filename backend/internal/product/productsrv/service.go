@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/product"
 )
 
@@ -90,12 +90,12 @@ func (s *Service) Delete(ctx context.Context, tenantID kernel.TenantID, id kerne
 }
 
 // List returns a paginated list of products for a tenant.
-func (s *Service) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.Pagination) (kernel.PaginatedResult[product.Product], error) {
+func (s *Service) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[product.Product], error) {
 	return s.repo.List(ctx, tenantID, pg)
 }
 
 // ListByCategory returns products in a specific category.
-func (s *Service) ListByCategory(ctx context.Context, tenantID kernel.TenantID, categoryID kernel.CategoryID, pg kernel.Pagination) (kernel.PaginatedResult[product.Product], error) {
+func (s *Service) ListByCategory(ctx context.Context, tenantID kernel.TenantID, categoryID kernel.CategoryID, pg kernel.PaginationOptions) (kernel.Paginated[product.Product], error) {
 	return s.repo.ListByCategory(ctx, tenantID, categoryID, pg)
 }
 

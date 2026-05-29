@@ -12,7 +12,7 @@ type Repository interface {
 	GetByID(ctx context.Context, tenantID kernel.TenantID, id kernel.ProductID) (*Product, error)
 	Update(ctx context.Context, p *Product) error
 	Delete(ctx context.Context, tenantID kernel.TenantID, id kernel.ProductID) error
-	List(ctx context.Context, tenantID kernel.TenantID, pg kernel.Pagination) (kernel.PaginatedResult[Product], error)
-	ListByCategory(ctx context.Context, tenantID kernel.TenantID, categoryID kernel.CategoryID, pg kernel.Pagination) (kernel.PaginatedResult[Product], error)
+	List(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[Product], error)
+	ListByCategory(ctx context.Context, tenantID kernel.TenantID, categoryID kernel.CategoryID, pg kernel.PaginationOptions) (kernel.Paginated[Product], error)
 	GetBySKU(ctx context.Context, tenantID kernel.TenantID, sku string) (*Product, error)
 }

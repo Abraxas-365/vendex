@@ -1,12 +1,11 @@
 package productcontainer
 
 import (
-	"database/sql"
-	"net/http"
-
 	"github.com/Abraxas-365/hada-commerce/internal/product/productapi"
 	"github.com/Abraxas-365/hada-commerce/internal/product/productinfra"
 	"github.com/Abraxas-365/hada-commerce/internal/product/productsrv"
+	"github.com/gofiber/fiber/v2"
+	"github.com/jmoiron/sqlx"
 )
 
 // Container wires together all product domain dependencies.
@@ -16,7 +15,7 @@ type Container struct {
 }
 
 // New creates a fully-wired product container.
-func New(db *sql.DB) *Container {
+func New(db *sqlx.DB) *Container {
 	repo := productinfra.NewPostgresRepo(db)
 	svc := productsrv.New(repo)
 	handler := productapi.NewHandler(svc)
@@ -26,7 +25,7 @@ func New(db *sql.DB) *Container {
 	}
 }
 
-// RegisterRoutes registers product HTTP routes on the given mux.
-func (c *Container) RegisterRoutes(mux *http.ServeMux) {
-	c.Handler.RegisterRoutes(mux)
+// RegisterRoutes registers product HTTP routes on the given router.
+func (c *Container) RegisterRoutes(router fiber.Router) {
+	c.Handler.RegisterRoutes(router)
 }

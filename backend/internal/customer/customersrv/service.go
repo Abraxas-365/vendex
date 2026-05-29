@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/Abraxas-365/hada-commerce/internal/customer"
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel/errx"
 )
 
 // Service handles customer business logic.
@@ -88,7 +88,7 @@ func (s *Service) Delete(ctx context.Context, tenantID kernel.TenantID, id kerne
 }
 
 // List returns a paginated list of customers for a tenant.
-func (s *Service) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.Pagination) (kernel.PaginatedResult[customer.Customer], error) {
+func (s *Service) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[customer.Customer], error) {
 	return s.repo.List(ctx, tenantID, pg)
 }
 

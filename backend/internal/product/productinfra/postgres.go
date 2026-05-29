@@ -5,30 +5,31 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"time"
 
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/product"
+	"github.com/jmoiron/sqlx"
 )
 
-// PostgresRepo implements product.Repository using database/sql.
+// PostgresRepo implements product.Repository using sqlx.
 type PostgresRepo struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 // NewPostgresRepo creates a new PostgreSQL-backed product repository.
-func NewPostgresRepo(db *sql.DB) *PostgresRepo {
+func NewPostgresRepo(db *sqlx.DB) *PostgresRepo {
 	return &PostgresRepo{db: db}
 }
 
 func (r *PostgresRepo) Create(ctx context.Context, p *product.Product) error {
 	imagesJSON, err := json.Marshal(p.Images)
 	if err != nil {
-		return fmt.Errorf("marshaling images: %w", err)
+		return errx.Wrap(err, "marshaling images", errx.TypeInternal)
 	}
 	tagsJSON, err := json.Marshal(p.Tags)
 	if err != nil {
-		return fmt.Errorf("marshaling tags: %w", err)
+		return errx.Wrap(err, "marshaling tags", errx.TypeInternal)
 	}
 
 	_, err = r.db.ExecContext(ctx, `
@@ -40,7 +41,7 @@ func (r *PostgresRepo) Create(ctx context.Context, p *product.Product) error {
 		string(p.Status), p.Stock, p.CreatedAt, p.UpdatedAt,
 	)
 	if err != nil {
-		return fmt.Errorf("inserting product: %w", err)
+		return errx.Wrap(err, "inserting product", errx.TypeInternal)
 	}
 	return nil
 }
@@ -51,7 +52,14 @@ func (r *PostgresRepo) GetByID(ctx context.Context, tenantID kernel.TenantID, id
 		FROM products WHERE id = $1 AND tenant_id = $2`,
 		string(id), string(tenantID),
 	)
-	return scanProduct(row)
+	p, err := scanProduct(row)
+	if err == sql.ErrNoRows {
+		return nil, product.ErrNotFound
+	}
+	if err != nil {
+		return nil, errx.Wrap(err, "scanning product", errx.TypeInternal)
+	}
+	return p, nil
 }
 
 func (r *PostgresRepo) GetBySKU(ctx context.Context, tenantID kernel.TenantID, sku string) (*product.Product, error) {
@@ -60,17 +68,24 @@ func (r *PostgresRepo) GetBySKU(ctx context.Context, tenantID kernel.TenantID, s
 		FROM products WHERE sku = $1 AND tenant_id = $2`,
 		sku, string(tenantID),
 	)
-	return scanProduct(row)
+	p, err := scanProduct(row)
+	if err == sql.ErrNoRows {
+		return nil, product.ErrNotFound
+	}
+	if err != nil {
+		return nil, errx.Wrap(err, "scanning product by SKU", errx.TypeInternal)
+	}
+	return p, nil
 }
 
 func (r *PostgresRepo) Update(ctx context.Context, p *product.Product) error {
 	imagesJSON, err := json.Marshal(p.Images)
 	if err != nil {
-		return fmt.Errorf("marshaling images: %w", err)
+		return errx.Wrap(err, "marshaling images", errx.TypeInternal)
 	}
 	tagsJSON, err := json.Marshal(p.Tags)
 	if err != nil {
-		return fmt.Errorf("marshaling tags: %w", err)
+		return errx.Wrap(err, "marshaling tags", errx.TypeInternal)
 	}
 
 	_, err = r.db.ExecContext(ctx, `
@@ -82,7 +97,7 @@ func (r *PostgresRepo) Update(ctx context.Context, p *product.Product) error {
 		string(p.ID), string(p.TenantID),
 	)
 	if err != nil {
-		return fmt.Errorf("updating product: %w", err)
+		return errx.Wrap(err, "updating product", errx.TypeInternal)
 	}
 	return nil
 }
@@ -92,21 +107,21 @@ func (r *PostgresRepo) Delete(ctx context.Context, tenantID kernel.TenantID, id 
 		string(id), string(tenantID),
 	)
 	if err != nil {
-		return fmt.Errorf("deleting product: %w", err)
+		return errx.Wrap(err, "deleting product", errx.TypeInternal)
 	}
 	return nil
 }
 
-func (r *PostgresRepo) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.Pagination) (kernel.PaginatedResult[product.Product], error) {
+func (r *PostgresRepo) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[product.Product], error) {
 	return r.queryProducts(ctx, tenantID, pg, "", nil)
 }
 
-func (r *PostgresRepo) ListByCategory(ctx context.Context, tenantID kernel.TenantID, categoryID kernel.CategoryID, pg kernel.Pagination) (kernel.PaginatedResult[product.Product], error) {
+func (r *PostgresRepo) ListByCategory(ctx context.Context, tenantID kernel.TenantID, categoryID kernel.CategoryID, pg kernel.PaginationOptions) (kernel.Paginated[product.Product], error) {
 	return r.queryProducts(ctx, tenantID, pg, "AND category_id = $3", []any{string(categoryID)})
 }
 
-func (r *PostgresRepo) queryProducts(ctx context.Context, tenantID kernel.TenantID, pg kernel.Pagination, extraWhere string, extraArgs []any) (kernel.PaginatedResult[product.Product], error) {
-	var zero kernel.PaginatedResult[product.Product]
+func (r *PostgresRepo) queryProducts(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions, extraWhere string, extraArgs []any) (kernel.Paginated[product.Product], error) {
+	var zero kernel.Paginated[product.Product]
 
 	baseArgs := []any{string(tenantID)}
 	countQuery := "SELECT COUNT(*) FROM products WHERE tenant_id = $1 " + extraWhere
@@ -114,7 +129,7 @@ func (r *PostgresRepo) queryProducts(ctx context.Context, tenantID kernel.Tenant
 
 	var total int
 	if err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total); err != nil {
-		return zero, fmt.Errorf("counting products: %w", err)
+		return zero, errx.Wrap(err, "counting products", errx.TypeInternal)
 	}
 
 	nextParam := len(args) + 1
@@ -127,7 +142,7 @@ func (r *PostgresRepo) queryProducts(ctx context.Context, tenantID kernel.Tenant
 
 	rows, err := r.db.QueryContext(ctx, dataQuery, args...)
 	if err != nil {
-		return zero, fmt.Errorf("querying products: %w", err)
+		return zero, errx.Wrap(err, "querying products", errx.TypeInternal)
 	}
 	defer rows.Close()
 
@@ -135,15 +150,15 @@ func (r *PostgresRepo) queryProducts(ctx context.Context, tenantID kernel.Tenant
 	for rows.Next() {
 		p, err := scanProductRow(rows)
 		if err != nil {
-			return zero, err
+			return zero, errx.Wrap(err, "scanning product row", errx.TypeInternal)
 		}
 		products = append(products, *p)
 	}
 	if err := rows.Err(); err != nil {
-		return zero, fmt.Errorf("iterating products: %w", err)
+		return zero, errx.Wrap(err, "iterating products", errx.TypeInternal)
 	}
 
-	return kernel.NewPaginatedResult(products, total, pg), nil
+	return kernel.NewPaginated(products, pg.Page, pg.PageSize, total), nil
 }
 
 // scanner is implemented by both *sql.Row and *sql.Rows.
@@ -152,14 +167,10 @@ type scanner interface {
 }
 
 func scanProduct(row *sql.Row) (*product.Product, error) {
-	p, err := scanFields(row)
-	if err == sql.ErrNoRows {
-		return nil, product.ErrNotFound
-	}
-	return p, err
+	return scanFields(row)
 }
 
-func scanProductRow(rows *sql.Rows) (*product.Product, error) {
+func scanProductRow(rows interface{ Scan(dest ...any) error }) (*product.Product, error) {
 	return scanFields(rows)
 }
 
@@ -167,13 +178,12 @@ func scanFields(s scanner) (*product.Product, error) {
 	var p product.Product
 	var id, tenantID, categoryID, status string
 	var imagesJSON, tagsJSON string
-	var createdAt, updatedAt time.Time
 
 	err := s.Scan(
 		&id, &tenantID, &p.Name, &p.Description,
 		&p.Price.Amount, &p.Price.Currency, &p.SKU,
 		&imagesJSON, &categoryID, &tagsJSON,
-		&status, &p.Stock, &createdAt, &updatedAt,
+		&status, &p.Stock, &p.CreatedAt, &p.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -183,8 +193,6 @@ func scanFields(s scanner) (*product.Product, error) {
 	p.TenantID = kernel.TenantID(tenantID)
 	p.CategoryID = kernel.CategoryID(categoryID)
 	p.Status = product.Status(status)
-	p.CreatedAt = createdAt
-	p.UpdatedAt = updatedAt
 
 	_ = json.Unmarshal([]byte(imagesJSON), &p.Images)
 	_ = json.Unmarshal([]byte(tagsJSON), &p.Tags)
