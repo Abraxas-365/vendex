@@ -100,7 +100,7 @@ export interface Category {
   tenant_id: string
   name: string
   slug: string
-  parent_id?: string
+  parent_id: string | null
   description: string
   created_at: string
   updated_at: string
