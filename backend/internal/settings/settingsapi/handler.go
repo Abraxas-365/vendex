@@ -1,11 +1,10 @@
 package settingsapi
 
 import (
-	"encoding/json"
-	"net/http"
+	"github.com/gofiber/fiber/v2"
 
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/settings"
 	"github.com/Abraxas-365/hada-commerce/internal/settings/settingssrv"
 )
@@ -20,10 +19,11 @@ func NewHandler(svc *settingssrv.Service) *Handler {
 	return &Handler{svc: svc}
 }
 
-// RegisterRoutes registers all settings routes on the given mux.
-func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("GET /settings", h.Get)
-	mux.HandleFunc("PUT /settings", h.Update)
+// RegisterRoutes registers all settings routes on the given Fiber router.
+func (h *Handler) RegisterRoutes(router fiber.Router) {
+	g := router.Group("/settings")
+	g.Get("/", h.Get)
+	g.Put("/", h.Update)
 }
 
 // updateRequest is the JSON body for updating store settings.
@@ -42,30 +42,34 @@ type updateRequest struct {
 
 // Get handles GET /settings.
 // Returns the current settings for the tenant, creating defaults if none exist.
-func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
-	tenantID := tenantFromRequest(r)
-
-	ss, err := h.svc.Get(r.Context(), tenantID)
-	if err != nil {
-		writeErrx(w, err)
-		return
+func (h *Handler) Get(c *fiber.Ctx) error {
+	authCtx, ok := c.Locals("auth").(*kernel.AuthContext)
+	if !ok || authCtx == nil {
+		return errx.New("unauthorized", errx.TypeAuthorization)
 	}
 
-	writeJSON(w, http.StatusOK, ss)
+	ss, err := h.svc.Get(c.Context(), authCtx.TenantID)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(ss)
 }
 
 // Update handles PUT /settings.
 // Upserts settings for the tenant from the request body.
-func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
-	tenantID := tenantFromRequest(r)
-
-	var req updateRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
-		return
+func (h *Handler) Update(c *fiber.Ctx) error {
+	authCtx, ok := c.Locals("auth").(*kernel.AuthContext)
+	if !ok || authCtx == nil {
+		return errx.New("unauthorized", errx.TypeAuthorization)
 	}
 
-	ss, err := h.svc.Update(r.Context(), tenantID, settingssrv.UpdateInput{
+	var req updateRequest
+	if err := c.BodyParser(&req); err != nil {
+		return errx.New("invalid request body", errx.TypeValidation)
+	}
+
+	ss, err := h.svc.Update(c.Context(), authCtx.TenantID, settingssrv.UpdateInput{
 		StoreName:      req.StoreName,
 		StoreEmail:     req.StoreEmail,
 		StorePhone:     req.StorePhone,
@@ -78,31 +82,8 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		CheckoutConfig: req.CheckoutConfig,
 	})
 	if err != nil {
-		writeErrx(w, err)
-		return
+		return err
 	}
 
-	writeJSON(w, http.StatusOK, ss)
-}
-
-// --- helpers ---
-
-func tenantFromRequest(r *http.Request) kernel.TenantID {
-	return kernel.TenantID(r.Header.Get("X-Tenant-ID"))
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
-}
-
-func writeError(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, map[string]string{"error": msg})
-}
-
-func writeErrx(w http.ResponseWriter, err error) {
-	status := errx.HTTPStatus(err)
-	msg := errx.Message(err)
-	writeJSON(w, status, map[string]string{"error": msg, "code": errx.Code(err)})
+	return c.Status(fiber.StatusOK).JSON(ss)
 }

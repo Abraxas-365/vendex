@@ -16,3 +16,4 @@ type MediaID string
 type PluginID string
 type PluginVersionID string
 type InstallationID string
+type VendorID string

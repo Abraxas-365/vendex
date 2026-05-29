@@ -90,7 +90,7 @@ func (s *Service) GetByID(ctx context.Context, tenantID kernel.TenantID, id kern
 }
 
 // List returns paginated media records for a tenant.
-func (s *Service) List(ctx context.Context, tenantID kernel.TenantID, p kernel.Pagination) (kernel.PaginatedResult[media.Media], error) {
+func (s *Service) List(ctx context.Context, tenantID kernel.TenantID, p kernel.PaginationOptions) (kernel.Paginated[media.Media], error) {
 	return s.repo.List(ctx, tenantID, p)
 }
 

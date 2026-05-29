@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/settings"
 )
 
@@ -37,7 +37,7 @@ type UpdateInput struct {
 // Get returns the settings for a tenant, creating defaults if none exist yet.
 func (s *Service) Get(ctx context.Context, tenantID kernel.TenantID) (*settings.StoreSettings, error) {
 	ss, err := s.repo.Get(ctx, tenantID)
-	if errx.Is(err, settings.ErrNotFound) {
+	if errx.IsNotFound(err) {
 		defaults := settings.DefaultSettings(tenantID)
 		if upsertErr := s.repo.Upsert(ctx, defaults); upsertErr != nil {
 			return nil, fmt.Errorf("creating default settings: %w", upsertErr)

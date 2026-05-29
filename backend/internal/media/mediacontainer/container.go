@@ -1,8 +1,8 @@
 package mediacontainer
 
 import (
-	"database/sql"
-	"net/http"
+	"github.com/gofiber/fiber/v2"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/Abraxas-365/hada-commerce/internal/media"
 	"github.com/Abraxas-365/hada-commerce/internal/media/mediaapi"
@@ -10,30 +10,42 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/media/mediasrv"
 )
 
-// Container wires together the media domain's repository, storage, service, and handler.
+// Container wires together all media domain dependencies.
 type Container struct {
-	handler *mediaapi.Handler
+	Service *mediasrv.Service
+	Handler *mediaapi.Handler
 }
 
-// New builds the full media dependency graph using the provided storage backend.
-func New(db *sql.DB, storage media.StorageProvider) *Container {
-	repo := mediainfra.NewPostgresMediaRepository(db)
-	svc := mediasrv.New(repo, storage)
-	handler := mediaapi.New(svc)
-	return &Container{handler: handler}
-}
-
-// NewWithLocalStorage is a convenience constructor that wires up a local filesystem
-// StorageProvider rooted at baseDir, serving files at baseURL.
-func NewWithLocalStorage(db *sql.DB, baseDir, baseURL string) (*Container, error) {
-	storage, err := mediainfra.NewLocalStorageProvider(baseDir, baseURL)
+// New creates a fully-wired media container with a local filesystem storage provider.
+// uploadDir is the directory where uploaded files will be stored.
+// baseURL is the public URL prefix for serving uploaded files (e.g. "http://localhost:3000/uploads").
+func New(db *sqlx.DB, uploadDir string, baseURL string) (*Container, error) {
+	storage, err := mediainfra.NewLocalStorageProvider(uploadDir, baseURL)
 	if err != nil {
 		return nil, err
 	}
-	return New(db, storage), nil
+	repo := mediainfra.NewPostgresMediaRepository(db)
+	svc := mediasrv.New(repo, storage)
+	handler := mediaapi.NewHandler(svc)
+	return &Container{
+		Service: svc,
+		Handler: handler,
+	}, nil
 }
 
-// RegisterRoutes wires all media routes onto the provided ServeMux.
-func (c *Container) RegisterRoutes(mux *http.ServeMux) {
-	c.handler.RegisterRoutes(mux)
+// NewWithStorage creates a media container with a custom StorageProvider.
+// Useful for production deployments (e.g., S3-backed storage).
+func NewWithStorage(db *sqlx.DB, storage media.StorageProvider) *Container {
+	repo := mediainfra.NewPostgresMediaRepository(db)
+	svc := mediasrv.New(repo, storage)
+	handler := mediaapi.NewHandler(svc)
+	return &Container{
+		Service: svc,
+		Handler: handler,
+	}
+}
+
+// RegisterRoutes registers media HTTP routes on the given Fiber router.
+func (c *Container) RegisterRoutes(router fiber.Router) {
+	c.Handler.RegisterRoutes(router)
 }

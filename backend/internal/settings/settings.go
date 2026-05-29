@@ -8,18 +8,18 @@ import (
 
 // StoreSettings holds all configuration for a tenant's store.
 type StoreSettings struct {
-	TenantID       kernel.TenantID `json:"tenant_id"`
-	StoreName      string          `json:"store_name"`
-	StoreEmail     string          `json:"store_email"`
-	StorePhone     string          `json:"store_phone"`
-	Currency       string          `json:"currency"`
-	Timezone       string          `json:"timezone"`
-	Address        StoreAddress    `json:"address"`
-	LogoURL        string          `json:"logo_url"`
-	FaviconURL     string          `json:"favicon_url"`
-	SocialLinks    SocialLinks     `json:"social_links"`
-	CheckoutConfig CheckoutConfig  `json:"checkout_config"`
-	UpdatedAt      time.Time       `json:"updated_at"`
+	TenantID       kernel.TenantID `json:"tenant_id" db:"tenant_id"`
+	StoreName      string          `json:"store_name" db:"store_name"`
+	StoreEmail     string          `json:"store_email" db:"store_email"`
+	StorePhone     string          `json:"store_phone" db:"store_phone"`
+	Currency       string          `json:"currency" db:"currency"`
+	Timezone       string          `json:"timezone" db:"timezone"`
+	Address        StoreAddress    `json:"address" db:"address"`
+	LogoURL        string          `json:"logo_url" db:"logo_url"`
+	FaviconURL     string          `json:"favicon_url" db:"favicon_url"`
+	SocialLinks    SocialLinks     `json:"social_links" db:"social_links"`
+	CheckoutConfig CheckoutConfig  `json:"checkout_config" db:"checkout_config"`
+	UpdatedAt      time.Time       `json:"updated_at" db:"updated_at"`
 }
 
 // StoreAddress holds the physical address of a store.

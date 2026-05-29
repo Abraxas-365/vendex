@@ -2,21 +2,22 @@ package analyticsinfra
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 
 	"github.com/Abraxas-365/hada-commerce/internal/analytics"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 )
 
-// PostgresRepo implements analytics.Repository using database/sql.
+// PostgresRepo implements analytics.Repository using sqlx.
 type PostgresRepo struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 // NewPostgresRepo creates a new PostgreSQL-backed analytics repository.
-func NewPostgresRepo(db *sql.DB) *PostgresRepo {
+func NewPostgresRepo(db *sqlx.DB) *PostgresRepo {
 	return &PostgresRepo{db: db}
 }
 
@@ -47,20 +48,13 @@ func (r *PostgresRepo) GetDashboardStats(ctx context.Context, tenantID kernel.Te
 	}
 
 	// Total revenue and currency (sum of non-cancelled orders).
-	var revenue sql.NullInt64
-	var currency sql.NullString
-	if err := r.db.QueryRowContext(ctx,
-		`SELECT COALESCE(SUM(total_amount), 0), MAX(total_currency)
+	row := r.db.QueryRowContext(ctx,
+		`SELECT COALESCE(SUM(total_amount), 0), COALESCE(MAX(total_currency), '')
 		   FROM orders
 		  WHERE tenant_id = $1 AND status != 'cancelled'`, tid,
-	).Scan(&revenue, &currency); err != nil {
+	)
+	if err := row.Scan(&stats.TotalRevenue, &stats.Currency); err != nil {
 		return nil, fmt.Errorf("summing revenue: %w", err)
-	}
-	if revenue.Valid {
-		stats.TotalRevenue = revenue.Int64
-	}
-	if currency.Valid {
-		stats.Currency = currency.String
 	}
 
 	// Pending orders count.
@@ -95,7 +89,13 @@ func (r *PostgresRepo) GetDashboardStats(ctx context.Context, tenantID kernel.Te
 func (r *PostgresRepo) GetRevenueTimeline(ctx context.Context, tenantID kernel.TenantID, days int) ([]analytics.RevenuePoint, error) {
 	since := time.Now().UTC().AddDate(0, 0, -days)
 
-	rows, err := r.db.QueryContext(ctx, `
+	type row struct {
+		Date   time.Time `db:"date"`
+		Amount int64     `db:"amount"`
+	}
+
+	var rows []row
+	err := r.db.SelectContext(ctx, &rows, `
 		SELECT DATE(created_at) AS date, SUM(total_amount) AS amount
 		  FROM orders
 		 WHERE tenant_id = $1
@@ -108,31 +108,28 @@ func (r *PostgresRepo) GetRevenueTimeline(ctx context.Context, tenantID kernel.T
 	if err != nil {
 		return nil, fmt.Errorf("querying revenue timeline: %w", err)
 	}
-	defer rows.Close()
 
-	var points []analytics.RevenuePoint
-	for rows.Next() {
-		var p analytics.RevenuePoint
-		var date time.Time
-		if err := rows.Scan(&date, &p.Amount); err != nil {
-			return nil, fmt.Errorf("scanning revenue point: %w", err)
+	points := make([]analytics.RevenuePoint, len(rows))
+	for i, rw := range rows {
+		points[i] = analytics.RevenuePoint{
+			Date:   rw.Date.Format("2006-01-02"),
+			Amount: rw.Amount,
 		}
-		p.Date = date.Format("2006-01-02")
-		points = append(points, p)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterating revenue timeline: %w", err)
-	}
-
-	if points == nil {
-		points = []analytics.RevenuePoint{}
 	}
 	return points, nil
 }
 
 // GetTopProducts returns the top N products by revenue from non-cancelled orders.
 func (r *PostgresRepo) GetTopProducts(ctx context.Context, tenantID kernel.TenantID, limit int) ([]analytics.TopProduct, error) {
-	rows, err := r.db.QueryContext(ctx, `
+	type row struct {
+		ProductID   string `db:"product_id"`
+		ProductName string `db:"product_name"`
+		TotalSold   int    `db:"total_sold"`
+		Revenue     int64  `db:"revenue"`
+	}
+
+	var rows []row
+	err := r.db.SelectContext(ctx, &rows, `
 		SELECT oi.product_id, oi.product_name,
 		       SUM(oi.quantity)     AS total_sold,
 		       SUM(oi.total_amount) AS revenue
@@ -148,29 +145,28 @@ func (r *PostgresRepo) GetTopProducts(ctx context.Context, tenantID kernel.Tenan
 	if err != nil {
 		return nil, fmt.Errorf("querying top products: %w", err)
 	}
-	defer rows.Close()
 
-	var products []analytics.TopProduct
-	for rows.Next() {
-		var p analytics.TopProduct
-		if err := rows.Scan(&p.ProductID, &p.ProductName, &p.TotalSold, &p.Revenue); err != nil {
-			return nil, fmt.Errorf("scanning top product: %w", err)
+	products := make([]analytics.TopProduct, len(rows))
+	for i, rw := range rows {
+		products[i] = analytics.TopProduct{
+			ProductID:   rw.ProductID,
+			ProductName: rw.ProductName,
+			TotalSold:   rw.TotalSold,
+			Revenue:     rw.Revenue,
 		}
-		products = append(products, p)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterating top products: %w", err)
-	}
-
-	if products == nil {
-		products = []analytics.TopProduct{}
 	}
 	return products, nil
 }
 
 // GetOrderStatusBreakdown returns order counts grouped by status for the tenant.
 func (r *PostgresRepo) GetOrderStatusBreakdown(ctx context.Context, tenantID kernel.TenantID) ([]analytics.OrderStatusBreakdown, error) {
-	rows, err := r.db.QueryContext(ctx, `
+	type row struct {
+		Status string `db:"status"`
+		Count  int    `db:"count"`
+	}
+
+	var rows []row
+	err := r.db.SelectContext(ctx, &rows, `
 		SELECT status, COUNT(*) AS count
 		  FROM orders
 		 WHERE tenant_id = $1
@@ -180,29 +176,30 @@ func (r *PostgresRepo) GetOrderStatusBreakdown(ctx context.Context, tenantID ker
 	if err != nil {
 		return nil, fmt.Errorf("querying order status breakdown: %w", err)
 	}
-	defer rows.Close()
 
-	var breakdown []analytics.OrderStatusBreakdown
-	for rows.Next() {
-		var b analytics.OrderStatusBreakdown
-		if err := rows.Scan(&b.Status, &b.Count); err != nil {
-			return nil, fmt.Errorf("scanning order status: %w", err)
+	breakdown := make([]analytics.OrderStatusBreakdown, len(rows))
+	for i, rw := range rows {
+		breakdown[i] = analytics.OrderStatusBreakdown{
+			Status: rw.Status,
+			Count:  rw.Count,
 		}
-		breakdown = append(breakdown, b)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterating order status breakdown: %w", err)
-	}
-
-	if breakdown == nil {
-		breakdown = []analytics.OrderStatusBreakdown{}
 	}
 	return breakdown, nil
 }
 
 // GetRecentOrders returns the N most recent orders for the tenant.
 func (r *PostgresRepo) GetRecentOrders(ctx context.Context, tenantID kernel.TenantID, limit int) ([]analytics.RecentOrder, error) {
-	rows, err := r.db.QueryContext(ctx, `
+	type row struct {
+		ID          string    `db:"id"`
+		CustomerID  string    `db:"customer_id"`
+		Status      string    `db:"status"`
+		TotalAmount int64     `db:"total_amount"`
+		Currency    string    `db:"total_currency"`
+		CreatedAt   time.Time `db:"created_at"`
+	}
+
+	var rows []row
+	err := r.db.SelectContext(ctx, &rows, `
 		SELECT id, customer_id, status, total_amount, total_currency, created_at
 		  FROM orders
 		 WHERE tenant_id = $1
@@ -213,24 +210,17 @@ func (r *PostgresRepo) GetRecentOrders(ctx context.Context, tenantID kernel.Tena
 	if err != nil {
 		return nil, fmt.Errorf("querying recent orders: %w", err)
 	}
-	defer rows.Close()
 
-	var orders []analytics.RecentOrder
-	for rows.Next() {
-		var o analytics.RecentOrder
-		var createdAt time.Time
-		if err := rows.Scan(&o.ID, &o.CustomerID, &o.Status, &o.TotalAmount, &o.Currency, &createdAt); err != nil {
-			return nil, fmt.Errorf("scanning recent order: %w", err)
+	orders := make([]analytics.RecentOrder, len(rows))
+	for i, rw := range rows {
+		orders[i] = analytics.RecentOrder{
+			ID:          rw.ID,
+			CustomerID:  rw.CustomerID,
+			Status:      rw.Status,
+			TotalAmount: rw.TotalAmount,
+			Currency:    rw.Currency,
+			CreatedAt:   rw.CreatedAt.UTC().Format(time.RFC3339),
 		}
-		o.CreatedAt = createdAt.UTC().Format(time.RFC3339)
-		orders = append(orders, o)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterating recent orders: %w", err)
-	}
-
-	if orders == nil {
-		orders = []analytics.RecentOrder{}
 	}
 	return orders, nil
 }

@@ -7,17 +7,20 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jmoiron/sqlx"
+
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/settings"
 )
 
-// PostgresRepo implements settings.Repository using database/sql.
+// PostgresRepo implements settings.Repository using sqlx.
 type PostgresRepo struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 // NewPostgresRepo creates a new PostgreSQL-backed settings repository.
-func NewPostgresRepo(db *sql.DB) *PostgresRepo {
+func NewPostgresRepo(db *sqlx.DB) *PostgresRepo {
 	return &PostgresRepo{db: db}
 }
 
@@ -55,20 +58,20 @@ func (r *PostgresRepo) Get(ctx context.Context, tenantID kernel.TenantID) (*sett
 		return nil, settings.ErrNotFound
 	}
 	if err != nil {
-		return nil, fmt.Errorf("scanning settings row: %w", err)
+		return nil, errx.Wrap(err, "scanning settings row", errx.TypeInternal)
 	}
 
 	s.TenantID = kernel.TenantID(tenantStr)
 	s.UpdatedAt = updatedAt
 
 	if err := json.Unmarshal([]byte(addressJSON), &s.Address); err != nil {
-		return nil, fmt.Errorf("unmarshaling address: %w", err)
+		return nil, errx.Wrap(err, "unmarshaling address", errx.TypeInternal)
 	}
 	if err := json.Unmarshal([]byte(socialLinksJSON), &s.SocialLinks); err != nil {
-		return nil, fmt.Errorf("unmarshaling social_links: %w", err)
+		return nil, errx.Wrap(err, "unmarshaling social_links", errx.TypeInternal)
 	}
 	if err := json.Unmarshal([]byte(checkoutConfigJSON), &s.CheckoutConfig); err != nil {
-		return nil, fmt.Errorf("unmarshaling checkout_config: %w", err)
+		return nil, errx.Wrap(err, "unmarshaling checkout_config", errx.TypeInternal)
 	}
 
 	return &s, nil
@@ -120,7 +123,7 @@ func (r *PostgresRepo) Upsert(ctx context.Context, s *settings.StoreSettings) er
 		s.UpdatedAt,
 	)
 	if err != nil {
-		return fmt.Errorf("upserting settings: %w", err)
+		return errx.Wrap(err, "upserting settings", errx.TypeInternal)
 	}
 	return nil
 }
