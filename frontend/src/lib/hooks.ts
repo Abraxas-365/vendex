@@ -151,6 +151,17 @@ export function useUpdateOrderStatus(): UseMutationResult<Order, Error, { id: st
   })
 }
 
+export function useCancelOrder(): UseMutationResult<Order, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.cancelOrder(id),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.orders.all })
+      qc.setQueryData(queryKeys.orders.detail(updated.id), updated)
+    },
+  })
+}
+
 // ---------------------------------------------------------------------------
 // Customers
 // ---------------------------------------------------------------------------
@@ -177,6 +188,24 @@ export function useCreateCustomer(): UseMutationResult<Customer, Error, Partial<
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.customers.all })
     },
+  })
+}
+
+export function useDeleteCustomer(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteCustomer(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.customers.all })
+    },
+  })
+}
+
+export function useCustomerOrders(customerId: string): UseQueryResult<PaginatedResult<Order>> {
+  return useQuery({
+    queryKey: ['orders', 'by-customer', customerId],
+    queryFn: () => api.listOrdersByCustomer(customerId),
+    enabled: Boolean(customerId),
   })
 }
 
@@ -209,6 +238,16 @@ export function useCreateCategory(): UseMutationResult<Category, Error, Partial<
   })
 }
 
+export function useDeleteCategory(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteCategory(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.categories.all })
+    },
+  })
+}
+
 // ---------------------------------------------------------------------------
 // Collections
 // ---------------------------------------------------------------------------
@@ -232,6 +271,16 @@ export function useCreateCollection(): UseMutationResult<Collection, Error, Part
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data) => api.createCollection(data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.collections.all })
+    },
+  })
+}
+
+export function useDeleteCollection(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteCollection(id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.collections.all })
     },

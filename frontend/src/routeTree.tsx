@@ -8,8 +8,10 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
+  Users,
   FileText,
   Tag,
+  Tags,
   Image,
   Bot,
   ExternalLink,
@@ -30,12 +32,16 @@ import DynamicPage from './pages/store/DynamicPage'
 import Dashboard from './pages/admin/Dashboard'
 import Products from './pages/admin/Products'
 import Orders from './pages/admin/Orders'
+import OrderDetail from './pages/admin/OrderDetail'
+import Customers from './pages/admin/Customers'
+import CustomerDetail from './pages/admin/CustomerDetail'
 import Pages from './pages/admin/Pages'
 import Promos from './pages/admin/Promos'
 import Media from './pages/admin/Media'
 import AgentChat from './pages/admin/AgentChat'
 import Marketplace from './pages/admin/Marketplace'
 import PluginView from './pages/admin/PluginView'
+import Catalog from './pages/admin/Catalog'
 
 // ─── Root route (bare) ───────────────────────────────────────────────────────
 
@@ -74,7 +80,9 @@ interface NavItem {
 const adminNavItems: NavItem[] = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/admin/products', label: 'Products', icon: Package },
+  { to: '/admin/catalog', label: 'Catalog', icon: Tags },
   { to: '/admin/orders', label: 'Orders', icon: ShoppingCart },
+  { to: '/admin/customers', label: 'Customers', icon: Users },
   { to: '/admin/pages', label: 'Pages', icon: FileText },
   { to: '/admin/promos', label: 'Promos', icon: Tag },
   { to: '/admin/media', label: 'Media', icon: Image },
@@ -196,10 +204,34 @@ const adminProductsRoute = createRoute({
   component: Products,
 })
 
+const adminCatalogRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/catalog',
+  component: Catalog,
+})
+
 const adminOrdersRoute = createRoute({
   getParentRoute: () => adminLayoutRoute,
   path: '/admin/orders',
   component: Orders,
+})
+
+const adminOrderDetailRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/orders/$id',
+  component: OrderDetail,
+})
+
+const adminCustomersRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/customers',
+  component: Customers,
+})
+
+const adminCustomerDetailRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/customers/$id',
+  component: CustomerDetail,
 })
 
 const adminPagesRoute = createRoute({
@@ -252,7 +284,11 @@ const storeTree = storeLayoutRoute.addChildren([
 const adminTree = adminLayoutRoute.addChildren([
   adminDashRoute,
   adminProductsRoute,
+  adminCatalogRoute,
   adminOrdersRoute,
+  adminOrderDetailRoute,
+  adminCustomersRoute,
+  adminCustomerDetailRoute,
   adminPagesRoute,
   adminPromosRoute,
   adminMediaRoute,

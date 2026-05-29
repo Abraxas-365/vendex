@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { ChevronDown, ChevronUp, ShoppingCart, Search } from 'lucide-react'
 import type { Order, OrderStatus } from '../../types'
 import { useOrders } from '../../lib/hooks'
@@ -111,10 +112,12 @@ export default function Orders() {
                   <>
                     <tr
                       key={order.id}
-                      className="border-b border-gray-50 cursor-pointer hover:bg-gray-50/50 transition-colors"
-                      onClick={() => toggleExpand(order.id)}
+                      className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
                     >
-                      <td className="px-4 py-4 text-gray-400">
+                      <td
+                        className="px-4 py-4 text-gray-400 cursor-pointer"
+                        onClick={() => toggleExpand(order.id)}
+                      >
                         {expandedId === order.id ? (
                           <ChevronUp className="h-4 w-4" />
                         ) : (
@@ -122,7 +125,13 @@ export default function Orders() {
                         )}
                       </td>
                       <td className="px-6 py-4 text-sm font-mono font-medium text-gray-900">
-                        {order.id.slice(0, 8)}...
+                        <Link
+                          to="/admin/orders/$id"
+                          params={{ id: order.id }}
+                          className="hover:text-indigo-600 hover:underline"
+                        >
+                          {order.id.slice(0, 8)}...
+                        </Link>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">{order.customer_id}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">

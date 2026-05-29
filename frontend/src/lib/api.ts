@@ -139,6 +139,10 @@ export function updateOrderStatus(id: string, status: OrderStatus): Promise<Orde
   return put<Order>(`/orders/${id}/status`, { status })
 }
 
+export function cancelOrder(id: string): Promise<Order> {
+  return post<Order>(`/orders/${id}/cancel`)
+}
+
 // ---------------------------------------------------------------------------
 // Customers
 // ---------------------------------------------------------------------------
@@ -153,6 +157,17 @@ export function getCustomer(id: string): Promise<Customer> {
 
 export function createCustomer(data: Partial<Customer>): Promise<Customer> {
   return post<Customer>('/customers', data)
+}
+
+export function deleteCustomer(id: string): Promise<void> {
+  return del(`/customers/${id}`)
+}
+
+export function listOrdersByCustomer(customerId: string, params?: PaginationParams): Promise<PaginatedResult<Order>> {
+  return get<PaginatedResult<Order>>('/orders', {
+    ...(params as Record<string, string | number | undefined>),
+    customer_id: customerId,
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -171,6 +186,10 @@ export function createCategory(data: Partial<Category>): Promise<Category> {
   return post<Category>('/catalog/categories', data)
 }
 
+export function deleteCategory(id: string): Promise<void> {
+  return del(`/catalog/categories/${id}`)
+}
+
 // ---------------------------------------------------------------------------
 // Catalog — Collections
 // ---------------------------------------------------------------------------
@@ -185,6 +204,10 @@ export function getCollection(id: string): Promise<Collection> {
 
 export function createCollection(data: Partial<Collection>): Promise<Collection> {
   return post<Collection>('/catalog/collections', data)
+}
+
+export function deleteCollection(id: string): Promise<void> {
+  return del(`/catalog/collections/${id}`)
 }
 
 // ---------------------------------------------------------------------------
