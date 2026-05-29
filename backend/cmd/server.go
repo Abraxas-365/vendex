@@ -24,6 +24,9 @@ func newServeMux(ctr *Container) http.Handler {
 	ctr.Storefront.RegisterRoutes(mux)
 	ctr.Promo.RegisterRoutes(mux)
 	ctr.Media.RegisterRoutes(mux)
+	ctr.Marketplace.RegisterRoutes(mux)
+	ctr.Settings.RegisterRoutes(mux)
+	ctr.Analytics.RegisterRoutes(mux)
 
 	// TODO: WebSocket endpoint for agent chat
 	// mux.HandleFunc("/api/v1/agent/chat", handleAgentChat)

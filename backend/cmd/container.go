@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/config"
 	"github.com/Abraxas-365/hada-commerce/internal/customer/customercontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/marketplace/marketplacecontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/media/mediacontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/order/ordercontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/product/productcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/promo/promocontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/settings/settingscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontcontainer"
 )
 
@@ -24,10 +27,10 @@ type Container struct {
 	Catalog    *catalogcontainer.Container
 	Storefront *storefrontcontainer.Container
 	Promo      *promocontainer.Container
-	Media      *mediacontainer.Container
-
-	// TODO: Agent tools — wire once internal/agent is implemented
-	// Agent *agentcontainer.Container
+	Media       *mediacontainer.Container
+	Marketplace *marketplacecontainer.Container
+	Analytics   *analyticscontainer.Container
+	Settings    *settingscontainer.Container
 }
 
 // NewContainer builds all domain containers in dependency order.
@@ -44,6 +47,13 @@ func NewContainer(db *sql.DB, cfg *config.Config) (*Container, error) {
 	// CMS domains
 	storefront := storefrontcontainer.New(db)
 	promo := promocontainer.New(db)
+	marketplace := marketplacecontainer.New(db)
+
+	// Analytics domain — read-only, queries across tables.
+	analyticsCtr := analyticscontainer.New(db)
+
+	// Settings domain — per-tenant store configuration.
+	settingsCtr := settingscontainer.New(db)
 
 	// Media needs a storage provider; choose based on config.
 	mediaCtr, err := newMediaContainer(db, cfg)
@@ -58,7 +68,10 @@ func NewContainer(db *sql.DB, cfg *config.Config) (*Container, error) {
 		Catalog:    catalog,
 		Storefront: storefront,
 		Promo:      promo,
-		Media:      mediaCtr,
+		Media:       mediaCtr,
+		Marketplace: marketplace,
+		Analytics:   analyticsCtr,
+		Settings:    settingsCtr,
 	}, nil
 }
 
