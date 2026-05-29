@@ -394,7 +394,7 @@ export default function Pages() {
 
   function handleSave(data: PageEditorData) {
     if (editingPage) {
-      updatePage.mutate({ id: editingPage.id, ...data })
+      updatePage.mutate({ id: editingPage.id, data })
     } else {
       createPage.mutate(data)
     }
@@ -403,15 +403,15 @@ export default function Pages() {
   }
 
   function handlePublish(page: Page) {
-    updatePage.mutate({ id: page.id, status: 'published' })
+    updatePage.mutate({ id: page.id, data: { status: 'published' } })
   }
 
   function handleUnpublish(page: Page) {
-    updatePage.mutate({ id: page.id, status: 'draft' })
+    updatePage.mutate({ id: page.id, data: { status: 'draft' } })
   }
 
   function handleArchive(page: Page) {
-    updatePage.mutate({ id: page.id, status: 'archived' })
+    updatePage.mutate({ id: page.id, data: { status: 'archived' } })
   }
 
   function handleDelete(page: Page) {

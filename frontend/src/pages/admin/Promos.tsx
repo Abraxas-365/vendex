@@ -85,7 +85,7 @@ export default function Promos() {
   }
 
   function handleToggleActive(promo: Promo) {
-    updatePromo.mutate({ id: promo.id, active: !promo.active })
+    updatePromo.mutate({ id: promo.id, data: { active: !promo.active } })
   }
 
   function handleCancel() {

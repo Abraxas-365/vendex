@@ -38,23 +38,15 @@ const EMPTY_FORM: ShippingForm = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function formatPrice(cents: number, currency = 'USD'): string {
+function formatAmount(amount: number, currency = 'USD'): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
-  }).format(cents / 100)
+  }).format(amount)
 }
 
-function getItemPrice(price: unknown): number {
-  if (!price) return 0
-  if (typeof price === 'object' && price !== null) {
-    return (price as { amount: number }).amount
-  }
-  return Number(price)
-}
-
-const SHIPPING_COST = 799
-const FREE_SHIPPING_THRESHOLD = 5000
+const SHIPPING_COST = 7.99           // $7.99
+const FREE_SHIPPING_THRESHOLD = 50   // $50.00
 
 // ─── Input component ─────────────────────────────────────────────────────────
 
@@ -123,7 +115,7 @@ export default function Checkout() {
   const [errors, setErrors] = useState<Partial<ShippingForm>>({})
 
   const shippingCost = total >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
-  const discount = promoApplied ? Math.floor(total * 0.1) : 0
+  const discount = promoApplied ? total * 0.1 : 0
   const orderTotal = total + shippingCost - discount
 
   // ── Promo ────────────────────────────────────────────────────────────────
@@ -153,7 +145,7 @@ export default function Checkout() {
   const handlePlaceOrder = async () => {
     if (!validate()) return
     setIsPlacing(true)
-    // TODO: integrate with /api/orders endpoint
+    // TODO: POST to /api/v1/orders once backend is ready
     await new Promise((resolve) => setTimeout(resolve, 1800))
     const num = `ORD-${Date.now().toString(36).toUpperCase()}`
     setOrderNumber(num)
@@ -338,39 +330,32 @@ export default function Checkout() {
 
               {/* Items */}
               <div className="space-y-3 mb-5 max-h-60 overflow-y-auto pr-1">
-                {items.map(({ product, quantity }) => {
-                  const unitPrice = getItemPrice(product.price)
-                  const image =
-                    Array.isArray(product.images) && product.images.length > 0
-                      ? product.images[0]
-                      : null
-                  return (
-                    <div key={product.id} className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden shrink-0">
-                        {image ? (
-                          <img
-                            src={image}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-200">
-                            <Package size={20} strokeWidth={1.5} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 line-clamp-1">
-                          {product.name}
-                        </p>
-                        <p className="text-xs text-gray-400">Qty: {quantity}</p>
-                      </div>
-                      <span className="text-sm font-medium text-gray-800 shrink-0">
-                        {formatPrice(unitPrice * quantity)}
-                      </span>
+                {items.map(({ product, quantity }) => (
+                  <div key={product.id} className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden shrink-0">
+                      {product.images.length > 0 ? (
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-200">
+                          <Package size={20} strokeWidth={1.5} />
+                        </div>
+                      )}
                     </div>
-                  )
-                })}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 line-clamp-1">
+                        {product.name}
+                      </p>
+                      <p className="text-xs text-gray-400">Qty: {quantity}</p>
+                    </div>
+                    <span className="text-sm font-medium text-gray-800 shrink-0">
+                      {formatAmount(product.price.amount * quantity, product.price.currency)}
+                    </span>
+                  </div>
+                ))}
               </div>
 
               {/* Promo code */}
@@ -416,13 +401,13 @@ export default function Checkout() {
               <div className="space-y-2.5 mb-5 pt-4 border-t border-gray-100">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Subtotal</span>
-                  <span className="font-medium text-gray-800">{formatPrice(total)}</span>
+                  <span className="font-medium text-gray-800">{formatAmount(total)}</span>
                 </div>
                 {promoApplied && (
                   <div className="flex justify-between text-sm">
                     <span className="text-green-600">Promo (HADA10)</span>
                     <span className="text-green-600 font-medium">
-                      -{formatPrice(discount)}
+                      -{formatAmount(discount)}
                     </span>
                   </div>
                 )}
@@ -432,13 +417,13 @@ export default function Checkout() {
                     <span className="text-green-600 font-medium">Free</span>
                   ) : (
                     <span className="font-medium text-gray-800">
-                      {formatPrice(shippingCost)}
+                      {formatAmount(shippingCost)}
                     </span>
                   )}
                 </div>
                 <div className="flex justify-between font-bold text-base pt-2 border-t border-gray-100">
                   <span>Total</span>
-                  <span>{formatPrice(orderTotal)}</span>
+                  <span>{formatAmount(orderTotal)}</span>
                 </div>
               </div>
 

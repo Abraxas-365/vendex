@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Upload, Trash2, Image, FileIcon, X, Search } from 'lucide-react'
+import { Upload, Image, FileIcon, X, Search } from 'lucide-react'
 import type { Media as MediaType } from '../../types'
 import { useMedia, useUploadMedia, useDeleteMedia } from '../../lib/hooks'
 
@@ -43,7 +43,7 @@ export default function Media() {
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
       if (file) {
-        uploadMedia.mutate(file)
+        uploadMedia.mutate({ file })
       }
     }
   }

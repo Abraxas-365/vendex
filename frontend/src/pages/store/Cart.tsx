@@ -9,26 +9,26 @@ import {
   ShoppingBag,
 } from 'lucide-react'
 import { useCart } from '../../lib/cart'
+import type { Money } from '../../types/index'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function formatPrice(cents: number, currency = 'USD'): string {
+function formatMoney(price: Money): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: price.currency ?? 'USD',
+  }).format(price.amount)
+}
+
+function formatAmount(amount: number, currency = 'USD'): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
-  }).format(cents / 100)
+  }).format(amount)
 }
 
-function getItemPrice(price: unknown): number {
-  if (!price) return 0
-  if (typeof price === 'object' && price !== null) {
-    return (price as { amount: number }).amount
-  }
-  return Number(price)
-}
-
-const FREE_SHIPPING_THRESHOLD = 5000 // $50.00 in cents
-const SHIPPING_COST = 799 // $7.99 in cents
+const FREE_SHIPPING_THRESHOLD = 50   // $50.00
+const SHIPPING_COST = 7.99           // $7.99
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -79,7 +79,7 @@ export default function Cart() {
           <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 mb-6">
             <p className="text-sm text-indigo-700 mb-2">
               Add{' '}
-              <span className="font-semibold">{formatPrice(remainingForFreeShipping)}</span>{' '}
+              <span className="font-semibold">{formatAmount(remainingForFreeShipping)}</span>{' '}
               more for free shipping!
             </p>
             <div className="h-2 bg-indigo-100 rounded-full overflow-hidden">
@@ -112,8 +112,7 @@ export default function Cart() {
             </div>
 
             {items.map(({ product, quantity }) => {
-              const unitPrice = getItemPrice(product.price)
-              const lineTotal = unitPrice * quantity
+              const lineTotal = product.price.amount * quantity
 
               return (
                 <div
@@ -122,7 +121,7 @@ export default function Cart() {
                 >
                   {/* Image */}
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden shrink-0">
-                    {Array.isArray(product.images) && product.images.length > 0 ? (
+                    {product.images.length > 0 ? (
                       <img
                         src={product.images[0]}
                         alt={product.name}
@@ -139,13 +138,9 @@ export default function Cart() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <Link
-                          to="/products/$id"
-                          params={{ id: product.id }}
-                          className="font-medium text-gray-800 hover:text-indigo-600 transition-colors line-clamp-2 text-sm"
-                        >
+                        <p className="font-medium text-gray-800 text-sm line-clamp-2">
                           {product.name}
-                        </Link>
+                        </p>
                         {product.sku && (
                           <p className="text-xs text-gray-400 mt-0.5">SKU: {product.sku}</p>
                         )}
@@ -186,11 +181,11 @@ export default function Cart() {
                       {/* Price */}
                       <div className="text-right">
                         <p className="font-semibold text-gray-900 text-sm">
-                          {formatPrice(lineTotal)}
+                          {formatAmount(lineTotal, product.price.currency)}
                         </p>
                         {quantity > 1 && (
                           <p className="text-xs text-gray-400">
-                            {formatPrice(unitPrice)} each
+                            {formatMoney(product.price)} each
                           </p>
                         )}
                       </div>
@@ -211,14 +206,14 @@ export default function Cart() {
                   <span className="text-gray-500">
                     Subtotal ({itemCount} item{itemCount !== 1 ? 's' : ''})
                   </span>
-                  <span className="font-medium text-gray-800">{formatPrice(total)}</span>
+                  <span className="font-medium text-gray-800">{formatAmount(total)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Shipping</span>
                   {shippingCost === 0 ? (
                     <span className="text-green-600 font-medium">Free</span>
                   ) : (
-                    <span className="font-medium text-gray-800">{formatPrice(shippingCost)}</span>
+                    <span className="font-medium text-gray-800">{formatAmount(shippingCost)}</span>
                   )}
                 </div>
                 <div className="flex justify-between text-sm">
@@ -231,7 +226,7 @@ export default function Cart() {
                 <div className="flex justify-between">
                   <span className="font-semibold text-gray-900">Total</span>
                   <span className="font-bold text-xl text-gray-900">
-                    {formatPrice(orderTotal)}
+                    {formatAmount(orderTotal)}
                   </span>
                 </div>
               </div>
