@@ -1,0 +1,12 @@
+[project]
+name = "hada-commerce"
+description = "AI-extensible e-commerce platform with CMS, product catalog, orders, promos, and agent integration"
+language = "go"
+module = "github.com/Abraxas-365/hada-commerce"
+
+[defaults]
+model = "claude-opus-4-5"
+max_tokens = 8096
+
+[skills]
+active = ["manifesto"]
