@@ -1,8 +1,8 @@
 package catalogcontainer
 
 import (
-	"database/sql"
-	"net/http"
+	"github.com/gofiber/fiber/v2"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogapi"
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/cataloginfra"
@@ -16,7 +16,7 @@ type Container struct {
 }
 
 // New creates a fully-wired catalog container.
-func New(db *sql.DB) *Container {
+func New(db *sqlx.DB) *Container {
 	categoryRepo := cataloginfra.NewCategoryPostgresRepo(db)
 	collectionRepo := cataloginfra.NewCollectionPostgresRepo(db)
 	svc := catalogsrv.New(categoryRepo, collectionRepo)
@@ -27,7 +27,7 @@ func New(db *sql.DB) *Container {
 	}
 }
 
-// RegisterRoutes registers catalog HTTP routes on the given mux.
-func (c *Container) RegisterRoutes(mux *http.ServeMux) {
-	c.Handler.RegisterRoutes(mux)
+// RegisterRoutes registers catalog HTTP routes on the given Fiber router.
+func (c *Container) RegisterRoutes(router fiber.Router) {
+	c.Handler.RegisterRoutes(router)
 }

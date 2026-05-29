@@ -1,11 +1,11 @@
-package storefrontsrv
+package catalogsrv
 
 import (
 	"crypto/rand"
 	"fmt"
 )
 
-func generateUUID() string {
+func generateID() string {
 	b := make([]byte, 16)
 	_, _ = rand.Read(b)
 	b[6] = (b[6] & 0x0f) | 0x40

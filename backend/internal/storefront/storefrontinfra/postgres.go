@@ -4,325 +4,280 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
-	"time"
 
+	"github.com/jmoiron/sqlx"
+
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/storefront"
 )
 
-// PostgresPageRepository implements storefront.PageRepository using PostgreSQL.
-type PostgresPageRepository struct {
-	db *sql.DB
+// --- Page Repository ---
+
+// PagePostgresRepo implements storefront.PageRepository.
+type PagePostgresRepo struct {
+	db *sqlx.DB
 }
 
-// NewPostgresPageRepository creates a new PostgresPageRepository.
-func NewPostgresPageRepository(db *sql.DB) *PostgresPageRepository {
-	return &PostgresPageRepository{db: db}
+// NewPagePostgresRepo creates a new PostgreSQL-backed page repository.
+func NewPagePostgresRepo(db *sqlx.DB) *PagePostgresRepo {
+	return &PagePostgresRepo{db: db}
 }
 
-// Create inserts a new page row.
-func (r *PostgresPageRepository) Create(ctx context.Context, page *storefront.Page) error {
+func (r *PagePostgresRepo) Create(ctx context.Context, page *storefront.Page) error {
 	metaJSON, err := json.Marshal(page.Meta)
 	if err != nil {
-		return fmt.Errorf("marshal meta: %w", err)
+		return errx.Wrap(err, "marshaling page meta", errx.TypeInternal)
 	}
 
 	_, err = r.db.ExecContext(ctx, `
-		INSERT INTO storefront_pages
-			(id, tenant_id, slug, title, html, css, meta, status, version, created_by, published_at, created_at, updated_at)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+		INSERT INTO pages (id, tenant_id, slug, title, html, css, meta, status, version, created_by, published_at, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
 		string(page.ID), string(page.TenantID), page.Slug, page.Title,
-		page.HTML, page.CSS, metaJSON, string(page.Status),
-		page.Version, page.CreatedBy, page.PublishedAt,
-		page.CreatedAt, page.UpdatedAt,
+		page.HTML, page.CSS, string(metaJSON), string(page.Status),
+		page.Version, page.CreatedBy, page.PublishedAt, page.CreatedAt, page.UpdatedAt,
 	)
 	if err != nil {
-		return fmt.Errorf("insert page: %w", err)
+		return errx.Wrap(err, "inserting page", errx.TypeInternal)
 	}
 	return nil
 }
 
-// GetByID retrieves a page by primary key, scoped to the tenant.
-func (r *PostgresPageRepository) GetByID(ctx context.Context, tenantID kernel.TenantID, id kernel.PageID) (*storefront.Page, error) {
-	row := r.db.QueryRowContext(ctx, `
+func (r *PagePostgresRepo) GetByID(ctx context.Context, tenantID kernel.TenantID, id kernel.PageID) (*storefront.Page, error) {
+	return r.queryOnePage(ctx, `
 		SELECT id, tenant_id, slug, title, html, css, meta, status, version, created_by, published_at, created_at, updated_at
-		FROM storefront_pages
-		WHERE tenant_id = $1 AND id = $2`,
-		string(tenantID), string(id),
+		FROM pages WHERE id = $1 AND tenant_id = $2`,
+		string(id), string(tenantID),
 	)
-	return scanPage(row)
 }
 
-// GetBySlug retrieves a page by its slug, scoped to the tenant.
-func (r *PostgresPageRepository) GetBySlug(ctx context.Context, tenantID kernel.TenantID, slug string) (*storefront.Page, error) {
-	row := r.db.QueryRowContext(ctx, `
+func (r *PagePostgresRepo) GetBySlug(ctx context.Context, tenantID kernel.TenantID, slug string) (*storefront.Page, error) {
+	return r.queryOnePage(ctx, `
 		SELECT id, tenant_id, slug, title, html, css, meta, status, version, created_by, published_at, created_at, updated_at
-		FROM storefront_pages
-		WHERE tenant_id = $1 AND slug = $2`,
-		string(tenantID), slug,
+		FROM pages WHERE slug = $1 AND tenant_id = $2`,
+		slug, string(tenantID),
 	)
-	return scanPage(row)
 }
 
-// GetPublished retrieves a published page by slug for public serving.
-func (r *PostgresPageRepository) GetPublished(ctx context.Context, tenantID kernel.TenantID, slug string) (*storefront.Page, error) {
-	row := r.db.QueryRowContext(ctx, `
+func (r *PagePostgresRepo) GetPublished(ctx context.Context, tenantID kernel.TenantID, slug string) (*storefront.Page, error) {
+	return r.queryOnePage(ctx, `
 		SELECT id, tenant_id, slug, title, html, css, meta, status, version, created_by, published_at, created_at, updated_at
-		FROM storefront_pages
-		WHERE tenant_id = $1 AND slug = $2 AND status = 'published'`,
-		string(tenantID), slug,
+		FROM pages WHERE slug = $1 AND tenant_id = $2 AND status = 'published'`,
+		slug, string(tenantID),
 	)
-	return scanPage(row)
 }
 
-// Update persists mutations to an existing page row.
-func (r *PostgresPageRepository) Update(ctx context.Context, page *storefront.Page) error {
+func (r *PagePostgresRepo) queryOnePage(ctx context.Context, query string, args ...any) (*storefront.Page, error) {
+	var page storefront.Page
+	var id, tenantID, status string
+	var metaJSON string
+
+	err := r.db.QueryRowContext(ctx, query, args...).
+		Scan(&id, &tenantID, &page.Slug, &page.Title, &page.HTML, &page.CSS,
+			&metaJSON, &status, &page.Version, &page.CreatedBy,
+			&page.PublishedAt, &page.CreatedAt, &page.UpdatedAt)
+
+	if err == sql.ErrNoRows {
+		return nil, storefront.ErrPageNotFound
+	}
+	if err != nil {
+		return nil, errx.Wrap(err, "querying page", errx.TypeInternal)
+	}
+
+	page.ID = kernel.PageID(id)
+	page.TenantID = kernel.TenantID(tenantID)
+	page.Status = storefront.PageStatus(status)
+	_ = json.Unmarshal([]byte(metaJSON), &page.Meta)
+
+	return &page, nil
+}
+
+func (r *PagePostgresRepo) Update(ctx context.Context, page *storefront.Page) error {
 	metaJSON, err := json.Marshal(page.Meta)
 	if err != nil {
-		return fmt.Errorf("marshal meta: %w", err)
+		return errx.Wrap(err, "marshaling page meta", errx.TypeInternal)
 	}
 
 	_, err = r.db.ExecContext(ctx, `
-		UPDATE storefront_pages
-		SET slug=$3, title=$4, html=$5, css=$6, meta=$7, status=$8, version=$9, published_at=$10, updated_at=$11
-		WHERE tenant_id=$1 AND id=$2`,
-		string(page.TenantID), string(page.ID),
-		page.Slug, page.Title, page.HTML, page.CSS, metaJSON,
+		UPDATE pages
+		SET slug=$1, title=$2, html=$3, css=$4, meta=$5, status=$6, version=$7, published_at=$8, updated_at=$9
+		WHERE id=$10 AND tenant_id=$11`,
+		page.Slug, page.Title, page.HTML, page.CSS, string(metaJSON),
 		string(page.Status), page.Version, page.PublishedAt, page.UpdatedAt,
+		string(page.ID), string(page.TenantID),
 	)
 	if err != nil {
-		return fmt.Errorf("update page: %w", err)
+		return errx.Wrap(err, "updating page", errx.TypeInternal)
 	}
 	return nil
 }
 
-// ListByStatus returns pages for a tenant filtered by status, with pagination.
-func (r *PostgresPageRepository) ListByStatus(ctx context.Context, tenantID kernel.TenantID, status storefront.PageStatus, p kernel.Pagination) (kernel.PaginatedResult[storefront.Page], error) {
+func (r *PagePostgresRepo) ListByStatus(ctx context.Context, tenantID kernel.TenantID, status storefront.PageStatus, p kernel.PaginationOptions) (kernel.Paginated[storefront.Page], error) {
+	var zero kernel.Paginated[storefront.Page]
+
 	var total int
-	err := r.db.QueryRowContext(ctx,
-		`SELECT COUNT(*) FROM storefront_pages WHERE tenant_id=$1 AND status=$2`,
+	if err := r.db.QueryRowContext(ctx,
+		"SELECT COUNT(*) FROM pages WHERE tenant_id = $1 AND status = $2",
 		string(tenantID), string(status),
-	).Scan(&total)
-	if err != nil {
-		return kernel.PaginatedResult[storefront.Page]{}, fmt.Errorf("count pages by status: %w", err)
+	).Scan(&total); err != nil {
+		return zero, errx.Wrap(err, "counting pages by status", errx.TypeInternal)
 	}
 
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, tenant_id, slug, title, html, css, meta, status, version, created_by, published_at, created_at, updated_at
-		FROM storefront_pages
-		WHERE tenant_id=$1 AND status=$2
+		FROM pages WHERE tenant_id = $1 AND status = $2
 		ORDER BY updated_at DESC
 		LIMIT $3 OFFSET $4`,
 		string(tenantID), string(status), p.Limit(), p.Offset(),
 	)
 	if err != nil {
-		return kernel.PaginatedResult[storefront.Page]{}, fmt.Errorf("list pages by status: %w", err)
+		return zero, errx.Wrap(err, "querying pages by status", errx.TypeInternal)
 	}
 	defer rows.Close()
 
-	pages, err := scanPages(rows)
+	pages, err := scanPageRows(rows)
 	if err != nil {
-		return kernel.PaginatedResult[storefront.Page]{}, err
+		return zero, err
 	}
-	return kernel.NewPaginatedResult(pages, total, p), nil
+
+	return kernel.NewPaginated(pages, p.Page, p.PageSize, total), nil
 }
 
-// List returns all pages for a tenant with pagination.
-func (r *PostgresPageRepository) List(ctx context.Context, tenantID kernel.TenantID, p kernel.Pagination) (kernel.PaginatedResult[storefront.Page], error) {
+func (r *PagePostgresRepo) List(ctx context.Context, tenantID kernel.TenantID, p kernel.PaginationOptions) (kernel.Paginated[storefront.Page], error) {
+	var zero kernel.Paginated[storefront.Page]
+
 	var total int
-	err := r.db.QueryRowContext(ctx,
-		`SELECT COUNT(*) FROM storefront_pages WHERE tenant_id=$1`,
-		string(tenantID),
-	).Scan(&total)
-	if err != nil {
-		return kernel.PaginatedResult[storefront.Page]{}, fmt.Errorf("count pages: %w", err)
+	if err := r.db.QueryRowContext(ctx,
+		"SELECT COUNT(*) FROM pages WHERE tenant_id = $1", string(tenantID),
+	).Scan(&total); err != nil {
+		return zero, errx.Wrap(err, "counting pages", errx.TypeInternal)
 	}
 
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, tenant_id, slug, title, html, css, meta, status, version, created_by, published_at, created_at, updated_at
-		FROM storefront_pages
-		WHERE tenant_id=$1
+		FROM pages WHERE tenant_id = $1
 		ORDER BY updated_at DESC
 		LIMIT $2 OFFSET $3`,
 		string(tenantID), p.Limit(), p.Offset(),
 	)
 	if err != nil {
-		return kernel.PaginatedResult[storefront.Page]{}, fmt.Errorf("list pages: %w", err)
+		return zero, errx.Wrap(err, "querying pages", errx.TypeInternal)
 	}
 	defer rows.Close()
 
-	pages, err := scanPages(rows)
+	pages, err := scanPageRows(rows)
 	if err != nil {
-		return kernel.PaginatedResult[storefront.Page]{}, err
+		return zero, err
 	}
-	return kernel.NewPaginatedResult(pages, total, p), nil
+
+	return kernel.NewPaginated(pages, p.Page, p.PageSize, total), nil
 }
 
-// scanPage scans a single page row.
-func scanPage(row *sql.Row) (*storefront.Page, error) {
-	var p storefront.Page
-	var idStr, tenantStr, statusStr string
-	var metaJSON []byte
-	var publishedAt sql.NullTime
-
-	err := row.Scan(
-		&idStr, &tenantStr, &p.Slug, &p.Title,
-		&p.HTML, &p.CSS, &metaJSON, &statusStr,
-		&p.Version, &p.CreatedBy, &publishedAt,
-		&p.CreatedAt, &p.UpdatedAt,
-	)
-	if err == sql.ErrNoRows {
-		return nil, storefront.ErrPageNotFound
-	}
-	if err != nil {
-		return nil, fmt.Errorf("scan page: %w", err)
-	}
-
-	p.ID = kernel.PageID(idStr)
-	p.TenantID = kernel.TenantID(tenantStr)
-	p.Status = storefront.PageStatus(statusStr)
-	if publishedAt.Valid {
-		t := publishedAt.Time
-		p.PublishedAt = &t
-	}
-	if err := json.Unmarshal(metaJSON, &p.Meta); err != nil {
-		return nil, fmt.Errorf("unmarshal meta: %w", err)
-	}
-	return &p, nil
-}
-
-// scanPages scans multiple page rows.
-func scanPages(rows *sql.Rows) ([]storefront.Page, error) {
+func scanPageRows(rows *sql.Rows) ([]storefront.Page, error) {
 	var pages []storefront.Page
 	for rows.Next() {
-		var p storefront.Page
-		var idStr, tenantStr, statusStr string
-		var metaJSON []byte
-		var publishedAt sql.NullTime
-
-		err := rows.Scan(
-			&idStr, &tenantStr, &p.Slug, &p.Title,
-			&p.HTML, &p.CSS, &metaJSON, &statusStr,
-			&p.Version, &p.CreatedBy, &publishedAt,
-			&p.CreatedAt, &p.UpdatedAt,
-		)
+		var page storefront.Page
+		var id, tenantID, status, metaJSON string
+		err := rows.Scan(&id, &tenantID, &page.Slug, &page.Title, &page.HTML, &page.CSS,
+			&metaJSON, &status, &page.Version, &page.CreatedBy,
+			&page.PublishedAt, &page.CreatedAt, &page.UpdatedAt)
 		if err != nil {
-			return nil, fmt.Errorf("scan page row: %w", err)
+			return nil, errx.Wrap(err, "scanning page", errx.TypeInternal)
 		}
-
-		p.ID = kernel.PageID(idStr)
-		p.TenantID = kernel.TenantID(tenantStr)
-		p.Status = storefront.PageStatus(statusStr)
-		if publishedAt.Valid {
-			t := publishedAt.Time
-			p.PublishedAt = &t
-		}
-		if err := json.Unmarshal(metaJSON, &p.Meta); err != nil {
-			return nil, fmt.Errorf("unmarshal meta: %w", err)
-		}
-		pages = append(pages, p)
+		page.ID = kernel.PageID(id)
+		page.TenantID = kernel.TenantID(tenantID)
+		page.Status = storefront.PageStatus(status)
+		_ = json.Unmarshal([]byte(metaJSON), &page.Meta)
+		pages = append(pages, page)
 	}
-	return pages, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, errx.Wrap(err, "iterating pages", errx.TypeInternal)
+	}
+	return pages, nil
 }
 
-// PostgresPageVersionRepository implements storefront.PageVersionRepository using PostgreSQL.
-type PostgresPageVersionRepository struct {
-	db *sql.DB
+// Ensure interface compliance.
+var _ storefront.PageRepository = (*PagePostgresRepo)(nil)
+
+// --- PageVersion Repository ---
+
+// PageVersionPostgresRepo implements storefront.PageVersionRepository.
+type PageVersionPostgresRepo struct {
+	db *sqlx.DB
 }
 
-// NewPostgresPageVersionRepository creates a new PostgresPageVersionRepository.
-func NewPostgresPageVersionRepository(db *sql.DB) *PostgresPageVersionRepository {
-	return &PostgresPageVersionRepository{db: db}
+// NewPageVersionPostgresRepo creates a new PostgreSQL-backed page version repository.
+func NewPageVersionPostgresRepo(db *sqlx.DB) *PageVersionPostgresRepo {
+	return &PageVersionPostgresRepo{db: db}
 }
 
-// Create inserts a new page version snapshot (append-only).
-func (r *PostgresPageVersionRepository) Create(ctx context.Context, v *storefront.PageVersion) error {
+func (r *PageVersionPostgresRepo) Create(ctx context.Context, v *storefront.PageVersion) error {
 	_, err := r.db.ExecContext(ctx, `
-		INSERT INTO storefront_page_versions
-			(id, page_id, tenant_id, version, html, css, edited_by, comment, created_at)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+		INSERT INTO page_versions (id, page_id, tenant_id, version, html, css, edited_by, comment, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 		string(v.ID), string(v.PageID), string(v.TenantID),
 		v.Version, v.HTML, v.CSS, v.EditedBy, v.Comment, v.CreatedAt,
 	)
 	if err != nil {
-		return fmt.Errorf("insert page version: %w", err)
+		return errx.Wrap(err, "inserting page version", errx.TypeInternal)
 	}
 	return nil
 }
 
-// GetByVersion retrieves a specific version of a page.
-func (r *PostgresPageVersionRepository) GetByVersion(ctx context.Context, tenantID kernel.TenantID, pageID kernel.PageID, version int) (*storefront.PageVersion, error) {
-	row := r.db.QueryRowContext(ctx, `
+func (r *PageVersionPostgresRepo) GetByVersion(ctx context.Context, tenantID kernel.TenantID, pageID kernel.PageID, version int) (*storefront.PageVersion, error) {
+	var v storefront.PageVersion
+	var id, pID, tID string
+
+	err := r.db.QueryRowContext(ctx, `
 		SELECT id, page_id, tenant_id, version, html, css, edited_by, comment, created_at
-		FROM storefront_page_versions
-		WHERE tenant_id=$1 AND page_id=$2 AND version=$3`,
-		string(tenantID), string(pageID), version,
-	)
-	return scanPageVersion(row)
+		FROM page_versions WHERE page_id = $1 AND tenant_id = $2 AND version = $3`,
+		string(pageID), string(tenantID), version,
+	).Scan(&id, &pID, &tID, &v.Version, &v.HTML, &v.CSS, &v.EditedBy, &v.Comment, &v.CreatedAt)
+
+	if err == sql.ErrNoRows {
+		return nil, storefront.ErrVersionNotFound
+	}
+	if err != nil {
+		return nil, errx.Wrap(err, "getting page version", errx.TypeInternal)
+	}
+
+	v.ID = kernel.PageVersionID(id)
+	v.PageID = kernel.PageID(pID)
+	v.TenantID = kernel.TenantID(tID)
+	return &v, nil
 }
 
-// ListByPage returns all version snapshots for a page, newest first.
-func (r *PostgresPageVersionRepository) ListByPage(ctx context.Context, tenantID kernel.TenantID, pageID kernel.PageID) ([]storefront.PageVersion, error) {
+func (r *PageVersionPostgresRepo) ListByPage(ctx context.Context, tenantID kernel.TenantID, pageID kernel.PageID) ([]storefront.PageVersion, error) {
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, page_id, tenant_id, version, html, css, edited_by, comment, created_at
-		FROM storefront_page_versions
-		WHERE tenant_id=$1 AND page_id=$2
+		FROM page_versions WHERE page_id = $1 AND tenant_id = $2
 		ORDER BY version DESC`,
-		string(tenantID), string(pageID),
+		string(pageID), string(tenantID),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("list page versions: %w", err)
+		return nil, errx.Wrap(err, "querying page versions", errx.TypeInternal)
 	}
 	defer rows.Close()
 
 	var versions []storefront.PageVersion
 	for rows.Next() {
-		v, err := scanPageVersionRow(rows)
+		var v storefront.PageVersion
+		var id, pID, tID string
+		err := rows.Scan(&id, &pID, &tID, &v.Version, &v.HTML, &v.CSS, &v.EditedBy, &v.Comment, &v.CreatedAt)
 		if err != nil {
-			return nil, err
+			return nil, errx.Wrap(err, "scanning page version", errx.TypeInternal)
 		}
-		versions = append(versions, *v)
+		v.ID = kernel.PageVersionID(id)
+		v.PageID = kernel.PageID(pID)
+		v.TenantID = kernel.TenantID(tID)
+		versions = append(versions, v)
 	}
-	return versions, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, errx.Wrap(err, "iterating page versions", errx.TypeInternal)
+	}
+
+	return versions, nil
 }
 
-func scanPageVersion(row *sql.Row) (*storefront.PageVersion, error) {
-	var v storefront.PageVersion
-	var idStr, pageIDStr, tenantStr string
-	err := row.Scan(
-		&idStr, &pageIDStr, &tenantStr,
-		&v.Version, &v.HTML, &v.CSS,
-		&v.EditedBy, &v.Comment, &v.CreatedAt,
-	)
-	if err == sql.ErrNoRows {
-		return nil, storefront.ErrVersionNotFound
-	}
-	if err != nil {
-		return nil, fmt.Errorf("scan page version: %w", err)
-	}
-	v.ID = kernel.PageVersionID(idStr)
-	v.PageID = kernel.PageID(pageIDStr)
-	v.TenantID = kernel.TenantID(tenantStr)
-	return &v, nil
-}
-
-func scanPageVersionRow(rows *sql.Rows) (*storefront.PageVersion, error) {
-	var v storefront.PageVersion
-	var idStr, pageIDStr, tenantStr string
-	err := rows.Scan(
-		&idStr, &pageIDStr, &tenantStr,
-		&v.Version, &v.HTML, &v.CSS,
-		&v.EditedBy, &v.Comment, &v.CreatedAt,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("scan page version row: %w", err)
-	}
-	v.ID = kernel.PageVersionID(idStr)
-	v.PageID = kernel.PageID(pageIDStr)
-	v.TenantID = kernel.TenantID(tenantStr)
-	return &v, nil
-}
-
-// Ensure time is imported (used in sql.NullTime).
-var _ = time.Time{}
+// Ensure interface compliance.
+var _ storefront.PageVersionRepository = (*PageVersionPostgresRepo)(nil)

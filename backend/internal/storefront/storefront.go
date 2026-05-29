@@ -32,19 +32,19 @@ type PageMeta struct {
 //   - Every edit produces a new PageVersion snapshot.
 //   - Only published pages are served publicly.
 type Page struct {
-	ID          kernel.PageID  `json:"id"`
-	TenantID    kernel.TenantID `json:"tenant_id"`
-	Slug        string          `json:"slug"`
-	Title       string          `json:"title"`
-	HTML        string          `json:"html"`
-	CSS         string          `json:"css"`
-	Meta        PageMeta        `json:"meta"`
-	Status      PageStatus      `json:"status"`
-	Version     int             `json:"version"`
-	CreatedBy   string          `json:"created_by"`
-	PublishedAt *time.Time      `json:"published_at,omitempty"`
-	CreatedAt   time.Time       `json:"created_at"`
-	UpdatedAt   time.Time       `json:"updated_at"`
+	ID          kernel.PageID   `json:"id" db:"id"`
+	TenantID    kernel.TenantID `json:"tenant_id" db:"tenant_id"`
+	Slug        string          `json:"slug" db:"slug"`
+	Title       string          `json:"title" db:"title"`
+	HTML        string          `json:"html" db:"html"`
+	CSS         string          `json:"css" db:"css"`
+	Meta        PageMeta        `json:"meta" db:"meta"`
+	Status      PageStatus      `json:"status" db:"status"`
+	Version     int             `json:"version" db:"version"`
+	CreatedBy   string          `json:"created_by" db:"created_by"`
+	PublishedAt *time.Time      `json:"published_at,omitempty" db:"published_at"`
+	CreatedAt   time.Time       `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time       `json:"updated_at" db:"updated_at"`
 }
 
 // IsPublished returns true when the page is live.
@@ -65,15 +65,15 @@ func (p *Page) CanBeEdited() bool {
 // PageVersion is a full snapshot of a page's HTML/CSS at a given version number.
 // The history is append-only — versions are never deleted.
 type PageVersion struct {
-	ID        kernel.PageVersionID `json:"id"`
-	PageID    kernel.PageID        `json:"page_id"`
-	TenantID  kernel.TenantID      `json:"tenant_id"`
-	Version   int                  `json:"version"`
-	HTML      string               `json:"html"`
-	CSS       string               `json:"css"`
-	EditedBy  string               `json:"edited_by"`
-	Comment   string               `json:"comment"`
-	CreatedAt time.Time            `json:"created_at"`
+	ID        kernel.PageVersionID `json:"id" db:"id"`
+	PageID    kernel.PageID        `json:"page_id" db:"page_id"`
+	TenantID  kernel.TenantID      `json:"tenant_id" db:"tenant_id"`
+	Version   int                  `json:"version" db:"version"`
+	HTML      string               `json:"html" db:"html"`
+	CSS       string               `json:"css" db:"css"`
+	EditedBy  string               `json:"edited_by" db:"edited_by"`
+	Comment   string               `json:"comment" db:"comment"`
+	CreatedAt time.Time            `json:"created_at" db:"created_at"`
 }
 
 // TemplateTag represents a dynamic tag embedded in page content, e.g. {{products "featured" limit=8}}.

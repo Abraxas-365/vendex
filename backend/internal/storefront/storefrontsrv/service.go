@@ -229,7 +229,7 @@ func (s *Service) GetPage(ctx context.Context, tenantID kernel.TenantID, id kern
 }
 
 // ListPages returns pages with optional status filter.
-func (s *Service) ListPages(ctx context.Context, tenantID kernel.TenantID, status *storefront.PageStatus, p kernel.Pagination) (kernel.PaginatedResult[storefront.Page], error) {
+func (s *Service) ListPages(ctx context.Context, tenantID kernel.TenantID, status *storefront.PageStatus, p kernel.PaginationOptions) (kernel.Paginated[storefront.Page], error) {
 	if status != nil {
 		return s.pages.ListByStatus(ctx, tenantID, *status, p)
 	}
@@ -255,7 +255,6 @@ func (s *Service) ResolveTemplateTags(ctx context.Context, tenantID kernel.Tenan
 }
 
 // newID generates a new UUID-like unique string identifier.
-// Uses crypto/rand under the hood via the uuid helper below.
 func newID() string {
 	return generateUUID()
 }

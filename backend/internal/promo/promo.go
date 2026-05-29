@@ -10,8 +10,8 @@ import (
 type PromoType string
 
 const (
-	PromoTypePercentage  PromoType = "percentage"   // Value is a percentage (0–100)
-	PromoTypeFixedAmount PromoType = "fixed_amount"  // Value is cents subtracted from total
+	PromoTypePercentage   PromoType = "percentage"    // Value is a percentage (0–100)
+	PromoTypeFixedAmount  PromoType = "fixed_amount"  // Value is cents subtracted from total
 	PromoTypeFreeShipping PromoType = "free_shipping" // Free shipping; Value is ignored
 )
 
@@ -22,22 +22,22 @@ const (
 //   - Applying a promo increments UsedCount atomically in the repository.
 //   - Deactivated promos cannot be reactivated via normal service methods.
 type Promo struct {
-	ID             kernel.PromoID  `json:"id"`
-	TenantID       kernel.TenantID `json:"tenant_id"`
-	Code           string          `json:"code"`
-	Type           PromoType       `json:"type"`
+	ID             kernel.PromoID  `json:"id" db:"id"`
+	TenantID       kernel.TenantID `json:"tenant_id" db:"tenant_id"`
+	Code           string          `json:"code" db:"code"`
+	Type           PromoType       `json:"type" db:"type"`
 	// Value meaning depends on Type:
 	//   percentage  → integer 0–100
 	//   fixed_amount → cents
 	//   free_shipping → not used
-	Value          int64           `json:"value"`
-	MinOrderAmount *int64          `json:"min_order_amount,omitempty"` // cents; nil means no minimum
-	MaxUses        *int            `json:"max_uses,omitempty"`         // nil means unlimited
-	UsedCount      int             `json:"used_count"`
-	StartsAt       *time.Time      `json:"starts_at,omitempty"`
-	EndsAt         *time.Time      `json:"ends_at,omitempty"`
-	Active         bool            `json:"active"`
-	CreatedAt      time.Time       `json:"created_at"`
+	Value          int64           `json:"value" db:"value"`
+	MinOrderAmount *int64          `json:"min_order_amount,omitempty" db:"min_order_amount"`
+	MaxUses        *int            `json:"max_uses,omitempty" db:"max_uses"`
+	UsedCount      int             `json:"used_count" db:"used_count"`
+	StartsAt       *time.Time      `json:"starts_at,omitempty" db:"starts_at"`
+	EndsAt         *time.Time      `json:"ends_at,omitempty" db:"ends_at"`
+	Active         bool            `json:"active" db:"active"`
+	CreatedAt      time.Time       `json:"created_at" db:"created_at"`
 }
 
 // IsExpired returns true when the promo is past its EndsAt date.

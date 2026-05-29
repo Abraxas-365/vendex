@@ -2,13 +2,12 @@ package catalogsrv
 
 import (
 	"context"
-	"crypto/rand"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/Abraxas-365/hada-commerce/internal/catalog"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel/errx"
 )
 
 // Service handles catalog business logic for both categories and collections.
@@ -36,7 +35,7 @@ type CreateCategoryInput struct {
 func (s *Service) CreateCategory(ctx context.Context, tenantID kernel.TenantID, in CreateCategoryInput) (*catalog.Category, error) {
 	// Check for duplicate slug.
 	existing, err := s.categories.GetBySlug(ctx, tenantID, in.Slug)
-	if err != nil && !errx.Is(err, catalog.ErrCategoryNotFound) {
+	if err != nil && !errors.Is(err, catalog.ErrCategoryNotFound) {
 		return nil, fmt.Errorf("checking slug uniqueness: %w", err)
 	}
 	if existing != nil {
@@ -78,12 +77,12 @@ func (s *Service) DeleteCategory(ctx context.Context, tenantID kernel.TenantID, 
 }
 
 // ListCategories returns a paginated list of categories for a tenant.
-func (s *Service) ListCategories(ctx context.Context, tenantID kernel.TenantID, pg kernel.Pagination) (kernel.PaginatedResult[catalog.Category], error) {
+func (s *Service) ListCategories(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[catalog.Category], error) {
 	return s.categories.List(ctx, tenantID, pg)
 }
 
 // ListCategoriesByParent returns child categories of a parent (nil for root categories).
-func (s *Service) ListCategoriesByParent(ctx context.Context, tenantID kernel.TenantID, parentID *kernel.CategoryID, pg kernel.Pagination) (kernel.PaginatedResult[catalog.Category], error) {
+func (s *Service) ListCategoriesByParent(ctx context.Context, tenantID kernel.TenantID, parentID *kernel.CategoryID, pg kernel.PaginationOptions) (kernel.Paginated[catalog.Category], error) {
 	return s.categories.ListByParent(ctx, tenantID, parentID, pg)
 }
 
@@ -103,7 +102,7 @@ type CreateCollectionInput struct {
 func (s *Service) CreateCollection(ctx context.Context, tenantID kernel.TenantID, in CreateCollectionInput) (*catalog.Collection, error) {
 	// Check for duplicate slug.
 	existing, err := s.collections.GetBySlug(ctx, tenantID, in.Slug)
-	if err != nil && !errx.Is(err, catalog.ErrCollectionNotFound) {
+	if err != nil && !errors.Is(err, catalog.ErrCollectionNotFound) {
 		return nil, fmt.Errorf("checking slug uniqueness: %w", err)
 	}
 	if existing != nil {
@@ -156,14 +155,8 @@ func (s *Service) DeleteCollection(ctx context.Context, tenantID kernel.TenantID
 }
 
 // ListCollections returns a paginated list of collections for a tenant.
-func (s *Service) ListCollections(ctx context.Context, tenantID kernel.TenantID, pg kernel.Pagination) (kernel.PaginatedResult[catalog.Collection], error) {
+func (s *Service) ListCollections(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[catalog.Collection], error) {
 	return s.collections.List(ctx, tenantID, pg)
 }
 
-func generateID() string {
-	b := make([]byte, 16)
-	_, _ = rand.Read(b)
-	b[6] = (b[6] & 0x0f) | 0x40
-	b[8] = (b[8] & 0x3f) | 0x80
-	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
-}
+
