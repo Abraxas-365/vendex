@@ -20,5 +20,5 @@ type PromoRepository interface {
 	// IncrementUsedCount atomically increments the used_count for a promo.
 	IncrementUsedCount(ctx context.Context, tenantID kernel.TenantID, id kernel.PromoID) error
 	// List returns all promos for a tenant with pagination.
-	List(ctx context.Context, tenantID kernel.TenantID, p kernel.Pagination) (kernel.PaginatedResult[Promo], error)
+	List(ctx context.Context, tenantID kernel.TenantID, p kernel.PaginationOptions) (kernel.Paginated[Promo], error)
 }

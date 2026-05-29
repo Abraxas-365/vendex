@@ -2,7 +2,6 @@ package promosrv
 
 import (
 	"context"
-	"crypto/rand"
 	"fmt"
 	"time"
 
@@ -56,10 +55,10 @@ func (s *Service) Create(ctx context.Context, input CreateInput) (*promo.Promo, 
 
 // ValidationResult holds the outcome of a promo validation.
 type ValidationResult struct {
-	Valid           bool
-	DiscountCents   int64
-	IsFreeShipping  bool
-	Reason          string
+	Valid          bool   `json:"valid"`
+	DiscountCents  int64  `json:"discount_cents"`
+	IsFreeShipping bool   `json:"is_free_shipping"`
+	Reason         string `json:"reason,omitempty"`
 }
 
 // Validate checks whether a promo code is applicable to the given order total.
@@ -73,19 +72,19 @@ func (s *Service) Validate(ctx context.Context, tenantID kernel.TenantID, code s
 	now := time.Now().UTC()
 
 	if !p.Active {
-		return ValidationResult{Valid: false, Reason: promo.ErrPromoInactive.Message()}, nil
+		return ValidationResult{Valid: false, Reason: promo.ErrPromoInactive.Error()}, nil
 	}
 	if !p.IsStarted(now) {
-		return ValidationResult{Valid: false, Reason: promo.ErrPromoNotStarted.Message()}, nil
+		return ValidationResult{Valid: false, Reason: promo.ErrPromoNotStarted.Error()}, nil
 	}
 	if p.IsExpired(now) {
-		return ValidationResult{Valid: false, Reason: promo.ErrPromoExpired.Message()}, nil
+		return ValidationResult{Valid: false, Reason: promo.ErrPromoExpired.Error()}, nil
 	}
 	if p.IsMaxUsesReached() {
-		return ValidationResult{Valid: false, Reason: promo.ErrPromoMaxUses.Message()}, nil
+		return ValidationResult{Valid: false, Reason: promo.ErrPromoMaxUses.Error()}, nil
 	}
 	if !p.MeetsMinOrder(orderTotalCents) {
-		return ValidationResult{Valid: false, Reason: promo.ErrPromoMinOrder.Message()}, nil
+		return ValidationResult{Valid: false, Reason: promo.ErrPromoMinOrder.Error()}, nil
 	}
 
 	return ValidationResult{
@@ -133,21 +132,11 @@ func (s *Service) Deactivate(ctx context.Context, tenantID kernel.TenantID, id k
 }
 
 // List returns all promos for a tenant with pagination.
-func (s *Service) List(ctx context.Context, tenantID kernel.TenantID, p kernel.Pagination) (kernel.PaginatedResult[promo.Promo], error) {
+func (s *Service) List(ctx context.Context, tenantID kernel.TenantID, p kernel.PaginationOptions) (kernel.Paginated[promo.Promo], error) {
 	return s.repo.List(ctx, tenantID, p)
 }
 
 // GetByID retrieves a promo by ID.
 func (s *Service) GetByID(ctx context.Context, tenantID kernel.TenantID, id kernel.PromoID) (*promo.Promo, error) {
 	return s.repo.GetByID(ctx, tenantID, id)
-}
-
-// generateUUID produces a random UUID v4 string.
-func generateUUID() string {
-	var b [16]byte
-	_, _ = rand.Read(b[:])
-	b[6] = (b[6] & 0x0f) | 0x40
-	b[8] = (b[8] & 0x3f) | 0x80
-	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
-		b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
 }

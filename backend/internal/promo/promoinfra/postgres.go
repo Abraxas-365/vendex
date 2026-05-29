@@ -3,21 +3,22 @@ package promoinfra
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"strings"
-	"time"
 
+	"github.com/jmoiron/sqlx"
+
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/promo"
 )
 
 // PostgresPromoRepository implements promo.PromoRepository using PostgreSQL.
 type PostgresPromoRepository struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 // NewPostgresPromoRepository creates a new PostgresPromoRepository.
-func NewPostgresPromoRepository(db *sql.DB) *PostgresPromoRepository {
+func NewPostgresPromoRepository(db *sqlx.DB) *PostgresPromoRepository {
 	return &PostgresPromoRepository{db: db}
 }
 
@@ -35,7 +36,7 @@ func (r *PostgresPromoRepository) Create(ctx context.Context, p *promo.Promo) er
 		if isDuplicateCode(err) {
 			return promo.ErrCodeAlreadyExists
 		}
-		return fmt.Errorf("insert promo: %w", err)
+		return errx.Wrap(err, "insert promo", errx.TypeInternal)
 	}
 	return nil
 }
@@ -73,7 +74,7 @@ func (r *PostgresPromoRepository) Update(ctx context.Context, p *promo.Promo) er
 		p.StartsAt, p.EndsAt, p.Active,
 	)
 	if err != nil {
-		return fmt.Errorf("update promo: %w", err)
+		return errx.Wrap(err, "update promo", errx.TypeInternal)
 	}
 	return nil
 }
@@ -86,17 +87,18 @@ func (r *PostgresPromoRepository) IncrementUsedCount(ctx context.Context, tenant
 		string(tenantID), string(id),
 	)
 	if err != nil {
-		return fmt.Errorf("increment used_count: %w", err)
+		return errx.Wrap(err, "increment used_count", errx.TypeInternal)
 	}
 	return nil
 }
 
 // List returns promos for a tenant with pagination.
-func (r *PostgresPromoRepository) List(ctx context.Context, tenantID kernel.TenantID, p kernel.Pagination) (kernel.PaginatedResult[promo.Promo], error) {
+func (r *PostgresPromoRepository) List(ctx context.Context, tenantID kernel.TenantID, p kernel.PaginationOptions) (kernel.Paginated[promo.Promo], error) {
+	var zero kernel.Paginated[promo.Promo]
+
 	var total int
-	err := r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM promos WHERE tenant_id=$1`, string(tenantID)).Scan(&total)
-	if err != nil {
-		return kernel.PaginatedResult[promo.Promo]{}, fmt.Errorf("count promos: %w", err)
+	if err := r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM promos WHERE tenant_id=$1`, string(tenantID)).Scan(&total); err != nil {
+		return zero, errx.Wrap(err, "count promos", errx.TypeInternal)
 	}
 
 	rows, err := r.db.QueryContext(ctx, `
@@ -107,7 +109,7 @@ func (r *PostgresPromoRepository) List(ctx context.Context, tenantID kernel.Tena
 		string(tenantID), p.Limit(), p.Offset(),
 	)
 	if err != nil {
-		return kernel.PaginatedResult[promo.Promo]{}, fmt.Errorf("list promos: %w", err)
+		return zero, errx.Wrap(err, "list promos", errx.TypeInternal)
 	}
 	defer rows.Close()
 
@@ -115,14 +117,14 @@ func (r *PostgresPromoRepository) List(ctx context.Context, tenantID kernel.Tena
 	for rows.Next() {
 		pr, err := scanPromoRow(rows)
 		if err != nil {
-			return kernel.PaginatedResult[promo.Promo]{}, err
+			return zero, err
 		}
 		promos = append(promos, *pr)
 	}
 	if err := rows.Err(); err != nil {
-		return kernel.PaginatedResult[promo.Promo]{}, fmt.Errorf("iterate promos: %w", err)
+		return zero, errx.Wrap(err, "iterate promos", errx.TypeInternal)
 	}
-	return kernel.NewPaginatedResult(promos, total, p), nil
+	return kernel.NewPaginated(promos, p.Page, p.PageSize, total), nil
 }
 
 // scanPromo scans a single promo row from sql.Row.
@@ -140,7 +142,7 @@ func scanPromo(row *sql.Row) (*promo.Promo, error) {
 		return nil, promo.ErrPromoNotFound
 	}
 	if err != nil {
-		return nil, fmt.Errorf("scan promo: %w", err)
+		return nil, errx.Wrap(err, "scan promo", errx.TypeInternal)
 	}
 
 	p.ID = kernel.PromoID(idStr)
@@ -169,7 +171,7 @@ func scanPromoRow(rows *sql.Rows) (*promo.Promo, error) {
 		&startsAt, &endsAt, &p.Active, &p.CreatedAt,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("scan promo row: %w", err)
+		return nil, errx.Wrap(err, "scan promo row", errx.TypeInternal)
 	}
 
 	p.ID = kernel.PromoID(idStr)
@@ -191,5 +193,5 @@ func isDuplicateCode(err error) bool {
 	return strings.Contains(err.Error(), "unique") || strings.Contains(err.Error(), "duplicate")
 }
 
-// Ensure time import is used.
-var _ = time.Time{}
+// Ensure interface compliance.
+var _ promo.PromoRepository = (*PostgresPromoRepository)(nil)

@@ -20,9 +20,9 @@ type PageRepository interface {
 	// Update persists changes to an existing page.
 	Update(ctx context.Context, page *Page) error
 	// ListByStatus returns all pages matching the given status with pagination.
-	ListByStatus(ctx context.Context, tenantID kernel.TenantID, status PageStatus, p kernel.Pagination) (kernel.PaginatedResult[Page], error)
+	ListByStatus(ctx context.Context, tenantID kernel.TenantID, status PageStatus, p kernel.PaginationOptions) (kernel.Paginated[Page], error)
 	// List returns all pages for a tenant with pagination.
-	List(ctx context.Context, tenantID kernel.TenantID, p kernel.Pagination) (kernel.PaginatedResult[Page], error)
+	List(ctx context.Context, tenantID kernel.TenantID, p kernel.PaginationOptions) (kernel.Paginated[Page], error)
 }
 
 // PageVersionRepository defines persistence for immutable page version snapshots.

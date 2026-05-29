@@ -4,10 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
-	"time"
+
+	"github.com/jmoiron/sqlx"
 
 	"github.com/Abraxas-365/hada-commerce/internal/catalog"
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 )
 
@@ -15,11 +16,11 @@ import (
 
 // CategoryPostgresRepo implements catalog.CategoryRepository.
 type CategoryPostgresRepo struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 // NewCategoryPostgresRepo creates a new PostgreSQL-backed category repository.
-func NewCategoryPostgresRepo(db *sql.DB) *CategoryPostgresRepo {
+func NewCategoryPostgresRepo(db *sqlx.DB) *CategoryPostgresRepo {
 	return &CategoryPostgresRepo{db: db}
 }
 
@@ -37,27 +38,57 @@ func (r *CategoryPostgresRepo) Create(ctx context.Context, c *catalog.Category) 
 		parentID, c.Description, c.CreatedAt, c.UpdatedAt,
 	)
 	if err != nil {
-		return fmt.Errorf("inserting category: %w", err)
+		return errx.Wrap(err, "inserting category", errx.TypeInternal)
 	}
 	return nil
 }
 
 func (r *CategoryPostgresRepo) GetByID(ctx context.Context, tenantID kernel.TenantID, id kernel.CategoryID) (*catalog.Category, error) {
-	row := r.db.QueryRowContext(ctx, `
+	var c catalog.Category
+	var parentID *string
+
+	err := r.db.QueryRowContext(ctx, `
 		SELECT id, tenant_id, name, slug, parent_id, description, created_at, updated_at
 		FROM categories WHERE id = $1 AND tenant_id = $2`,
 		string(id), string(tenantID),
-	)
-	return scanCategory(row)
+	).Scan(&c.ID, &c.TenantID, &c.Name, &c.Slug, &parentID, &c.Description, &c.CreatedAt, &c.UpdatedAt)
+
+	if err == sql.ErrNoRows {
+		return nil, catalog.ErrCategoryNotFound
+	}
+	if err != nil {
+		return nil, errx.Wrap(err, "getting category by id", errx.TypeInternal)
+	}
+
+	if parentID != nil {
+		pid := kernel.CategoryID(*parentID)
+		c.ParentID = &pid
+	}
+	return &c, nil
 }
 
 func (r *CategoryPostgresRepo) GetBySlug(ctx context.Context, tenantID kernel.TenantID, slug string) (*catalog.Category, error) {
-	row := r.db.QueryRowContext(ctx, `
+	var c catalog.Category
+	var parentID *string
+
+	err := r.db.QueryRowContext(ctx, `
 		SELECT id, tenant_id, name, slug, parent_id, description, created_at, updated_at
 		FROM categories WHERE slug = $1 AND tenant_id = $2`,
 		slug, string(tenantID),
-	)
-	return scanCategory(row)
+	).Scan(&c.ID, &c.TenantID, &c.Name, &c.Slug, &parentID, &c.Description, &c.CreatedAt, &c.UpdatedAt)
+
+	if err == sql.ErrNoRows {
+		return nil, catalog.ErrCategoryNotFound
+	}
+	if err != nil {
+		return nil, errx.Wrap(err, "getting category by slug", errx.TypeInternal)
+	}
+
+	if parentID != nil {
+		pid := kernel.CategoryID(*parentID)
+		c.ParentID = &pid
+	}
+	return &c, nil
 }
 
 func (r *CategoryPostgresRepo) Update(ctx context.Context, c *catalog.Category) error {
@@ -74,7 +105,7 @@ func (r *CategoryPostgresRepo) Update(ctx context.Context, c *catalog.Category) 
 		string(c.ID), string(c.TenantID),
 	)
 	if err != nil {
-		return fmt.Errorf("updating category: %w", err)
+		return errx.Wrap(err, "updating category", errx.TypeInternal)
 	}
 	return nil
 }
@@ -84,19 +115,19 @@ func (r *CategoryPostgresRepo) Delete(ctx context.Context, tenantID kernel.Tenan
 		string(id), string(tenantID),
 	)
 	if err != nil {
-		return fmt.Errorf("deleting category: %w", err)
+		return errx.Wrap(err, "deleting category", errx.TypeInternal)
 	}
 	return nil
 }
 
-func (r *CategoryPostgresRepo) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.Pagination) (kernel.PaginatedResult[catalog.Category], error) {
-	var zero kernel.PaginatedResult[catalog.Category]
+func (r *CategoryPostgresRepo) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[catalog.Category], error) {
+	var zero kernel.Paginated[catalog.Category]
 
 	var total int
 	if err := r.db.QueryRowContext(ctx,
 		"SELECT COUNT(*) FROM categories WHERE tenant_id = $1", string(tenantID),
 	).Scan(&total); err != nil {
-		return zero, fmt.Errorf("counting categories: %w", err)
+		return zero, errx.Wrap(err, "counting categories", errx.TypeInternal)
 	}
 
 	rows, err := r.db.QueryContext(ctx, `
@@ -107,27 +138,27 @@ func (r *CategoryPostgresRepo) List(ctx context.Context, tenantID kernel.TenantI
 		string(tenantID), pg.Limit(), pg.Offset(),
 	)
 	if err != nil {
-		return zero, fmt.Errorf("querying categories: %w", err)
+		return zero, errx.Wrap(err, "querying categories", errx.TypeInternal)
 	}
 	defer rows.Close()
 
 	var categories []catalog.Category
 	for rows.Next() {
-		c, err := scanCategoryRow(rows)
+		c, err := scanCategoryFields(rows)
 		if err != nil {
 			return zero, err
 		}
 		categories = append(categories, *c)
 	}
 	if err := rows.Err(); err != nil {
-		return zero, fmt.Errorf("iterating categories: %w", err)
+		return zero, errx.Wrap(err, "iterating categories", errx.TypeInternal)
 	}
 
-	return kernel.NewPaginatedResult(categories, total, pg), nil
+	return kernel.NewPaginated(categories, pg.Page, pg.PageSize, total), nil
 }
 
-func (r *CategoryPostgresRepo) ListByParent(ctx context.Context, tenantID kernel.TenantID, parentID *kernel.CategoryID, pg kernel.Pagination) (kernel.PaginatedResult[catalog.Category], error) {
-	var zero kernel.PaginatedResult[catalog.Category]
+func (r *CategoryPostgresRepo) ListByParent(ctx context.Context, tenantID kernel.TenantID, parentID *kernel.CategoryID, pg kernel.PaginationOptions) (kernel.Paginated[catalog.Category], error) {
+	var zero kernel.Paginated[catalog.Category]
 
 	var total int
 	var countArgs []any
@@ -142,7 +173,7 @@ func (r *CategoryPostgresRepo) ListByParent(ctx context.Context, tenantID kernel
 	}
 
 	if err := r.db.QueryRowContext(ctx, countQuery, countArgs...).Scan(&total); err != nil {
-		return zero, fmt.Errorf("counting categories: %w", err)
+		return zero, errx.Wrap(err, "counting categories by parent", errx.TypeInternal)
 	}
 
 	var dataQuery string
@@ -166,50 +197,37 @@ func (r *CategoryPostgresRepo) ListByParent(ctx context.Context, tenantID kernel
 
 	rows, err := r.db.QueryContext(ctx, dataQuery, dataArgs...)
 	if err != nil {
-		return zero, fmt.Errorf("querying categories by parent: %w", err)
+		return zero, errx.Wrap(err, "querying categories by parent", errx.TypeInternal)
 	}
 	defer rows.Close()
 
 	var categories []catalog.Category
 	for rows.Next() {
-		c, err := scanCategoryRow(rows)
+		c, err := scanCategoryFields(rows)
 		if err != nil {
 			return zero, err
 		}
 		categories = append(categories, *c)
 	}
 	if err := rows.Err(); err != nil {
-		return zero, fmt.Errorf("iterating categories: %w", err)
+		return zero, errx.Wrap(err, "iterating categories by parent", errx.TypeInternal)
 	}
 
-	return kernel.NewPaginatedResult(categories, total, pg), nil
+	return kernel.NewPaginated(categories, pg.Page, pg.PageSize, total), nil
 }
 
-type categoryScanner interface {
+type rowScanner interface {
 	Scan(dest ...any) error
 }
 
-func scanCategory(row *sql.Row) (*catalog.Category, error) {
-	c, err := scanCategoryFields(row)
-	if err == sql.ErrNoRows {
-		return nil, catalog.ErrCategoryNotFound
-	}
-	return c, err
-}
-
-func scanCategoryRow(rows *sql.Rows) (*catalog.Category, error) {
-	return scanCategoryFields(rows)
-}
-
-func scanCategoryFields(s categoryScanner) (*catalog.Category, error) {
+func scanCategoryFields(s rowScanner) (*catalog.Category, error) {
 	var c catalog.Category
 	var id, tenantID string
 	var parentID *string
-	var createdAt, updatedAt time.Time
 
-	err := s.Scan(&id, &tenantID, &c.Name, &c.Slug, &parentID, &c.Description, &createdAt, &updatedAt)
+	err := s.Scan(&id, &tenantID, &c.Name, &c.Slug, &parentID, &c.Description, &c.CreatedAt, &c.UpdatedAt)
 	if err != nil {
-		return nil, err
+		return nil, errx.Wrap(err, "scanning category", errx.TypeInternal)
 	}
 
 	c.ID = kernel.CategoryID(id)
@@ -218,8 +236,6 @@ func scanCategoryFields(s categoryScanner) (*catalog.Category, error) {
 		pid := kernel.CategoryID(*parentID)
 		c.ParentID = &pid
 	}
-	c.CreatedAt = createdAt
-	c.UpdatedAt = updatedAt
 
 	return &c, nil
 }
@@ -231,22 +247,22 @@ var _ catalog.CategoryRepository = (*CategoryPostgresRepo)(nil)
 
 // CollectionPostgresRepo implements catalog.CollectionRepository.
 type CollectionPostgresRepo struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 // NewCollectionPostgresRepo creates a new PostgreSQL-backed collection repository.
-func NewCollectionPostgresRepo(db *sql.DB) *CollectionPostgresRepo {
+func NewCollectionPostgresRepo(db *sqlx.DB) *CollectionPostgresRepo {
 	return &CollectionPostgresRepo{db: db}
 }
 
 func (r *CollectionPostgresRepo) Create(ctx context.Context, c *catalog.Collection) error {
 	productIDsJSON, err := json.Marshal(c.ProductIDs)
 	if err != nil {
-		return fmt.Errorf("marshaling product IDs: %w", err)
+		return errx.Wrap(err, "marshaling product IDs", errx.TypeInternal)
 	}
 	rulesJSON, err := json.Marshal(c.Rules)
 	if err != nil {
-		return fmt.Errorf("marshaling rules: %w", err)
+		return errx.Wrap(err, "marshaling rules", errx.TypeInternal)
 	}
 
 	_, err = r.db.ExecContext(ctx, `
@@ -257,37 +273,83 @@ func (r *CollectionPostgresRepo) Create(ctx context.Context, c *catalog.Collecti
 		c.CreatedAt, c.UpdatedAt,
 	)
 	if err != nil {
-		return fmt.Errorf("inserting collection: %w", err)
+		return errx.Wrap(err, "inserting collection", errx.TypeInternal)
 	}
 	return nil
 }
 
 func (r *CollectionPostgresRepo) GetByID(ctx context.Context, tenantID kernel.TenantID, id kernel.CollectionID) (*catalog.Collection, error) {
-	row := r.db.QueryRowContext(ctx, `
+	var c catalog.Collection
+	var cID, cTenantID string
+	var productIDsJSON, rulesJSON string
+
+	err := r.db.QueryRowContext(ctx, `
 		SELECT id, tenant_id, name, slug, description, product_ids, is_automatic, rules, created_at, updated_at
 		FROM collections WHERE id = $1 AND tenant_id = $2`,
 		string(id), string(tenantID),
-	)
-	return scanCollection(row)
+	).Scan(&cID, &cTenantID, &c.Name, &c.Slug, &c.Description,
+		&productIDsJSON, &c.IsAutomatic, &rulesJSON, &c.CreatedAt, &c.UpdatedAt)
+
+	if err == sql.ErrNoRows {
+		return nil, catalog.ErrCollectionNotFound
+	}
+	if err != nil {
+		return nil, errx.Wrap(err, "getting collection by id", errx.TypeInternal)
+	}
+
+	c.ID = kernel.CollectionID(cID)
+	c.TenantID = kernel.TenantID(cTenantID)
+	_ = json.Unmarshal([]byte(productIDsJSON), &c.ProductIDs)
+	if c.ProductIDs == nil {
+		c.ProductIDs = []kernel.ProductID{}
+	}
+	_ = json.Unmarshal([]byte(rulesJSON), &c.Rules)
+	if c.Rules == nil {
+		c.Rules = map[string]any{}
+	}
+	return &c, nil
 }
 
 func (r *CollectionPostgresRepo) GetBySlug(ctx context.Context, tenantID kernel.TenantID, slug string) (*catalog.Collection, error) {
-	row := r.db.QueryRowContext(ctx, `
+	var c catalog.Collection
+	var cID, cTenantID string
+	var productIDsJSON, rulesJSON string
+
+	err := r.db.QueryRowContext(ctx, `
 		SELECT id, tenant_id, name, slug, description, product_ids, is_automatic, rules, created_at, updated_at
 		FROM collections WHERE slug = $1 AND tenant_id = $2`,
 		slug, string(tenantID),
-	)
-	return scanCollection(row)
+	).Scan(&cID, &cTenantID, &c.Name, &c.Slug, &c.Description,
+		&productIDsJSON, &c.IsAutomatic, &rulesJSON, &c.CreatedAt, &c.UpdatedAt)
+
+	if err == sql.ErrNoRows {
+		return nil, catalog.ErrCollectionNotFound
+	}
+	if err != nil {
+		return nil, errx.Wrap(err, "getting collection by slug", errx.TypeInternal)
+	}
+
+	c.ID = kernel.CollectionID(cID)
+	c.TenantID = kernel.TenantID(cTenantID)
+	_ = json.Unmarshal([]byte(productIDsJSON), &c.ProductIDs)
+	if c.ProductIDs == nil {
+		c.ProductIDs = []kernel.ProductID{}
+	}
+	_ = json.Unmarshal([]byte(rulesJSON), &c.Rules)
+	if c.Rules == nil {
+		c.Rules = map[string]any{}
+	}
+	return &c, nil
 }
 
 func (r *CollectionPostgresRepo) Update(ctx context.Context, c *catalog.Collection) error {
 	productIDsJSON, err := json.Marshal(c.ProductIDs)
 	if err != nil {
-		return fmt.Errorf("marshaling product IDs: %w", err)
+		return errx.Wrap(err, "marshaling product IDs", errx.TypeInternal)
 	}
 	rulesJSON, err := json.Marshal(c.Rules)
 	if err != nil {
-		return fmt.Errorf("marshaling rules: %w", err)
+		return errx.Wrap(err, "marshaling rules", errx.TypeInternal)
 	}
 
 	_, err = r.db.ExecContext(ctx, `
@@ -298,7 +360,7 @@ func (r *CollectionPostgresRepo) Update(ctx context.Context, c *catalog.Collecti
 		string(c.ID), string(c.TenantID),
 	)
 	if err != nil {
-		return fmt.Errorf("updating collection: %w", err)
+		return errx.Wrap(err, "updating collection", errx.TypeInternal)
 	}
 	return nil
 }
@@ -308,19 +370,19 @@ func (r *CollectionPostgresRepo) Delete(ctx context.Context, tenantID kernel.Ten
 		string(id), string(tenantID),
 	)
 	if err != nil {
-		return fmt.Errorf("deleting collection: %w", err)
+		return errx.Wrap(err, "deleting collection", errx.TypeInternal)
 	}
 	return nil
 }
 
-func (r *CollectionPostgresRepo) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.Pagination) (kernel.PaginatedResult[catalog.Collection], error) {
-	var zero kernel.PaginatedResult[catalog.Collection]
+func (r *CollectionPostgresRepo) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[catalog.Collection], error) {
+	var zero kernel.Paginated[catalog.Collection]
 
 	var total int
 	if err := r.db.QueryRowContext(ctx,
 		"SELECT COUNT(*) FROM collections WHERE tenant_id = $1", string(tenantID),
 	).Scan(&total); err != nil {
-		return zero, fmt.Errorf("counting collections: %w", err)
+		return zero, errx.Wrap(err, "counting collections", errx.TypeInternal)
 	}
 
 	rows, err := r.db.QueryContext(ctx, `
@@ -331,58 +393,39 @@ func (r *CollectionPostgresRepo) List(ctx context.Context, tenantID kernel.Tenan
 		string(tenantID), pg.Limit(), pg.Offset(),
 	)
 	if err != nil {
-		return zero, fmt.Errorf("querying collections: %w", err)
+		return zero, errx.Wrap(err, "querying collections", errx.TypeInternal)
 	}
 	defer rows.Close()
 
 	var collections []catalog.Collection
 	for rows.Next() {
-		c, err := scanCollectionRow(rows)
+		c, err := scanCollectionFields(rows)
 		if err != nil {
 			return zero, err
 		}
 		collections = append(collections, *c)
 	}
 	if err := rows.Err(); err != nil {
-		return zero, fmt.Errorf("iterating collections: %w", err)
+		return zero, errx.Wrap(err, "iterating collections", errx.TypeInternal)
 	}
 
-	return kernel.NewPaginatedResult(collections, total, pg), nil
+	return kernel.NewPaginated(collections, pg.Page, pg.PageSize, total), nil
 }
 
-type collectionScanner interface {
-	Scan(dest ...any) error
-}
-
-func scanCollection(row *sql.Row) (*catalog.Collection, error) {
-	c, err := scanCollectionFields(row)
-	if err == sql.ErrNoRows {
-		return nil, catalog.ErrCollectionNotFound
-	}
-	return c, err
-}
-
-func scanCollectionRow(rows *sql.Rows) (*catalog.Collection, error) {
-	return scanCollectionFields(rows)
-}
-
-func scanCollectionFields(s collectionScanner) (*catalog.Collection, error) {
+func scanCollectionFields(s rowScanner) (*catalog.Collection, error) {
 	var c catalog.Collection
 	var id, tenantID string
 	var productIDsJSON, rulesJSON string
-	var createdAt, updatedAt time.Time
 
 	err := s.Scan(&id, &tenantID, &c.Name, &c.Slug, &c.Description,
 		&productIDsJSON, &c.IsAutomatic, &rulesJSON,
-		&createdAt, &updatedAt)
+		&c.CreatedAt, &c.UpdatedAt)
 	if err != nil {
-		return nil, err
+		return nil, errx.Wrap(err, "scanning collection", errx.TypeInternal)
 	}
 
 	c.ID = kernel.CollectionID(id)
 	c.TenantID = kernel.TenantID(tenantID)
-	c.CreatedAt = createdAt
-	c.UpdatedAt = updatedAt
 
 	_ = json.Unmarshal([]byte(productIDsJSON), &c.ProductIDs)
 	if c.ProductIDs == nil {

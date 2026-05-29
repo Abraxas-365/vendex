@@ -8,14 +8,14 @@ import (
 
 // Category represents a product category in a tenant's catalog.
 type Category struct {
-	ID          kernel.CategoryID  `json:"id"`
-	TenantID    kernel.TenantID    `json:"tenant_id"`
-	Name        string             `json:"name"`
-	Slug        string             `json:"slug"`
-	ParentID    *kernel.CategoryID `json:"parent_id"`
-	Description string             `json:"description"`
-	CreatedAt   time.Time          `json:"created_at"`
-	UpdatedAt   time.Time          `json:"updated_at"`
+	ID          kernel.CategoryID  `json:"id" db:"id"`
+	TenantID    kernel.TenantID    `json:"tenant_id" db:"tenant_id"`
+	Name        string             `json:"name" db:"name"`
+	Slug        string             `json:"slug" db:"slug"`
+	ParentID    *kernel.CategoryID `json:"parent_id" db:"parent_id"`
+	Description string             `json:"description" db:"description"`
+	CreatedAt   time.Time          `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time          `json:"updated_at" db:"updated_at"`
 }
 
 // IsRoot returns true if this category has no parent.
@@ -25,16 +25,16 @@ func (c *Category) IsRoot() bool {
 
 // Collection represents a curated or automatic grouping of products.
 type Collection struct {
-	ID          kernel.CollectionID `json:"id"`
-	TenantID    kernel.TenantID    `json:"tenant_id"`
-	Name        string             `json:"name"`
-	Slug        string             `json:"slug"`
-	Description string             `json:"description"`
-	ProductIDs  []kernel.ProductID `json:"product_ids"`
-	IsAutomatic bool               `json:"is_automatic"`
-	Rules       map[string]any     `json:"rules"`
-	CreatedAt   time.Time          `json:"created_at"`
-	UpdatedAt   time.Time          `json:"updated_at"`
+	ID          kernel.CollectionID `json:"id" db:"id"`
+	TenantID    kernel.TenantID     `json:"tenant_id" db:"tenant_id"`
+	Name        string              `json:"name" db:"name"`
+	Slug        string              `json:"slug" db:"slug"`
+	Description string              `json:"description" db:"description"`
+	ProductIDs  []kernel.ProductID  `json:"product_ids" db:"product_ids"`
+	IsAutomatic bool                `json:"is_automatic" db:"is_automatic"`
+	Rules       map[string]any      `json:"rules" db:"rules"`
+	CreatedAt   time.Time           `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time           `json:"updated_at" db:"updated_at"`
 }
 
 // ContainsProduct checks if a product is in this collection.

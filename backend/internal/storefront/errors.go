@@ -1,16 +1,14 @@
 package storefront
 
 import (
-	"net/http"
-
-	"github.com/Abraxas-365/hada-commerce/internal/kernel/errx"
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 )
 
 var (
-	ErrPageNotFound      = errx.New("PAGE_NOT_FOUND", "page not found", http.StatusNotFound)
-	ErrSlugAlreadyExists = errx.New("SLUG_ALREADY_EXISTS", "a page with this slug already exists", http.StatusConflict)
-	ErrPageNotPublished  = errx.New("PAGE_NOT_PUBLISHED", "page is not published", http.StatusNotFound)
-	ErrPageArchived      = errx.New("PAGE_ARCHIVED", "archived pages cannot be edited", http.StatusUnprocessableEntity)
-	ErrInvalidStatus     = errx.New("INVALID_STATUS", "invalid page status transition", http.StatusUnprocessableEntity)
-	ErrVersionNotFound   = errx.New("VERSION_NOT_FOUND", "page version not found", http.StatusNotFound)
+	ErrPageNotFound      = errx.New("page not found", errx.TypeNotFound)
+	ErrSlugAlreadyExists = errx.New("a page with this slug already exists", errx.TypeConflict)
+	ErrPageNotPublished  = errx.New("page is not published", errx.TypeNotFound)
+	ErrPageArchived      = errx.New("archived pages cannot be edited", errx.TypeBusiness)
+	ErrInvalidStatus     = errx.New("invalid page status transition", errx.TypeBusiness)
+	ErrVersionNotFound   = errx.New("page version not found", errx.TypeNotFound)
 )

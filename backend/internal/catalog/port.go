@@ -13,8 +13,8 @@ type CategoryRepository interface {
 	GetBySlug(ctx context.Context, tenantID kernel.TenantID, slug string) (*Category, error)
 	Update(ctx context.Context, c *Category) error
 	Delete(ctx context.Context, tenantID kernel.TenantID, id kernel.CategoryID) error
-	List(ctx context.Context, tenantID kernel.TenantID, pg kernel.Pagination) (kernel.PaginatedResult[Category], error)
-	ListByParent(ctx context.Context, tenantID kernel.TenantID, parentID *kernel.CategoryID, pg kernel.Pagination) (kernel.PaginatedResult[Category], error)
+	List(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[Category], error)
+	ListByParent(ctx context.Context, tenantID kernel.TenantID, parentID *kernel.CategoryID, pg kernel.PaginationOptions) (kernel.Paginated[Category], error)
 }
 
 // CollectionRepository defines persistence operations for collections.
@@ -24,5 +24,5 @@ type CollectionRepository interface {
 	GetBySlug(ctx context.Context, tenantID kernel.TenantID, slug string) (*Collection, error)
 	Update(ctx context.Context, c *Collection) error
 	Delete(ctx context.Context, tenantID kernel.TenantID, id kernel.CollectionID) error
-	List(ctx context.Context, tenantID kernel.TenantID, pg kernel.Pagination) (kernel.PaginatedResult[Collection], error)
+	List(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[Collection], error)
 }
