@@ -217,3 +217,61 @@ export interface AgentMessage {
   content: string
   timestamp: string
 }
+
+// ---------------------------------------------------------------------------
+// Marketplace types
+// ---------------------------------------------------------------------------
+
+export type PluginCategory = 'official' | 'community' | 'custom'
+export type InstallationStatus = 'active' | 'inactive' | 'failed'
+
+export interface Plugin {
+  id: string
+  name: string
+  display_name: string
+  description: string
+  author: string
+  icon: string
+  category: PluginCategory
+  tags: string[]
+  created_at: string
+  updated_at: string
+}
+
+export interface PluginVersion {
+  id: string
+  plugin_id: string
+  version: string
+  changelog: string
+  permissions: string[]
+  manifest_json: string
+  frontend_url: string
+  min_platform_ver: string
+  created_at: string
+}
+
+export interface PluginInstallation {
+  id: string
+  tenant_id: string
+  plugin_id: string
+  version_id: string
+  status: InstallationStatus
+  settings: Record<string, unknown>
+  installed_at: string
+  updated_at: string
+}
+
+export interface PluginManifest {
+  name: string
+  display_name: string
+  version: string
+  description: string
+  author: string
+  permissions: string[]
+  ui: {
+    tabs: Array<{ label: string; icon: string; entry: string }>
+    widgets: Array<{ slot: string; component: string; entry: string }>
+  }
+  tools: Array<{ name: string; description: string }>
+  migrations: string[]
+}

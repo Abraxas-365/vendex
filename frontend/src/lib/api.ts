@@ -10,6 +10,10 @@ import type {
   Promo,
   Media,
   PaginatedResult,
+  Plugin,
+  PluginVersion,
+  PluginInstallation,
+  PluginManifest,
 } from '../types'
 
 // ---------------------------------------------------------------------------
@@ -277,4 +281,44 @@ export async function uploadMedia(file: File, alt?: string): Promise<Media> {
 
 export function deleteMedia(id: string): Promise<void> {
   return del(`/media/${id}`)
+}
+
+// ---------------------------------------------------------------------------
+// Marketplace
+// ---------------------------------------------------------------------------
+
+export function listMarketplacePlugins(params?: PaginationParams): Promise<PaginatedResult<Plugin>> {
+  return get<PaginatedResult<Plugin>>('/marketplace/plugins', params as Record<string, string | number | undefined>)
+}
+
+export function getMarketplacePlugin(id: string): Promise<Plugin & { latest_version?: PluginVersion }> {
+  return get<Plugin & { latest_version?: PluginVersion }>(`/marketplace/plugins/${id}`)
+}
+
+export function installPlugin(pluginId: string): Promise<PluginInstallation> {
+  return post<PluginInstallation>('/marketplace/install', { plugin_id: pluginId })
+}
+
+export function uninstallPlugin(pluginId: string): Promise<void> {
+  return post<void>('/marketplace/uninstall', { plugin_id: pluginId })
+}
+
+export function listInstalledPlugins(): Promise<PluginInstallation[]> {
+  return get<PluginInstallation[]>('/marketplace/installed')
+}
+
+export function updatePluginSettings(pluginId: string, settings: Record<string, unknown>): Promise<PluginInstallation> {
+  return put<PluginInstallation>(`/marketplace/plugins/${pluginId}/settings`, { settings })
+}
+
+// ---------------------------------------------------------------------------
+// Plugin Runtime
+// ---------------------------------------------------------------------------
+
+export function listPluginManifests(): Promise<PluginManifest[]> {
+  return get<PluginManifest[]>('/plugins/manifests')
+}
+
+export function getPluginManifest(name: string): Promise<PluginManifest> {
+  return get<PluginManifest>(`/plugins/${name}/manifest`)
 }

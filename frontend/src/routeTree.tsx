@@ -14,6 +14,7 @@ import {
   Bot,
   ExternalLink,
   Store,
+  Puzzle,
 } from 'lucide-react'
 
 // Store pages
@@ -33,6 +34,8 @@ import Pages from './pages/admin/Pages'
 import Promos from './pages/admin/Promos'
 import Media from './pages/admin/Media'
 import AgentChat from './pages/admin/AgentChat'
+import Marketplace from './pages/admin/Marketplace'
+import PluginView from './pages/admin/PluginView'
 
 // ─── Root route (bare) ───────────────────────────────────────────────────────
 
@@ -76,6 +79,7 @@ const adminNavItems: NavItem[] = [
   { to: '/admin/promos', label: 'Promos', icon: Tag },
   { to: '/admin/media', label: 'Media', icon: Image },
   { to: '/admin/agent', label: 'Agent Chat', icon: Bot },
+  { to: '/admin/marketplace', label: 'Marketplace', icon: Puzzle },
 ]
 
 function AdminLayout() {
@@ -222,6 +226,18 @@ const adminAgentRoute = createRoute({
   component: AgentChat,
 })
 
+const adminMarketplaceRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/marketplace',
+  component: Marketplace,
+})
+
+const adminPluginViewRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/plugins/$name',
+  component: PluginView,
+})
+
 // ─── Route tree ───────────────────────────────────────────────────────────────
 
 const storeTree = storeLayoutRoute.addChildren([
@@ -241,6 +257,8 @@ const adminTree = adminLayoutRoute.addChildren([
   adminPromosRoute,
   adminMediaRoute,
   adminAgentRoute,
+  adminMarketplaceRoute,
+  adminPluginViewRoute,
 ])
 
 export const routeTree = rootRoute.addChildren([storeTree, adminTree])

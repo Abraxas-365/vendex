@@ -17,6 +17,9 @@ import type {
   Promo,
   Media,
   PaginatedResult,
+  Plugin,
+  PluginInstallation,
+  PluginManifest,
 } from '../types'
 import * as api from './api'
 import type { PaginationParams } from './api'
@@ -393,5 +396,52 @@ export function useDeleteMedia(): UseMutationResult<void, Error, string> {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.media.all })
     },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Marketplace
+// ---------------------------------------------------------------------------
+
+export function useMarketplacePlugins(params?: PaginationParams): UseQueryResult<PaginatedResult<Plugin>> {
+  return useQuery({
+    queryKey: ['marketplace', 'plugins', params],
+    queryFn: () => api.listMarketplacePlugins(params),
+  })
+}
+
+export function useInstallPlugin(): UseMutationResult<PluginInstallation, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (pluginId: string) => api.installPlugin(pluginId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['marketplace'] })
+      void qc.invalidateQueries({ queryKey: ['plugins'] })
+    },
+  })
+}
+
+export function useUninstallPlugin(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (pluginId: string) => api.uninstallPlugin(pluginId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['marketplace'] })
+      void qc.invalidateQueries({ queryKey: ['plugins'] })
+    },
+  })
+}
+
+export function useInstalledPlugins(): UseQueryResult<PluginInstallation[]> {
+  return useQuery({
+    queryKey: ['marketplace', 'installed'],
+    queryFn: () => api.listInstalledPlugins(),
+  })
+}
+
+export function usePluginManifests(): UseQueryResult<PluginManifest[]> {
+  return useQuery({
+    queryKey: ['plugins', 'manifests'],
+    queryFn: () => api.listPluginManifests(),
   })
 }
