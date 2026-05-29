@@ -13,3 +13,6 @@ type PageID string
 type PageVersionID string
 type PromoID string
 type MediaID string
+type PluginID string
+type PluginVersionID string
+type InstallationID string
