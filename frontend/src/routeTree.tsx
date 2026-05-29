@@ -1,0 +1,246 @@
+import {
+  createRootRoute,
+  createRoute,
+  Outlet,
+  Link,
+} from '@tanstack/react-router'
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  FileText,
+  Tag,
+  Image,
+  Bot,
+  ExternalLink,
+  Store,
+} from 'lucide-react'
+
+// Store pages
+import Navbar from './components/store/Navbar'
+import Home from './pages/store/Home'
+import ProductList from './pages/store/ProductList'
+import ProductDetail from './pages/store/ProductDetail'
+import Cart from './pages/store/Cart'
+import Checkout from './pages/store/Checkout'
+import DynamicPage from './pages/store/DynamicPage'
+
+// Admin pages
+import Dashboard from './pages/admin/Dashboard'
+import Products from './pages/admin/Products'
+import Orders from './pages/admin/Orders'
+import Pages from './pages/admin/Pages'
+import Promos from './pages/admin/Promos'
+import Media from './pages/admin/Media'
+import AgentChat from './pages/admin/AgentChat'
+
+// ─── Root route (bare) ───────────────────────────────────────────────────────
+
+const rootRoute = createRootRoute({
+  component: () => <Outlet />,
+})
+
+// ─── Store layout route ──────────────────────────────────────────────────────
+
+const storeLayoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: '_store',
+  component: () => (
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <Navbar />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+      <footer className="bg-white border-t border-gray-100 py-8 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-400">
+          © {new Date().getFullYear()} Hada Store. All rights reserved.
+        </div>
+      </footer>
+    </div>
+  ),
+})
+
+// ─── Admin layout route ──────────────────────────────────────────────────────
+
+interface NavItem {
+  to: string
+  label: string
+  icon: React.ComponentType<{ size?: number; className?: string }>
+}
+
+const adminNavItems: NavItem[] = [
+  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/admin/products', label: 'Products', icon: Package },
+  { to: '/admin/orders', label: 'Orders', icon: ShoppingCart },
+  { to: '/admin/pages', label: 'Pages', icon: FileText },
+  { to: '/admin/promos', label: 'Promos', icon: Tag },
+  { to: '/admin/media', label: 'Media', icon: Image },
+  { to: '/admin/agent', label: 'Agent Chat', icon: Bot },
+]
+
+function AdminLayout() {
+  return (
+    <div className="flex h-screen overflow-hidden bg-slate-50 font-sans antialiased">
+      {/* Sidebar */}
+      <aside className="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
+        <div className="flex h-16 items-center border-b border-slate-200 px-4">
+          <Store size={22} className="text-indigo-600" />
+          <span className="ml-2 text-base font-semibold text-slate-800 tracking-tight">
+            Hada Commerce
+          </span>
+        </div>
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
+          <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
+            Admin
+          </p>
+          <ul className="space-y-0.5">
+            {adminNavItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 [&.active]:bg-indigo-50 [&.active]:text-indigo-700"
+                  >
+                    <Icon size={18} className="shrink-0" />
+                    {item.label}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
+        <div className="border-t border-slate-200 px-3 py-4">
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          >
+            <ExternalLink size={18} className="shrink-0" />
+            View Store
+          </a>
+        </div>
+      </aside>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="flex h-16 shrink-0 items-center border-b border-slate-200 bg-white px-6">
+          <h1 className="text-sm font-medium text-slate-500">Hada Commerce Admin</h1>
+        </header>
+        <main className="flex-1 overflow-y-auto p-6">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  )
+}
+
+const adminLayoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: '_admin',
+  component: AdminLayout,
+})
+
+// ─── Store routes ────────────────────────────────────────────────────────────
+
+const homeRoute = createRoute({
+  getParentRoute: () => storeLayoutRoute,
+  path: '/',
+  component: Home,
+})
+
+const productsRoute = createRoute({
+  getParentRoute: () => storeLayoutRoute,
+  path: '/products',
+  component: ProductList,
+})
+
+const productDetailRoute = createRoute({
+  getParentRoute: () => storeLayoutRoute,
+  path: '/products/$id',
+  component: ProductDetail,
+})
+
+const cartRoute = createRoute({
+  getParentRoute: () => storeLayoutRoute,
+  path: '/cart',
+  component: Cart,
+})
+
+const checkoutRoute = createRoute({
+  getParentRoute: () => storeLayoutRoute,
+  path: '/checkout',
+  component: Checkout,
+})
+
+const dynamicPageRoute = createRoute({
+  getParentRoute: () => storeLayoutRoute,
+  path: '/pages/$slug',
+  component: DynamicPage,
+})
+
+// ─── Admin routes ────────────────────────────────────────────────────────────
+
+const adminDashRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin',
+  component: Dashboard,
+})
+
+const adminProductsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/products',
+  component: Products,
+})
+
+const adminOrdersRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/orders',
+  component: Orders,
+})
+
+const adminPagesRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/pages',
+  component: Pages,
+})
+
+const adminPromosRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/promos',
+  component: Promos,
+})
+
+const adminMediaRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/media',
+  component: Media,
+})
+
+const adminAgentRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/agent',
+  component: AgentChat,
+})
+
+// ─── Route tree ───────────────────────────────────────────────────────────────
+
+const storeTree = storeLayoutRoute.addChildren([
+  homeRoute,
+  productsRoute,
+  productDetailRoute,
+  cartRoute,
+  checkoutRoute,
+  dynamicPageRoute,
+])
+
+const adminTree = adminLayoutRoute.addChildren([
+  adminDashRoute,
+  adminProductsRoute,
+  adminOrdersRoute,
+  adminPagesRoute,
+  adminPromosRoute,
+  adminMediaRoute,
+  adminAgentRoute,
+])
+
+export const routeTree = rootRoute.addChildren([storeTree, adminTree])
