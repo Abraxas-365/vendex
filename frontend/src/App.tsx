@@ -1,6 +1,8 @@
 import { createRouter, RouterProvider } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Theme } from '@radix-ui/themes'
 import { CartProvider } from './lib/cart'
+import { AuthProvider } from './lib/auth'
 import { routeTree } from './routeTree'
 
 // ─── TanStack Query client ────────────────────────────────────────────────────
@@ -26,15 +28,20 @@ declare module '@tanstack/react-router' {
 }
 
 // ─── App ─────────────────────────────────────────────────────────────────────
-// CartProvider wraps the whole app so the cart is accessible from both
+// AuthProvider wraps the whole app so auth state is accessible everywhere.
+// CartProvider wraps the store so the cart is accessible from both
 // store pages (via useCart) and the admin Navbar "View Store" link context.
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        <RouterProvider router={router} />
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Theme>
+            <RouterProvider router={router} />
+          </Theme>
+        </CartProvider>
+      </AuthProvider>
     </QueryClientProvider>
   )
 }

@@ -318,6 +318,53 @@ export interface RecentOrder {
 }
 
 // ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+
+export interface AuthUser {
+  id: string
+  tenant_id: string
+  email: string
+  name: string
+  picture?: string
+  status: string
+  scopes: string[]
+}
+
+export interface AuthTenant {
+  id: string
+  name: string
+  slug: string
+  plan: string
+  is_active: boolean
+}
+
+export interface TokenResponse {
+  access_token: string
+  refresh_token: string
+  token_type: string
+  expires_in: number
+  user: AuthUser
+  tenant: AuthTenant
+}
+
+export interface LoginResponse {
+  auth_url: string
+  state: string
+}
+
+export interface RefreshResponse {
+  access_token: string
+  token_type: string
+  expires_in: number
+}
+
+export interface MeResponse {
+  user: AuthUser
+  tenant: AuthTenant
+}
+
+// ---------------------------------------------------------------------------
 // Settings
 // ---------------------------------------------------------------------------
 

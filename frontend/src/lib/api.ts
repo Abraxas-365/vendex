@@ -20,6 +20,10 @@ import type {
   OrderStatusBreakdown,
   RecentOrder,
   StoreSettings,
+  LoginResponse,
+  RefreshResponse,
+  TokenResponse,
+  MeResponse,
 } from '../types'
 
 // ---------------------------------------------------------------------------
@@ -28,12 +32,36 @@ import type {
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
 
-// TODO: replace with auth context / tenant resolver once multi-tenancy UI is built
-const TENANT_ID = import.meta.env.VITE_TENANT_ID ?? 'default'
-
 export interface PaginationParams {
   page?: number
   page_size?: number
+}
+
+// ---------------------------------------------------------------------------
+// Token management (localStorage)
+// ---------------------------------------------------------------------------
+
+const TOKEN_KEY = 'hada_access_token'
+const REFRESH_TOKEN_KEY = 'hada_refresh_token'
+
+export function getAccessToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+export function getRefreshToken(): string | null {
+  return localStorage.getItem(REFRESH_TOKEN_KEY)
+}
+
+export function setTokens(accessToken: string, refreshToken?: string): void {
+  localStorage.setItem(TOKEN_KEY, accessToken)
+  if (refreshToken) {
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+  }
+}
+
+export function clearTokens(): void {
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(REFRESH_TOKEN_KEY)
 }
 
 // ---------------------------------------------------------------------------
@@ -41,11 +69,15 @@ export interface PaginationParams {
 // ---------------------------------------------------------------------------
 
 function buildHeaders(extra?: Record<string, string>): HeadersInit {
-  return {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'X-Tenant-ID': TENANT_ID,
     ...extra,
   }
+  const token = getAccessToken()
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  return headers
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {
@@ -65,6 +97,45 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>
 }
 
+// Attempt a token refresh and retry the original request once
+let _refreshPromise: Promise<string> | null = null
+
+async function withRefreshRetry<T>(fn: () => Promise<Response>): Promise<T> {
+  const res = await fn()
+  if (res.status !== 401) {
+    return handleResponse<T>(res)
+  }
+
+  // 401 — try refreshing the token (deduplicate concurrent refreshes)
+  if (!_refreshPromise) {
+    const refreshToken = getRefreshToken()
+    if (!refreshToken) {
+      // No refresh token — clear state and throw
+      clearTokens()
+      throw new Error('Session expired. Please log in again.')
+    }
+    _refreshPromise = refreshTokenApi(refreshToken)
+      .then((newToken) => {
+        setTokens(newToken)
+        return newToken
+      })
+      .finally(() => {
+        _refreshPromise = null
+      })
+  }
+
+  try {
+    await _refreshPromise
+  } catch {
+    clearTokens()
+    throw new Error('Session expired. Please log in again.')
+  }
+
+  // Retry with new token
+  const retried = await fn()
+  return handleResponse<T>(retried)
+}
+
 export async function get<T>(path: string, params?: Record<string, string | number | undefined>): Promise<T> {
   const url = new URL(`${BASE_URL}${path}`, window.location.origin)
   if (params) {
@@ -72,37 +143,104 @@ export async function get<T>(path: string, params?: Record<string, string | numb
       if (v !== undefined) url.searchParams.set(k, String(v))
     }
   }
-  const res = await fetch(url.toString(), {
-    method: 'GET',
-    headers: buildHeaders(),
-  })
-  return handleResponse<T>(res)
+  return withRefreshRetry<T>(() =>
+    fetch(url.toString(), {
+      method: 'GET',
+      headers: buildHeaders(),
+    }),
+  )
 }
 
 export async function post<T>(path: string, body?: unknown): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: 'POST',
-    headers: buildHeaders(),
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  })
-  return handleResponse<T>(res)
+  return withRefreshRetry<T>(() =>
+    fetch(`${BASE_URL}${path}`, {
+      method: 'POST',
+      headers: buildHeaders(),
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
+  )
 }
 
 export async function put<T>(path: string, body?: unknown): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: 'PUT',
-    headers: buildHeaders(),
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  })
-  return handleResponse<T>(res)
+  return withRefreshRetry<T>(() =>
+    fetch(`${BASE_URL}${path}`, {
+      method: 'PUT',
+      headers: buildHeaders(),
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
+  )
 }
 
 export async function del(path: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: 'DELETE',
+  return withRefreshRetry<void>(() =>
+    fetch(`${BASE_URL}${path}`, {
+      method: 'DELETE',
+      headers: buildHeaders(),
+    }),
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Auth API — these do NOT use withRefreshRetry to avoid infinite loops
+// ---------------------------------------------------------------------------
+
+export async function initiateLogin(provider: 'GOOGLE' | 'MICROSOFT', invitationToken?: string): Promise<LoginResponse> {
+  const body: { provider: string; invitation_token?: string } = { provider }
+  if (invitationToken) body.invitation_token = invitationToken
+  const res = await fetch(`${BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  return handleResponse<LoginResponse>(res)
+}
+
+export async function handleAuthCallback(provider: string, code: string, state: string): Promise<TokenResponse> {
+  const url = new URL(`${BASE_URL}/auth/callback/${provider}`, window.location.origin)
+  url.searchParams.set('code', code)
+  url.searchParams.set('state', state)
+  const res = await fetch(url.toString(), {
+    method: 'GET',
+    credentials: 'include', // include cookies
+  })
+  return handleResponse<TokenResponse>(res)
+}
+
+// Internal helper used only by withRefreshRetry — returns new access token
+async function refreshTokenApi(refreshToken: string): Promise<string> {
+  const res = await fetch(`${BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  })
+  const data = await handleResponse<RefreshResponse>(res)
+  return data.access_token
+}
+
+// Exported refresh function for explicit use
+export async function refreshToken(token: string): Promise<RefreshResponse> {
+  const res = await fetch(`${BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: token }),
+  })
+  return handleResponse<RefreshResponse>(res)
+}
+
+export async function logout(): Promise<{ message: string }> {
+  const res = await fetch(`${BASE_URL}/auth/logout`, {
+    method: 'POST',
     headers: buildHeaders(),
   })
-  await handleResponse<void>(res)
+  return handleResponse<{ message: string }>(res)
+}
+
+export async function getMe(): Promise<MeResponse> {
+  const res = await fetch(`${BASE_URL}/auth/me`, {
+    method: 'GET',
+    headers: buildHeaders(),
+  })
+  return handleResponse<MeResponse>(res)
 }
 
 // ---------------------------------------------------------------------------
@@ -297,12 +435,17 @@ export async function uploadMedia(file: File, alt?: string): Promise<Media> {
   formData.append('file', file)
   if (alt) formData.append('alt', alt)
 
+  const headers: Record<string, string> = {
+    // Do NOT set Content-Type — browser sets multipart/form-data with boundary automatically
+  }
+  const token = getAccessToken()
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   const res = await fetch(`${BASE_URL}/media`, {
     method: 'POST',
-    headers: {
-      // Do NOT set Content-Type — browser sets multipart/form-data with boundary automatically
-      'X-Tenant-ID': TENANT_ID,
-    },
+    headers,
     body: formData,
   })
   return handleResponse<Media>(res)

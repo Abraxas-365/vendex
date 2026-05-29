@@ -26,9 +26,11 @@ import type {
   OrderStatusBreakdown,
   RecentOrder,
   StoreSettings,
+  MeResponse,
 } from '../types'
 import * as api from './api'
 import type { PaginationParams } from './api'
+import { useAuth } from './auth'
 
 // ---------------------------------------------------------------------------
 // Query key factory — centralised to avoid typos and simplify invalidation
@@ -557,6 +559,37 @@ export function useUpdateSettings(): UseMutationResult<StoreSettings, Error, Par
     mutationFn: (data: Partial<StoreSettings>) => api.updateSettings(data),
     onSuccess: (updated) => {
       qc.setQueryData(['settings'], updated)
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+
+export function useCurrentUser(): UseQueryResult<MeResponse> {
+  return useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: () => api.getMe(),
+    staleTime: 5 * 60_000, // 5 minutes
+    retry: false, // Don't retry auth failures
+  })
+}
+
+export function useLogout(): UseMutationResult<{ message: string }, Error, void> {
+  const qc = useQueryClient()
+  const { logout } = useAuth()
+  return useMutation({
+    mutationFn: () => api.logout(),
+    onSuccess: () => {
+      // Clear all cached queries after logout
+      qc.clear()
+      void logout()
+    },
+    onError: () => {
+      // Even on error, clear local state
+      qc.clear()
+      void logout()
     },
   })
 }

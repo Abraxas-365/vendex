@@ -18,6 +18,7 @@ import {
   Store,
   Puzzle,
   Settings2,
+  LogOut,
 } from 'lucide-react'
 
 // Store pages
@@ -44,6 +45,13 @@ import Marketplace from './pages/admin/Marketplace'
 import PluginView from './pages/admin/PluginView'
 import Catalog from './pages/admin/Catalog'
 import Settings from './pages/admin/Settings'
+
+// Auth pages
+import Login from './pages/auth/Login'
+import Callback from './pages/auth/Callback'
+
+// Auth context
+import { useAuth } from './lib/auth'
 
 // ─── Root route (bare) ───────────────────────────────────────────────────────
 
@@ -94,6 +102,8 @@ const adminNavItems: NavItem[] = [
 ]
 
 function AdminLayout() {
+  const { user, logout, isLoading } = useAuth()
+
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 font-sans antialiased">
       {/* Sidebar */}
@@ -125,7 +135,7 @@ function AdminLayout() {
             })}
           </ul>
         </nav>
-        <div className="border-t border-slate-200 px-3 py-4">
+        <div className="border-t border-slate-200 px-3 py-4 space-y-1">
           <a
             href="/"
             target="_blank"
@@ -135,11 +145,39 @@ function AdminLayout() {
             <ExternalLink size={18} className="shrink-0" />
             View Store
           </a>
+          {!isLoading && (
+            <button
+              onClick={() => void logout()}
+              className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 text-left"
+            >
+              <LogOut size={18} className="shrink-0" />
+              Sign Out
+            </button>
+          )}
         </div>
       </aside>
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 shrink-0 items-center border-b border-slate-200 bg-white px-6">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6">
           <h1 className="text-sm font-medium text-slate-500">Hada Commerce Admin</h1>
+          {user && (
+            <div className="flex items-center gap-3">
+              {user.picture ? (
+                <img
+                  src={user.picture}
+                  alt={user.name}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-sm font-semibold">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="text-right">
+                <p className="text-sm font-medium text-slate-700 leading-none">{user.name}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{user.email}</p>
+              </div>
+            </div>
+          )}
         </header>
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
@@ -149,10 +187,51 @@ function AdminLayout() {
   )
 }
 
+// Guard component that redirects to /login if not authenticated
+function AdminGuard() {
+  const { isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-slate-500">Loading…</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    window.location.replace('/login')
+    return null
+  }
+
+  return <AdminLayout />
+}
+
 const adminLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: '_admin',
-  component: AdminLayout,
+  component: AdminGuard,
+})
+
+// ─── Auth routes ──────────────────────────────────────────────────────────────
+
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login',
+  component: Login,
+})
+
+// /auth/callback/:provider
+const authCallbackRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/callback/$provider',
+  component: function AuthCallbackPage() {
+    const { provider } = authCallbackRoute.useParams()
+    return <Callback provider={provider} />
+  },
 })
 
 // ─── Store routes ────────────────────────────────────────────────────────────
@@ -307,4 +386,9 @@ const adminTree = adminLayoutRoute.addChildren([
   adminSettingsRoute,
 ])
 
-export const routeTree = rootRoute.addChildren([storeTree, adminTree])
+export const routeTree = rootRoute.addChildren([
+  loginRoute,
+  authCallbackRoute,
+  storeTree,
+  adminTree,
+])
