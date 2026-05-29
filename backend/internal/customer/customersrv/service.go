@@ -2,9 +2,10 @@ package customersrv
 
 import (
 	"context"
-	"crypto/rand"
 	"fmt"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/Abraxas-365/hada-commerce/internal/customer"
 	"github.com/Abraxas-365/hada-commerce/internal/errx"
@@ -47,7 +48,7 @@ func (s *Service) Create(ctx context.Context, tenantID kernel.TenantID, in Creat
 
 	now := time.Now()
 	c := &customer.Customer{
-		ID:        kernel.CustomerID(generateID()),
+		ID:        kernel.CustomerID(uuid.NewString()),
 		TenantID:  tenantID,
 		Email:     email,
 		Name:      in.Name,
@@ -92,10 +93,3 @@ func (s *Service) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.
 	return s.repo.List(ctx, tenantID, pg)
 }
 
-func generateID() string {
-	b := make([]byte, 16)
-	_, _ = rand.Read(b)
-	b[6] = (b[6] & 0x0f) | 0x40
-	b[8] = (b[8] & 0x3f) | 0x80
-	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
-}

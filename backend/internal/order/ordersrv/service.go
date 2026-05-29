@@ -2,9 +2,10 @@ package ordersrv
 
 import (
 	"context"
-	"crypto/rand"
 	"fmt"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/order"
@@ -45,7 +46,7 @@ func (s *Service) Create(ctx context.Context, tenantID kernel.TenantID, in Creat
 	items := make([]order.OrderItem, len(in.Items))
 	for i, it := range in.Items {
 		items[i] = order.OrderItem{
-			ID:          kernel.OrderItemID(generateID()),
+			ID:          kernel.OrderItemID(uuid.NewString()),
 			ProductID:   it.ProductID,
 			ProductName: it.ProductName,
 			Quantity:    it.Quantity,
@@ -54,7 +55,7 @@ func (s *Service) Create(ctx context.Context, tenantID kernel.TenantID, in Creat
 	}
 
 	o := &order.Order{
-		ID:              kernel.OrderID(generateID()),
+		ID:              kernel.OrderID(uuid.NewString()),
 		TenantID:        tenantID,
 		CustomerID:      in.CustomerID,
 		Items:           items,
@@ -124,10 +125,3 @@ func (s *Service) ListByCustomer(ctx context.Context, tenantID kernel.TenantID, 
 	return s.repo.ListByCustomer(ctx, tenantID, customerID, pg)
 }
 
-func generateID() string {
-	b := make([]byte, 16)
-	_, _ = rand.Read(b)
-	b[6] = (b[6] & 0x0f) | 0x40
-	b[8] = (b[8] & 0x3f) | 0x80
-	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
-}

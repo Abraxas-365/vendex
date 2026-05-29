@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/Abraxas-365/hada-commerce/internal/catalog"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 )
@@ -44,7 +46,7 @@ func (s *Service) CreateCategory(ctx context.Context, tenantID kernel.TenantID, 
 
 	now := time.Now()
 	c := &catalog.Category{
-		ID:          kernel.CategoryID(generateID()),
+		ID:          kernel.CategoryID(uuid.NewString()),
 		TenantID:    tenantID,
 		Name:        in.Name,
 		Slug:        in.Slug,
@@ -120,7 +122,7 @@ func (s *Service) CreateCollection(ctx context.Context, tenantID kernel.TenantID
 	}
 
 	c := &catalog.Collection{
-		ID:          kernel.CollectionID(generateID()),
+		ID:          kernel.CollectionID(uuid.NewString()),
 		TenantID:    tenantID,
 		Name:        in.Name,
 		Slug:        in.Slug,
