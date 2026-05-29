@@ -43,7 +43,7 @@ func (s *Service) Create(ctx context.Context, tenantID kernel.TenantID, in Creat
 	if in.SKU != "" {
 		existing, err := s.repo.GetBySKU(ctx, tenantID, in.SKU)
 		if err != nil && !errx.Is(err, product.ErrNotFound) {
-			return nil, fmt.Errorf("checking SKU uniqueness: %w", err)
+			return nil, errx.Wrap(err, "checking SKU uniqueness", errx.TypeInternal)
 		}
 		if existing != nil {
 			return nil, product.ErrDuplicateSKU
@@ -68,7 +68,7 @@ func (s *Service) Create(ctx context.Context, tenantID kernel.TenantID, in Creat
 	}
 
 	if err := s.repo.Create(ctx, p); err != nil {
-		return nil, fmt.Errorf("creating product: %w", err)
+		return nil, errx.Wrap(err, "creating product", errx.TypeInternal)
 	}
 	return p, nil
 }

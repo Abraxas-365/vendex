@@ -39,7 +39,7 @@ func (s *Service) Create(ctx context.Context, tenantID kernel.TenantID, in Creat
 	// Check for duplicate email.
 	existing, err := s.repo.GetByEmail(ctx, tenantID, email)
 	if err != nil && !errx.Is(err, customer.ErrNotFound) {
-		return nil, fmt.Errorf("checking email uniqueness: %w", err)
+		return nil, errx.Wrap(err, "checking email uniqueness", errx.TypeInternal)
 	}
 	if existing != nil {
 		return nil, customer.ErrDuplicateEmail
@@ -61,7 +61,7 @@ func (s *Service) Create(ctx context.Context, tenantID kernel.TenantID, in Creat
 	}
 
 	if err := s.repo.Create(ctx, c); err != nil {
-		return nil, fmt.Errorf("creating customer: %w", err)
+		return nil, errx.Wrap(err, "creating customer", errx.TypeInternal)
 	}
 	return c, nil
 }

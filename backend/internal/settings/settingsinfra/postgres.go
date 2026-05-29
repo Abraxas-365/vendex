@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -81,15 +80,15 @@ func (r *PostgresRepo) Get(ctx context.Context, tenantID kernel.TenantID) (*sett
 func (r *PostgresRepo) Upsert(ctx context.Context, s *settings.StoreSettings) error {
 	addressJSON, err := json.Marshal(s.Address)
 	if err != nil {
-		return fmt.Errorf("marshaling address: %w", err)
+		return errx.Wrap(err, "marshaling address", errx.TypeInternal)
 	}
 	socialLinksJSON, err := json.Marshal(s.SocialLinks)
 	if err != nil {
-		return fmt.Errorf("marshaling social_links: %w", err)
+		return errx.Wrap(err, "marshaling social_links", errx.TypeInternal)
 	}
 	checkoutConfigJSON, err := json.Marshal(s.CheckoutConfig)
 	if err != nil {
-		return fmt.Errorf("marshaling checkout_config: %w", err)
+		return errx.Wrap(err, "marshaling checkout_config", errx.TypeInternal)
 	}
 
 	_, err = r.db.ExecContext(ctx, `
