@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 )
 
@@ -44,14 +45,14 @@ func New(mux *http.ServeMux, db *sql.DB) *Runtime {
 // Calling LoadPlugin again for an already-loaded plugin returns an error.
 func (r *Runtime) LoadPlugin(ctx context.Context, tenantID kernel.TenantID, manifest *Manifest) error {
 	if manifest.Name == "" {
-		return fmt.Errorf("loading plugin: manifest name must not be empty")
+		return errx.Validation("loading plugin: manifest name must not be empty")
 	}
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	if _, exists := r.plugins[manifest.Name]; exists {
-		return fmt.Errorf("loading plugin %q: already loaded", manifest.Name)
+		return errx.Conflict(fmt.Sprintf("plugin %q already loaded", manifest.Name))
 	}
 
 	sandbox := newSandbox(manifest.Name, tenantID, manifest.Permissions, r.db)
@@ -81,7 +82,7 @@ func (r *Runtime) UnloadPlugin(name string) error {
 	defer r.mu.Unlock()
 
 	if _, exists := r.plugins[name]; !exists {
-		return fmt.Errorf("unloading plugin %q: not loaded", name)
+		return errx.NotFound(fmt.Sprintf("plugin %q not loaded", name))
 	}
 
 	delete(r.plugins, name)
@@ -118,7 +119,7 @@ func (r *Runtime) GetManifest(name string) (*Manifest, error) {
 
 	lp, ok := r.plugins[name]
 	if !ok {
-		return nil, fmt.Errorf("plugin %q: not loaded", name)
+		return nil, errx.NotFound(fmt.Sprintf("plugin %q not loaded", name))
 	}
 	return lp.Manifest, nil
 }

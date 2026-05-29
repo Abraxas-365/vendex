@@ -2,10 +2,11 @@ package mediainfra
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 )
 
 // LocalStorageProvider implements media.StorageProvider using the local filesystem.
@@ -22,7 +23,7 @@ type LocalStorageProvider struct {
 // It creates BaseDir if it does not exist.
 func NewLocalStorageProvider(baseDir, baseURL string) (*LocalStorageProvider, error) {
 	if err := os.MkdirAll(baseDir, 0o755); err != nil {
-		return nil, fmt.Errorf("create storage dir: %w", err)
+		return nil, errx.Wrap(err, "create storage dir", errx.TypeExternal)
 	}
 	return &LocalStorageProvider{BaseDir: baseDir, BaseURL: baseURL}, nil
 }
@@ -33,17 +34,17 @@ func (p *LocalStorageProvider) Upload(_ context.Context, key string, _ string, r
 
 	// Ensure parent directories exist.
 	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
-		return "", fmt.Errorf("create upload dir: %w", err)
+		return "", errx.Wrap(err, "create upload dir", errx.TypeExternal)
 	}
 
 	f, err := os.Create(dest)
 	if err != nil {
-		return "", fmt.Errorf("create file: %w", err)
+		return "", errx.Wrap(err, "create file", errx.TypeExternal)
 	}
 	defer f.Close()
 
 	if _, err := io.Copy(f, r); err != nil {
-		return "", fmt.Errorf("write file: %w", err)
+		return "", errx.Wrap(err, "write file", errx.TypeExternal)
 	}
 
 	return p.BaseURL + "/" + key, nil
@@ -53,7 +54,7 @@ func (p *LocalStorageProvider) Upload(_ context.Context, key string, _ string, r
 func (p *LocalStorageProvider) Delete(_ context.Context, key string) error {
 	dest := filepath.Join(p.BaseDir, filepath.FromSlash(key))
 	if err := os.Remove(dest); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("delete file: %w", err)
+		return errx.Wrap(err, "delete file", errx.TypeExternal)
 	}
 	return nil
 }

@@ -2,13 +2,12 @@ package catalogsrv
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/Abraxas-365/hada-commerce/internal/catalog"
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 )
 
@@ -37,8 +36,8 @@ type CreateCategoryInput struct {
 func (s *Service) CreateCategory(ctx context.Context, tenantID kernel.TenantID, in CreateCategoryInput) (*catalog.Category, error) {
 	// Check for duplicate slug.
 	existing, err := s.categories.GetBySlug(ctx, tenantID, in.Slug)
-	if err != nil && !errors.Is(err, catalog.ErrCategoryNotFound) {
-		return nil, fmt.Errorf("checking slug uniqueness: %w", err)
+	if err != nil && !errx.Is(err, catalog.ErrCategoryNotFound) {
+		return nil, errx.Wrap(err, "checking slug uniqueness", errx.TypeInternal)
 	}
 	if existing != nil {
 		return nil, catalog.ErrCategoryDuplicateSlug
@@ -57,7 +56,7 @@ func (s *Service) CreateCategory(ctx context.Context, tenantID kernel.TenantID, 
 	}
 
 	if err := s.categories.Create(ctx, c); err != nil {
-		return nil, fmt.Errorf("creating category: %w", err)
+		return nil, errx.Wrap(err, "creating category", errx.TypeInternal)
 	}
 	return c, nil
 }
@@ -104,8 +103,8 @@ type CreateCollectionInput struct {
 func (s *Service) CreateCollection(ctx context.Context, tenantID kernel.TenantID, in CreateCollectionInput) (*catalog.Collection, error) {
 	// Check for duplicate slug.
 	existing, err := s.collections.GetBySlug(ctx, tenantID, in.Slug)
-	if err != nil && !errors.Is(err, catalog.ErrCollectionNotFound) {
-		return nil, fmt.Errorf("checking slug uniqueness: %w", err)
+	if err != nil && !errx.Is(err, catalog.ErrCollectionNotFound) {
+		return nil, errx.Wrap(err, "checking slug uniqueness", errx.TypeInternal)
 	}
 	if existing != nil {
 		return nil, catalog.ErrCollectionDupSlug
@@ -135,7 +134,7 @@ func (s *Service) CreateCollection(ctx context.Context, tenantID kernel.TenantID
 	}
 
 	if err := s.collections.Create(ctx, c); err != nil {
-		return nil, fmt.Errorf("creating collection: %w", err)
+		return nil, errx.Wrap(err, "creating collection", errx.TypeInternal)
 	}
 	return c, nil
 }

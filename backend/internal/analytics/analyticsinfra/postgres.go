@@ -2,12 +2,12 @@ package analyticsinfra
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 
 	"github.com/Abraxas-365/hada-commerce/internal/analytics"
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 )
 
@@ -30,21 +30,21 @@ func (r *PostgresRepo) GetDashboardStats(ctx context.Context, tenantID kernel.Te
 	if err := r.db.QueryRowContext(ctx,
 		`SELECT COUNT(*) FROM products WHERE tenant_id = $1`, tid,
 	).Scan(&stats.TotalProducts); err != nil {
-		return nil, fmt.Errorf("counting products: %w", err)
+		return nil, errx.Wrap(err, "counting products", errx.TypeInternal)
 	}
 
 	// Total orders.
 	if err := r.db.QueryRowContext(ctx,
 		`SELECT COUNT(*) FROM orders WHERE tenant_id = $1`, tid,
 	).Scan(&stats.TotalOrders); err != nil {
-		return nil, fmt.Errorf("counting orders: %w", err)
+		return nil, errx.Wrap(err, "counting orders", errx.TypeInternal)
 	}
 
 	// Total customers.
 	if err := r.db.QueryRowContext(ctx,
 		`SELECT COUNT(*) FROM customers WHERE tenant_id = $1`, tid,
 	).Scan(&stats.TotalCustomers); err != nil {
-		return nil, fmt.Errorf("counting customers: %w", err)
+		return nil, errx.Wrap(err, "counting customers", errx.TypeInternal)
 	}
 
 	// Total revenue and currency (sum of non-cancelled orders).
@@ -54,14 +54,14 @@ func (r *PostgresRepo) GetDashboardStats(ctx context.Context, tenantID kernel.Te
 		  WHERE tenant_id = $1 AND status != 'cancelled'`, tid,
 	)
 	if err := row.Scan(&stats.TotalRevenue, &stats.Currency); err != nil {
-		return nil, fmt.Errorf("summing revenue: %w", err)
+		return nil, errx.Wrap(err, "summing revenue", errx.TypeInternal)
 	}
 
 	// Pending orders count.
 	if err := r.db.QueryRowContext(ctx,
 		`SELECT COUNT(*) FROM orders WHERE tenant_id = $1 AND status = 'pending'`, tid,
 	).Scan(&stats.PendingOrders); err != nil {
-		return nil, fmt.Errorf("counting pending orders: %w", err)
+		return nil, errx.Wrap(err, "counting pending orders", errx.TypeInternal)
 	}
 
 	// Active promos count (active flag and within date range).
@@ -72,14 +72,14 @@ func (r *PostgresRepo) GetDashboardStats(ctx context.Context, tenantID kernel.Te
 		    AND (starts_at IS NULL OR starts_at <= NOW())
 		    AND (ends_at IS NULL OR ends_at >= NOW())`, tid,
 	).Scan(&stats.ActivePromos); err != nil {
-		return nil, fmt.Errorf("counting active promos: %w", err)
+		return nil, errx.Wrap(err, "counting active promos", errx.TypeInternal)
 	}
 
 	// Pages pending review.
 	if err := r.db.QueryRowContext(ctx,
 		`SELECT COUNT(*) FROM pages WHERE tenant_id = $1 AND status = 'pending_review'`, tid,
 	).Scan(&stats.PendingPages); err != nil {
-		return nil, fmt.Errorf("counting pending pages: %w", err)
+		return nil, errx.Wrap(err, "counting pending pages", errx.TypeInternal)
 	}
 
 	return stats, nil
@@ -106,7 +106,7 @@ func (r *PostgresRepo) GetRevenueTimeline(ctx context.Context, tenantID kernel.T
 		string(tenantID), since,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("querying revenue timeline: %w", err)
+		return nil, errx.Wrap(err, "querying revenue timeline", errx.TypeInternal)
 	}
 
 	points := make([]analytics.RevenuePoint, len(rows))
@@ -143,7 +143,7 @@ func (r *PostgresRepo) GetTopProducts(ctx context.Context, tenantID kernel.Tenan
 		string(tenantID), limit,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("querying top products: %w", err)
+		return nil, errx.Wrap(err, "querying top products", errx.TypeInternal)
 	}
 
 	products := make([]analytics.TopProduct, len(rows))
@@ -174,7 +174,7 @@ func (r *PostgresRepo) GetOrderStatusBreakdown(ctx context.Context, tenantID ker
 		string(tenantID),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("querying order status breakdown: %w", err)
+		return nil, errx.Wrap(err, "querying order status breakdown", errx.TypeInternal)
 	}
 
 	breakdown := make([]analytics.OrderStatusBreakdown, len(rows))
@@ -208,7 +208,7 @@ func (r *PostgresRepo) GetRecentOrders(ctx context.Context, tenantID kernel.Tena
 		string(tenantID), limit,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("querying recent orders: %w", err)
+		return nil, errx.Wrap(err, "querying recent orders", errx.TypeInternal)
 	}
 
 	orders := make([]analytics.RecentOrder, len(rows))

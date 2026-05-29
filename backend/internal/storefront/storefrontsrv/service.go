@@ -2,9 +2,9 @@ package storefrontsrv
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/storefront"
 )
@@ -57,7 +57,7 @@ func (s *Service) CreatePage(ctx context.Context, input CreatePageInput) (*store
 	}
 
 	if err := s.pages.Create(ctx, page); err != nil {
-		return nil, fmt.Errorf("create page: %w", err)
+		return nil, errx.Wrap(err, "create page", errx.TypeInternal)
 	}
 
 	// Snapshot version 1.
@@ -73,7 +73,7 @@ func (s *Service) CreatePage(ctx context.Context, input CreatePageInput) (*store
 		CreatedAt: now,
 	}
 	if err := s.versions.Create(ctx, v); err != nil {
-		return nil, fmt.Errorf("create initial version: %w", err)
+		return nil, errx.Wrap(err, "create initial version", errx.TypeInternal)
 	}
 
 	return page, nil
@@ -118,7 +118,7 @@ func (s *Service) UpdatePage(ctx context.Context, input UpdatePageInput) (*store
 	page.UpdatedAt = time.Now().UTC()
 
 	if err := s.pages.Update(ctx, page); err != nil {
-		return nil, fmt.Errorf("update page: %w", err)
+		return nil, errx.Wrap(err, "update page", errx.TypeInternal)
 	}
 
 	// Snapshot the new version.
@@ -134,7 +134,7 @@ func (s *Service) UpdatePage(ctx context.Context, input UpdatePageInput) (*store
 		CreatedAt: page.UpdatedAt,
 	}
 	if err := s.versions.Create(ctx, v); err != nil {
-		return nil, fmt.Errorf("create version snapshot: %w", err)
+		return nil, errx.Wrap(err, "create version snapshot", errx.TypeInternal)
 	}
 
 	return page, nil
@@ -156,7 +156,7 @@ func (s *Service) Publish(ctx context.Context, tenantID kernel.TenantID, id kern
 	page.UpdatedAt = now
 
 	if err := s.pages.Update(ctx, page); err != nil {
-		return nil, fmt.Errorf("publish page: %w", err)
+		return nil, errx.Wrap(err, "publish page", errx.TypeInternal)
 	}
 	return page, nil
 }
@@ -175,7 +175,7 @@ func (s *Service) Unpublish(ctx context.Context, tenantID kernel.TenantID, id ke
 	page.UpdatedAt = time.Now().UTC()
 
 	if err := s.pages.Update(ctx, page); err != nil {
-		return nil, fmt.Errorf("unpublish page: %w", err)
+		return nil, errx.Wrap(err, "unpublish page", errx.TypeInternal)
 	}
 	return page, nil
 }
@@ -194,7 +194,7 @@ func (s *Service) Archive(ctx context.Context, tenantID kernel.TenantID, id kern
 	page.UpdatedAt = time.Now().UTC()
 
 	if err := s.pages.Update(ctx, page); err != nil {
-		return nil, fmt.Errorf("archive page: %w", err)
+		return nil, errx.Wrap(err, "archive page", errx.TypeInternal)
 	}
 	return page, nil
 }
@@ -212,7 +212,7 @@ func (s *Service) ReviseFromFeedback(ctx context.Context, input UpdatePageInput)
 		page.Status = storefront.PageStatusPendingReview
 		page.UpdatedAt = time.Now().UTC()
 		if err := s.pages.Update(ctx, page); err != nil {
-			return nil, fmt.Errorf("set pending_review after revision: %w", err)
+			return nil, errx.Wrap(err, "set pending_review after revision", errx.TypeInternal)
 		}
 	}
 	return page, nil

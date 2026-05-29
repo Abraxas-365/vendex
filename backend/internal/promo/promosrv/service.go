@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/promo"
 )
@@ -48,7 +49,7 @@ func (s *Service) Create(ctx context.Context, input CreateInput) (*promo.Promo, 
 	}
 
 	if err := s.repo.Create(ctx, p); err != nil {
-		return nil, fmt.Errorf("create promo: %w", err)
+		return nil, errx.Wrap(err, "create promo", errx.TypeInternal)
 	}
 	return p, nil
 }
@@ -102,7 +103,7 @@ func (s *Service) Apply(ctx context.Context, tenantID kernel.TenantID, code stri
 		return 0, err
 	}
 	if !result.Valid {
-		return 0, fmt.Errorf("promo not applicable: %s", result.Reason)
+		return 0, errx.Business(fmt.Sprintf("promo not applicable: %s", result.Reason))
 	}
 
 	p, err := s.repo.GetByCode(ctx, tenantID, code)
@@ -111,7 +112,7 @@ func (s *Service) Apply(ctx context.Context, tenantID kernel.TenantID, code stri
 	}
 
 	if err := s.repo.IncrementUsedCount(ctx, tenantID, p.ID); err != nil {
-		return 0, fmt.Errorf("increment promo usage: %w", err)
+		return 0, errx.Wrap(err, "increment promo usage", errx.TypeInternal)
 	}
 
 	return result.DiscountCents, nil
@@ -126,7 +127,7 @@ func (s *Service) Deactivate(ctx context.Context, tenantID kernel.TenantID, id k
 
 	p.Active = false
 	if err := s.repo.Update(ctx, p); err != nil {
-		return nil, fmt.Errorf("deactivate promo: %w", err)
+		return nil, errx.Wrap(err, "deactivate promo", errx.TypeInternal)
 	}
 	return p, nil
 }

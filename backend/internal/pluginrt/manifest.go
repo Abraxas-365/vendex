@@ -2,7 +2,8 @@ package pluginrt
 
 import (
 	"encoding/json"
-	"fmt"
+
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 )
 
 // Manifest describes a plugin's capabilities.
@@ -49,7 +50,7 @@ type ToolConfig struct {
 func ParseManifest(data []byte) (*Manifest, error) {
 	var m Manifest
 	if err := json.Unmarshal(data, &m); err != nil {
-		return nil, fmt.Errorf("parsing plugin manifest: %w", err)
+		return nil, errx.Wrap(err, "parsing plugin manifest", errx.TypeValidation)
 	}
 	return &m, nil
 }

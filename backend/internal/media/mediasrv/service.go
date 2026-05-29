@@ -8,6 +8,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/media"
 )
@@ -42,7 +43,7 @@ func (s *Service) Upload(ctx context.Context, input UploadInput) (*media.Media, 
 
 	url, err := s.storage.Upload(ctx, key, input.ContentType, input.Data)
 	if err != nil {
-		return nil, fmt.Errorf("upload file: %w", err)
+		return nil, errx.Wrap(err, "upload file", errx.TypeExternal)
 	}
 
 	m := &media.Media{
@@ -60,7 +61,7 @@ func (s *Service) Upload(ctx context.Context, input UploadInput) (*media.Media, 
 	if err := s.repo.Create(ctx, m); err != nil {
 		// Best-effort cleanup of orphaned file.
 		_ = s.storage.Delete(ctx, key)
-		return nil, fmt.Errorf("persist media metadata: %w", err)
+		return nil, errx.Wrap(err, "persist media metadata", errx.TypeInternal)
 	}
 	return m, nil
 }
@@ -77,7 +78,7 @@ func (s *Service) Delete(ctx context.Context, tenantID kernel.TenantID, id kerne
 	// so we use the path component of the URL as the key.
 	key := path.Base(m.URL)
 	if err := s.repo.Delete(ctx, tenantID, id); err != nil {
-		return fmt.Errorf("delete media metadata: %w", err)
+		return errx.Wrap(err, "delete media metadata", errx.TypeInternal)
 	}
 	// Best-effort; failure here does not roll back the metadata deletion.
 	_ = s.storage.Delete(ctx, key)

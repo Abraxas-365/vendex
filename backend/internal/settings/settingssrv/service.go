@@ -2,7 +2,6 @@ package settingssrv
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/Abraxas-365/hada-commerce/internal/errx"
@@ -40,12 +39,12 @@ func (s *Service) Get(ctx context.Context, tenantID kernel.TenantID) (*settings.
 	if errx.IsNotFound(err) {
 		defaults := settings.DefaultSettings(tenantID)
 		if upsertErr := s.repo.Upsert(ctx, defaults); upsertErr != nil {
-			return nil, fmt.Errorf("creating default settings: %w", upsertErr)
+			return nil, errx.Wrap(upsertErr, "creating default settings", errx.TypeInternal)
 		}
 		return defaults, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("getting settings: %w", err)
+		return nil, errx.Wrap(err, "getting settings", errx.TypeInternal)
 	}
 	return ss, nil
 }
@@ -71,7 +70,7 @@ func (s *Service) Update(ctx context.Context, tenantID kernel.TenantID, in Updat
 	ss.UpdatedAt = time.Now()
 
 	if err := s.repo.Upsert(ctx, ss); err != nil {
-		return nil, fmt.Errorf("upserting settings: %w", err)
+		return nil, errx.Wrap(err, "upserting settings", errx.TypeInternal)
 	}
 	return ss, nil
 }

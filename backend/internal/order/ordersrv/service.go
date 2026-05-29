@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/google/uuid"
 
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
@@ -67,7 +68,7 @@ func (s *Service) Create(ctx context.Context, tenantID kernel.TenantID, in Creat
 	o.CalculateTotal()
 
 	if err := s.repo.Create(ctx, o); err != nil {
-		return nil, fmt.Errorf("creating order: %w", err)
+		return nil, errx.Wrap(err, "creating order", errx.TypeInternal)
 	}
 	return o, nil
 }
@@ -89,7 +90,7 @@ func (s *Service) UpdateStatus(ctx context.Context, tenantID kernel.TenantID, id
 	}
 
 	if err := s.repo.Update(ctx, o); err != nil {
-		return nil, fmt.Errorf("updating order status: %w", err)
+		return nil, errx.Wrap(err, "updating order status", errx.TypeInternal)
 	}
 	return o, nil
 }
@@ -110,7 +111,7 @@ func (s *Service) Cancel(ctx context.Context, tenantID kernel.TenantID, id kerne
 	}
 
 	if err := s.repo.Update(ctx, o); err != nil {
-		return nil, fmt.Errorf("cancelling order: %w", err)
+		return nil, errx.Wrap(err, "cancelling order", errx.TypeInternal)
 	}
 	return o, nil
 }
