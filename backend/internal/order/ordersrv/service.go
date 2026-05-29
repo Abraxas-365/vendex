@@ -2,7 +2,6 @@ package ordersrv
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/Abraxas-365/hada-commerce/internal/errx"

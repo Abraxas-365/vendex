@@ -116,8 +116,26 @@ test.beforeEach(async ({ page }) => {
         { id: 'o5', customer_name: 'Emma Brown', total: 18300, currency: 'USD', status: 'pending', created_at: new Date().toISOString() },
       ])
     }
-    if (url.includes('/settings')) {
-      return json({ store_name: 'Hada Store', currency: 'USD', timezone: 'UTC', contact_email: 'hello@hada.store' })
+    if (url.includes('/marketplace/installed')) {
+      return json([])
+    }
+    if (url.includes('/marketplace/plugins') && !url.includes('/settings')) {
+      return json({ items: [], total: 0, page: 1, page_size: 20, total_pages: 0 })
+    }
+    if (url.includes('/plugins/manifests')) {
+      return json([])
+    }
+    // Settings endpoint (match /settings but not /plugins/.../settings)
+    if (url.match(/\/settings\/?(\?.*)?$/) && !url.includes('/plugins/')) {
+      return json({
+        tenant_id: 'tnt_mock', store_name: 'Hada Store', store_email: 'hello@hada.store',
+        store_phone: '+1 555-0123', currency: 'USD', timezone: 'America/New_York',
+        address: { street: '123 Commerce St', city: 'San Francisco', state: 'CA', zip: '94102', country: 'US' },
+        logo_url: '', favicon_url: '',
+        social_links: { instagram: '', twitter: '', facebook: '', tiktok: '' },
+        checkout_config: { require_phone: false, require_shipping: true, allow_notes: true },
+        updated_at: new Date().toISOString(),
+      })
     }
     // Default: return empty paginated results for list endpoints
     return json({ items: [], total: 0, page: 1, page_size: 20, total_pages: 0 })

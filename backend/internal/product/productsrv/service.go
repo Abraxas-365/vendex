@@ -2,7 +2,6 @@ package productsrv
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
