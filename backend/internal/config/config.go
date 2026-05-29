@@ -1,42 +1,122 @@
 package config
 
 import (
+	"fmt"
 	"os"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type Config struct {
-	Port        string
-	DatabaseURL string
-	RedisURL    string
+	Server       ServerConfig
+	Database     DatabaseConfig
+	Redis        RedisConfig
+	Environment  Environment
+	Auth         AuthConfig
+	OAuth        OAuthConfig
+	TenantConfig TenantConfig
+	Jobx         JobxConfig
+	Notifx       NotifxConfig
+}
 
-	// AI / Harness
-	AnthropicKey string
-	AIModel      string
+type Environment string
 
-	// Storage
-	MediaStorage string // "local" or "s3"
-	S3Bucket     string
-	S3Region     string
+const (
+	EnvironmentDevelopment Environment = "development"
+	EnvironmentStaging     Environment = "staging"
+	EnvironmentProduction  Environment = "production"
+)
+
+func (c Config) IsDevelopment() bool {
+	return c.Environment == EnvironmentDevelopment
+}
+func (c Config) IsStaging() bool {
+	return c.Environment == EnvironmentStaging
+}
+func (c Config) IsProd() bool {
+	return c.Environment == EnvironmentProduction
+}
+
+func loadEnvironment() Environment {
+	env := getEnv("ENVIRONMENT", "development")
+	switch strings.ToLower(env) {
+	case "production":
+		return EnvironmentProduction
+	case "staging":
+		return EnvironmentStaging
+	default:
+		return EnvironmentDevelopment
+	}
 }
 
 func Load() (*Config, error) {
 	cfg := &Config{
-		Port:         envOr("PORT", "8080"),
-		DatabaseURL:  envOr("DATABASE_URL", "postgres://hada:hada@localhost:5433/hada?sslmode=disable"),
-		RedisURL:     envOr("REDIS_URL", "redis://localhost:6379"),
-		AnthropicKey: os.Getenv("ANTHROPIC_API_KEY"),
-		AIModel:      envOr("AI_MODEL", "claude-sonnet-4-6"),
-		MediaStorage: envOr("MEDIA_STORAGE", "local"),
-		S3Bucket:     os.Getenv("S3_BUCKET"),
-		S3Region:     os.Getenv("S3_REGION"),
+		Server:       loadServerConfig(),
+		Database:     loadDatabaseConfig(),
+		Redis:        loadRedisConfig(),
+		Environment:  loadEnvironment(),
+		Auth:         loadAuthConfig(),
+		OAuth:        loadOAuthConfig(),
+		TenantConfig: loadTenantConfig(),
 	}
+
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("config validation failed: %w", err)
+	}
+
+	cfg.Jobx = loadJobxConfig()
+	cfg.Notifx = loadNotifxConfig()
 
 	return cfg, nil
 }
 
-func envOr(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
+func (c *Config) Validate() error {
+	return nil
+}
+
+func (c *Config) IsProduction() bool {
+	return c.Server.Environment == "production"
+}
+
+// Helper functions
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
 	}
-	return fallback
+	return defaultValue
+}
+
+func getEnvInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intVal, err := strconv.Atoi(value); err == nil {
+			return intVal
+		}
+	}
+	return defaultValue
+}
+
+func getEnvBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		if boolVal, err := strconv.ParseBool(value); err == nil {
+			return boolVal
+		}
+	}
+	return defaultValue
+}
+
+func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
+	if value := os.Getenv(key); value != "" {
+		if duration, err := time.ParseDuration(value); err == nil {
+			return duration
+		}
+	}
+	return defaultValue
+}
+
+func getEnvStringSlice(key string, defaultValue []string) []string {
+	if value := os.Getenv(key); value != "" {
+		return strings.Split(value, ",")
+	}
+	return defaultValue
 }

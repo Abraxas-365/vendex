@@ -1,0 +1,49 @@
+project:
+    name: hada-test
+    go_module: github.com/Abraxas-365/hada-commerce
+    manifesto_version: main
+modules:
+    asyncx:
+        version: main
+        installed_at: 2026-05-29T12:21:45.563475-05:00
+    config:
+        version: main
+        installed_at: 2026-05-29T12:21:33.420543-05:00
+    errx:
+        version: main
+        installed_at: 2026-05-29T12:21:33.420542-05:00
+    fsx:
+        version: main
+        installed_at: 2026-05-29T12:21:33.868055-05:00
+    iam:
+        version: main
+        installed_at: 2026-05-29T12:21:50.896106-05:00
+    jobx:
+        version: main
+        installed_at: 2026-05-29T12:21:45.958921-05:00
+    kernel:
+        version: main
+        installed_at: 2026-05-29T12:21:33.420543-05:00
+    logx:
+        version: main
+        installed_at: 2026-05-29T12:21:33.420542-05:00
+    migrations:
+        version: main
+        installed_at: 2026-05-29T12:21:50.896107-05:00
+    notifx:
+        version: main
+        installed_at: 2026-05-29T12:21:46.358734-05:00
+    ptrx:
+        version: main
+        installed_at: 2026-05-29T12:21:33.420543-05:00
+    server:
+        version: main
+        installed_at: 2026-05-29T12:21:33.420538-05:00
+wired_modules:
+    - fsx
+    - asyncx
+    - jobx
+    - notifx
+    - iam
+created_at: 2026-05-29T12:21:33.420536-05:00
+updated_at: 2026-05-29T12:21:50.9771-05:00

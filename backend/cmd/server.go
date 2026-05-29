@@ -3,152 +3,354 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
-	"net"
-	"net/http"
-	"time"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/Abraxas-365/hada-commerce/internal/config"
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
+	"github.com/Abraxas-365/hada-commerce/internal/logx"
+	// manifesto:server-imports
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 )
 
-// newServeMux builds the top-level HTTP mux with all routes and middleware.
-func newServeMux(ctr *Container) http.Handler {
-	mux := http.NewServeMux()
-
-	// Health check — always first.
-	mux.HandleFunc("GET /health", handleHealth)
-
-	// Domain routes — each container registers under /api/v1/<domain>/...
-	ctr.Product.RegisterRoutes(mux)
-	ctr.Order.RegisterRoutes(mux)
-	ctr.Customer.RegisterRoutes(mux)
-	ctr.Catalog.RegisterRoutes(mux)
-	ctr.Storefront.RegisterRoutes(mux)
-	ctr.Promo.RegisterRoutes(mux)
-	ctr.Media.RegisterRoutes(mux)
-	ctr.Marketplace.RegisterRoutes(mux)
-	ctr.Settings.RegisterRoutes(mux)
-	ctr.Analytics.RegisterRoutes(mux)
-
-	// TODO: WebSocket endpoint for agent chat
-	// mux.HandleFunc("/api/v1/agent/chat", handleAgentChat)
-
-	// Wrap with middleware chain (innermost first).
-	var handler http.Handler = mux
-	handler = withTenantExtraction(handler)
-	handler = withRequestLogging(handler)
-	handler = withCORS(handler)
-
-	return handler
-}
-
-// newHTTPServer creates a configured *http.Server ready to start.
-func newHTTPServer(addr string, handler http.Handler) *http.Server {
-	return &http.Server{
-		Addr:              addr,
-		Handler:           handler,
-		ReadHeaderTimeout: 10 * time.Second,
-		ReadTimeout:       30 * time.Second,
-		WriteTimeout:      60 * time.Second,
-		IdleTimeout:       120 * time.Second,
-		BaseContext: func(_ net.Listener) context.Context {
-			return context.Background()
-		},
+func main() {
+	// 1. Load Configuration
+	cfg, err := config.Load()
+	if err != nil {
+		logx.Fatalf("Failed to load configuration: %v", err)
 	}
+
+	// 2. Initialize Logger
+	switch cfg.Server.LogLevel {
+	case "debug":
+		logx.SetLevel(logx.LevelDebug)
+	case "warn":
+		logx.SetLevel(logx.LevelWarn)
+	case "error":
+		logx.SetLevel(logx.LevelError)
+	default:
+		logx.SetLevel(logx.LevelInfo)
+	}
+
+	logx.Info("Starting hada-commerce API Server...")
+	logx.Infof("Environment: %s", cfg.Server.Environment)
+
+	// 3. Initialize Dependency Container
+	container := NewContainer(cfg)
+	defer container.Cleanup()
+
+	// 4. Start background services
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	container.StartBackgroundServices(ctx)
+
+	// 5. Create Fiber App
+	app := fiber.New(fiber.Config{
+		AppName:               "hada-commerce API",
+		DisableStartupMessage: true,
+		ErrorHandler:          globalErrorHandler(cfg),
+		BodyLimit:             10 * 1024 * 1024, // 10MB
+		IdleTimeout:           120,
+		EnablePrintRoutes:     false,
+	})
+
+	// 6. Global Middleware
+	setupMiddleware(app, cfg)
+
+	// 7. Health Check & Info
+	app.Get("/health", healthCheckHandler(container))
+	app.Get("/", infoHandler(cfg))
+
+	// 8. Register Routes
+	registerRoutes(app, container)
+
+	// 9. 404 Handler
+	app.Use(notFoundHandler)
+
+	// 10. Print Route Summary
+	printRouteSummary()
+
+	// 11. Start Server with Graceful Shutdown
+	startServer(app, cfg, cancel)
 }
 
-// ---------------------------------------------------------------------------
-// Handlers
-// ---------------------------------------------------------------------------
-
-func handleHealth(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, `{"status":"ok"}`)
-}
-
-// ---------------------------------------------------------------------------
+// ============================================================================
 // Middleware
-// ---------------------------------------------------------------------------
+// ============================================================================
 
-// withCORS adds permissive CORS headers suitable for development.
-// Tighten AllowOrigin for production.
-func withCORS(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Tenant-ID")
-		w.Header().Set("Access-Control-Max-Age", "86400")
+func setupMiddleware(app *fiber.App, cfg *config.Config) {
+	// Panic recovery
+	app.Use(recover.New(recover.Config{
+		EnableStackTrace: cfg.IsDevelopment(),
+	}))
 
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
+	// Request ID
+	app.Use(requestid.New(requestid.Config{
+		Header: "X-Request-ID",
+		Generator: func() string {
+			return "req-" + randomString(16)
+		},
+	}))
+
+	// CORS
+	corsOrigins := "*"
+	if len(cfg.Server.CORSOrigins) > 0 {
+		corsOrigins = ""
+		for i, origin := range cfg.Server.CORSOrigins {
+			if i > 0 {
+				corsOrigins += ","
+			}
+			corsOrigins += origin
 		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-// withRequestLogging logs method, path, status code, and duration for every request.
-func withRequestLogging(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
-
-		next.ServeHTTP(rw, r)
-
-		log.Printf("%s %s %d %s",
-			r.Method,
-			r.URL.Path,
-			rw.statusCode,
-			time.Since(start).Round(time.Millisecond),
-		)
-	})
-}
-
-// withTenantExtraction reads the tenant identifier from the X-Tenant-ID header
-// and injects it into the request context. Downstream handlers retrieve it with
-// tenantFromContext.
-func withTenantExtraction(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tenantID := r.Header.Get("X-Tenant-ID")
-		// TODO: In production, extract tenant from JWT claims instead of a
-		// plain header. For now, we accept the header for development.
-		if tenantID != "" {
-			ctx := context.WithValue(r.Context(), ctxKeyTenant, tenantID)
-			r = r.WithContext(ctx)
-		}
-		next.ServeHTTP(w, r)
-	})
-}
-
-// ---------------------------------------------------------------------------
-// Context keys & helpers
-// ---------------------------------------------------------------------------
-
-type contextKey string
-
-const ctxKeyTenant contextKey = "tenant_id"
-
-// TenantFromContext returns the tenant ID injected by the tenant middleware.
-// Returns empty string if no tenant is set.
-func TenantFromContext(ctx context.Context) string {
-	v, _ := ctx.Value(ctxKeyTenant).(string)
-	return v
-}
-
-// ---------------------------------------------------------------------------
-// responseWriter wraps http.ResponseWriter to capture the status code.
-// ---------------------------------------------------------------------------
-
-type responseWriter struct {
-	http.ResponseWriter
-	statusCode  int
-	wroteHeader bool
-}
-
-func (rw *responseWriter) WriteHeader(code int) {
-	if !rw.wroteHeader {
-		rw.statusCode = code
-		rw.wroteHeader = true
 	}
-	rw.ResponseWriter.WriteHeader(code)
+
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     corsOrigins,
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization, X-API-Key, X-Request-ID",
+		AllowMethods:     "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
+		AllowCredentials: true,
+		ExposeHeaders:    "X-Request-ID",
+	}))
+
+	// Request logger
+	logFormat := "${time} | ${status} | ${latency} | ${method} ${path}"
+	if cfg.IsDevelopment() {
+		logFormat += " | ${ip} | ${reqHeader:X-Request-ID}\n"
+	} else {
+		logFormat += "\n"
+	}
+
+	app.Use(logger.New(logger.Config{
+		Format:     logFormat,
+		TimeFormat: "2006-01-02 15:04:05",
+		TimeZone:   "Local",
+	}))
+}
+
+// ============================================================================
+// Routes
+// ============================================================================
+
+func registerRoutes(app *fiber.App, container *Container) {
+	logx.Info("Registering routes...")
+
+	// IAM Routes (public)
+	container.IAM.OAuthHandlers.RegisterRoutes(app)
+	logx.Info("  > OAuth routes registered")
+
+	container.IAM.PasswordlessHandlers.RegisterRoutes(app)
+	logx.Info("  > Passwordless auth routes registered")
+
+	// Protected routes (require auth)
+	protected := app.Group("/api/v1",
+		container.IAM.UnifiedAuthMiddleware.Authenticate(),
+	)
+
+	container.IAM.APIKeyHandlers.RegisterRoutes(protected, container.IAM.UnifiedAuthMiddleware)
+	logx.Info("  > API key routes registered")
+
+	container.IAM.InvitationHandlers.RegisterRoutes(protected, container.IAM.UnifiedAuthMiddleware)
+	logx.Info("  > Invitation routes registered")
+
+	// Commerce domain routes (all protected by auth middleware)
+	container.Product.RegisterRoutes(protected)
+	container.Order.RegisterRoutes(protected)
+	container.Customer.RegisterRoutes(protected)
+	container.Catalog.RegisterRoutes(protected)
+	container.Storefront.RegisterRoutes(protected)
+	container.Promo.RegisterRoutes(protected)
+	container.Media.RegisterRoutes(protected)
+	container.Marketplace.RegisterRoutes(protected)
+	container.Analytics.RegisterRoutes(protected)
+	container.Settings.RegisterRoutes(protected)
+	logx.Info("  > Commerce domain routes registered")
+
+	logx.Info("All routes registered")
+}
+
+
+// ============================================================================
+// Handlers
+// ============================================================================
+
+func healthCheckHandler(container *Container) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		health := fiber.Map{
+			"status":      "healthy",
+			"service":     "hada-commerce",
+			"environment": container.Config.Server.Environment,
+			"timestamp":   fmt.Sprintf("%d", c.Context().Time().Unix()),
+		}
+
+		// Check database
+		if err := container.DB.Ping(); err != nil {
+			health["db"] = "unhealthy"
+			health["db_error"] = err.Error()
+			health["status"] = "degraded"
+		} else {
+			health["db"] = "healthy"
+		}
+
+		// Check Redis
+		if _, err := container.Redis.Ping(c.Context()).Result(); err != nil {
+			health["redis"] = "unhealthy"
+			health["redis_error"] = err.Error()
+			health["status"] = "degraded"
+		} else {
+			health["redis"] = "healthy"
+		}
+
+		status := fiber.StatusOK
+		if health["status"] == "degraded" {
+			status = fiber.StatusServiceUnavailable
+		}
+
+		return c.Status(status).JSON(health)
+	}
+}
+
+func infoHandler(cfg *config.Config) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"service":     "hada-commerce",
+			"version":     "1.0.0",
+			"environment": cfg.Server.Environment,
+			"endpoints": fiber.Map{
+				"health": "/health",
+				"api":    "/api/v1",
+			},
+		})
+	}
+}
+
+func notFoundHandler(c *fiber.Ctx) error {
+	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+		"error":      "Route not found",
+		"code":       "NOT_FOUND",
+		"path":       c.Path(),
+		"method":     c.Method(),
+		"request_id": c.Get("X-Request-ID"),
+	})
+}
+
+// ============================================================================
+// Error Handler
+// ============================================================================
+
+func globalErrorHandler(cfg *config.Config) fiber.ErrorHandler {
+	return func(c *fiber.Ctx, err error) error {
+		logx.WithFields(logx.Fields{
+			"path":       c.Path(),
+			"method":     c.Method(),
+			"ip":         c.IP(),
+			"request_id": c.Get("X-Request-ID"),
+			"user_agent": c.Get("User-Agent"),
+		}).Errorf("Request error: %v", err)
+
+		// Fiber error
+		if e, ok := err.(*fiber.Error); ok {
+			return c.Status(e.Code).JSON(fiber.Map{
+				"error":      e.Message,
+				"code":       "FIBER_ERROR",
+				"status":     e.Code,
+				"request_id": c.Get("X-Request-ID"),
+			})
+		}
+
+		// errx.Error
+		if e, ok := err.(*errx.Error); ok {
+			response := fiber.Map{
+				"error":      e.Message,
+				"code":       e.Code,
+				"type":       string(e.Type),
+				"status":     e.HTTPStatus,
+				"request_id": c.Get("X-Request-ID"),
+			}
+			if len(e.Details) > 0 {
+				response["details"] = e.Details
+			}
+			if cfg.IsDevelopment() && e.Err != nil {
+				response["underlying_error"] = e.Err.Error()
+			}
+			return c.Status(e.HTTPStatus).JSON(response)
+		}
+
+		// Unknown error
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":      "Internal Server Error",
+			"code":       "INTERNAL_ERROR",
+			"type":       "INTERNAL",
+			"message":    "An unexpected error occurred",
+			"request_id": c.Get("X-Request-ID"),
+		})
+	}
+}
+
+// ============================================================================
+// Server Lifecycle
+// ============================================================================
+
+func startServer(app *fiber.App, cfg *config.Config, cancel context.CancelFunc) {
+	port := fmt.Sprintf("%d", cfg.Server.Port)
+
+	go func() {
+		logx.Info(repeatString("=", 70))
+		logx.Infof("Server listening on port %s", port)
+		logx.Infof("Health: http://localhost:%s/health", port)
+		logx.Infof("Environment: %s", cfg.Server.Environment)
+		logx.Info(repeatString("=", 70))
+
+		if err := app.Listen(":" + port); err != nil {
+			logx.Fatalf("Server error: %v", err)
+		}
+	}()
+
+	// Graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+
+	sig := <-sigChan
+	logx.Infof("Received signal: %v", sig)
+	logx.Info("Shutting down gracefully...")
+
+	cancel()
+
+	if err := app.ShutdownWithTimeout(30); err != nil {
+		logx.Errorf("Server forced to shutdown: %v", err)
+	}
+
+	logx.Info("Server exited successfully")
+}
+
+// ============================================================================
+// Utilities
+// ============================================================================
+
+func printRouteSummary() {
+	logx.Info("Route Summary:")
+	logx.Info("   |- Health: /health")
+	logx.Info("   |- Info: /")
+	logx.Info("   |- API: /api/v1/*")
+}
+
+func randomString(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letters[i%len(letters)]
+	}
+	return string(b)
+}
+
+func repeatString(s string, count int) string {
+	result := ""
+	for range count {
+		result += s
+	}
+	return result
 }

@@ -1,89 +1,316 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
-	"path/filepath"
+	"os"
 
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/config"
 	"github.com/Abraxas-365/hada-commerce/internal/customer/customercontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/fsx"
+	"github.com/Abraxas-365/hada-commerce/internal/fsx/fsxlocal"
+	"github.com/Abraxas-365/hada-commerce/internal/fsx/fsxs3"
+	"github.com/Abraxas-365/hada-commerce/internal/iam/iamcontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/jobx"
+	"github.com/Abraxas-365/hada-commerce/internal/jobx/jobxredis"
+	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/hada-commerce/internal/logx"
 	"github.com/Abraxas-365/hada-commerce/internal/marketplace/marketplacecontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/media/mediacontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/notifx"
+	"github.com/Abraxas-365/hada-commerce/internal/notifx/notifxconsole"
+	"github.com/Abraxas-365/hada-commerce/internal/notifx/notifxses"
 	"github.com/Abraxas-365/hada-commerce/internal/order/ordercontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/product/productcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/promo/promocontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/settings/settingscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontcontainer"
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 )
 
-// Container is the top-level DI container that wires all domain containers together.
-// Each domain container owns its own repository, service, and handler graph.
+// Container holds shared infrastructure and composed module containers.
 type Container struct {
-	Product    *productcontainer.Container
-	Order      *ordercontainer.Container
-	Customer   *customercontainer.Container
-	Catalog    *catalogcontainer.Container
-	Storefront *storefrontcontainer.Container
-	Promo      *promocontainer.Container
+	Config *config.Config
+
+	// Infrastructure
+	DB    *sqlx.DB
+	Redis *redis.Client
+
+	// File storage
+	FileSystem fsx.FileSystem
+	S3Client   *s3.Client
+
+	// Background services
+	JobClient    *jobx.Client
+	NotifxClient *notifx.Client
+
+	// IAM
+	IAM *iamcontainer.Container
+
+	// Commerce domains
+	Product     *productcontainer.Container
+	Order       *ordercontainer.Container
+	Customer    *customercontainer.Container
+	Catalog     *catalogcontainer.Container
+	Storefront  *storefrontcontainer.Container
+	Promo       *promocontainer.Container
 	Media       *mediacontainer.Container
 	Marketplace *marketplacecontainer.Container
 	Analytics   *analyticscontainer.Container
 	Settings    *settingscontainer.Container
 }
 
-// NewContainer builds all domain containers in dependency order.
-// Domains that are independent of each other are built first; domains with
-// cross-domain dependencies (if any are added later) come after.
-func NewContainer(db *sql.DB, cfg *config.Config) (*Container, error) {
-	// Independent domain containers — order doesn't matter today,
-	// but we group them logically: core commerce, then CMS.
-	product := productcontainer.New(db)
-	order := ordercontainer.New(db)
-	customer := customercontainer.New(db)
-	catalog := catalogcontainer.New(db)
+func NewContainer(cfg *config.Config) *Container {
+	logx.Info("Initializing application container...")
 
-	// CMS domains
-	storefront := storefrontcontainer.New(db)
-	promo := promocontainer.New(db)
-	marketplace := marketplacecontainer.New(db)
+	c := &Container{Config: cfg}
 
-	// Analytics domain — read-only, queries across tables.
-	analyticsCtr := analyticscontainer.New(db)
+	c.initInfrastructure()
+	c.initModules()
 
-	// Settings domain — per-tenant store configuration.
-	settingsCtr := settingscontainer.New(db)
-
-	// Media needs a storage provider; choose based on config.
-	mediaCtr, err := newMediaContainer(db, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("media container: %w", err)
-	}
-
-	return &Container{
-		Product:    product,
-		Order:      order,
-		Customer:   customer,
-		Catalog:    catalog,
-		Storefront: storefront,
-		Promo:      promo,
-		Media:       mediaCtr,
-		Marketplace: marketplace,
-		Analytics:   analyticsCtr,
-		Settings:    settingsCtr,
-	}, nil
+	logx.Info("Application container initialized")
+	return c
 }
 
-// newMediaContainer selects the right storage backend based on cfg.MediaStorage.
-func newMediaContainer(db *sql.DB, cfg *config.Config) (*mediacontainer.Container, error) {
-	switch cfg.MediaStorage {
-	case "local", "":
-		baseDir := filepath.Join(".", "uploads")
-		baseURL := "/uploads"
-		return mediacontainer.NewWithLocalStorage(db, baseDir, baseURL)
-	// TODO: add "s3" case when S3 storage provider is implemented
-	default:
-		return nil, fmt.Errorf("unsupported media storage type: %q", cfg.MediaStorage)
+// ---------------------------------------------------------------------------
+// Infrastructure
+// ---------------------------------------------------------------------------
+
+func (c *Container) initInfrastructure() {
+	logx.Info("Initializing infrastructure...")
+
+	// Database
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		c.Config.Database.Host,
+		c.Config.Database.Port,
+		c.Config.Database.User,
+		c.Config.Database.Password,
+		c.Config.Database.Name,
+		c.Config.Database.SSLMode,
+	)
+
+	db, err := sqlx.Connect("postgres", dsn)
+	if err != nil {
+		logx.Fatalf("Failed to connect to database: %v", err)
 	}
+	db.SetMaxOpenConns(c.Config.Database.MaxOpenConns)
+	db.SetMaxIdleConns(c.Config.Database.MaxIdleConns)
+	db.SetConnMaxLifetime(c.Config.Database.ConnMaxLifetime)
+	c.DB = db
+	logx.Info("  Database connected")
+
+	// Redis
+	c.Redis = redis.NewClient(&redis.Options{
+		Addr:     c.Config.Redis.Address(),
+		Password: c.Config.Redis.Password,
+		DB:       c.Config.Redis.DB,
+	})
+	if _, err := c.Redis.Ping(context.Background()).Result(); err != nil {
+		logx.Fatalf("Failed to connect to Redis: %v (Redis is required)", err)
+	}
+	logx.Info("  Redis connected")
+
+	logx.Info("Infrastructure initialized")
+}
+
+// ---------------------------------------------------------------------------
+// Module composition
+// ---------------------------------------------------------------------------
+
+func (c *Container) initModules() {
+	logx.Info("Initializing modules...")
+
+	c.initFileStorage()
+	c.initJobx()
+	c.initNotifx()
+
+	// IAM — uses notifx for OTP and invitation emails
+	c.IAM = iamcontainer.New(iamcontainer.Deps{
+		DB:                 c.DB,
+		Redis:              c.Redis,
+		Cfg:                c.Config,
+		OTPNotifier:        NewNotifxOTPNotifier(c.NotifxClient),
+		InvitationNotifier: NewNotifxInvitationNotifier(c.NotifxClient),
+	})
+
+	// Commerce domains
+	c.Product = productcontainer.New(c.DB)
+	c.Order = ordercontainer.New(c.DB)
+	c.Customer = customercontainer.New(c.DB)
+	c.Catalog = catalogcontainer.New(c.DB)
+	c.Storefront = storefrontcontainer.New(c.DB)
+	c.Promo = promocontainer.New(c.DB)
+	c.Media = mediacontainer.New(c.DB)
+	c.Marketplace = marketplacecontainer.New(c.DB)
+	c.Analytics = analyticscontainer.New(c.DB)
+	c.Settings = settingscontainer.New(c.DB)
+
+	logx.Info("All modules initialized")
+}
+
+// ---------------------------------------------------------------------------
+// Lifecycle
+// ---------------------------------------------------------------------------
+
+func (c *Container) StartBackgroundServices(ctx context.Context) {
+	logx.Info("Starting background services...")
+	go c.JobClient.Start(ctx)
+	c.IAM.StartBackgroundServices(ctx)
+}
+
+func (c *Container) Cleanup() {
+	logx.Info("Cleaning up resources...")
+
+	if c.DB != nil {
+		if err := c.DB.Close(); err != nil {
+			logx.Errorf("Error closing database: %v", err)
+		} else {
+			logx.Info("  Database connection closed")
+		}
+	}
+
+	if c.Redis != nil {
+		if err := c.Redis.Close(); err != nil {
+			logx.Errorf("Error closing Redis: %v", err)
+		} else {
+			logx.Info("  Redis connection closed")
+		}
+	}
+
+	logx.Info("Cleanup complete")
+}
+
+// ---------------------------------------------------------------------------
+// File storage
+// ---------------------------------------------------------------------------
+
+func (c *Container) initFileStorage() {
+	storageMode := getEnv("STORAGE_MODE", "local")
+
+	switch storageMode {
+	case "s3":
+		awsRegion := getEnv("AWS_REGION", "us-east-1")
+		awsBucket := getEnv("AWS_BUCKET", "hada-uploads")
+
+		cfg, err := awsConfig.LoadDefaultConfig(context.TODO(), awsConfig.WithRegion(awsRegion))
+		if err != nil {
+			logx.Fatalf("Unable to load AWS SDK config: %v", err)
+		}
+		c.S3Client = s3.NewFromConfig(cfg)
+		c.FileSystem = fsxs3.NewS3FileSystem(c.S3Client, awsBucket, "")
+		logx.Infof("  S3 file system configured (bucket: %s, region: %s)", awsBucket, awsRegion)
+
+	case "local":
+		uploadDir := getEnv("UPLOAD_DIR", "./uploads")
+		localFS, err := fsxlocal.NewLocalFileSystem(uploadDir)
+		if err != nil {
+			logx.Fatalf("Failed to initialize local file system: %v", err)
+		}
+		c.FileSystem = localFS
+		logx.Infof("  Local file system configured (path: %s)", localFS.GetBasePath())
+
+	default:
+		logx.Fatalf("Unknown STORAGE_MODE: %s (use 'local' or 's3')", storageMode)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Job queue
+// ---------------------------------------------------------------------------
+
+func (c *Container) initJobx() {
+	queue := jobxredis.NewRedisQueue(c.Redis)
+	c.JobClient = jobx.NewClient(queue,
+		jobx.WithConcurrency(c.Config.Jobx.Concurrency),
+		jobx.WithQueues(c.Config.Jobx.Queues...),
+		jobx.WithPollInterval(c.Config.Jobx.PollInterval),
+		jobx.WithShutdownTimeout(c.Config.Jobx.ShutdownTimeout),
+		jobx.WithDequeueTimeout(c.Config.Jobx.DequeueTimeout),
+		jobx.WithDefaultRetryDelay(c.Config.Jobx.DefaultRetryDelay),
+	)
+	logx.Info("  Job queue configured")
+}
+
+// ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+
+func (c *Container) initNotifx() {
+	var provider notifx.EmailSender
+
+	switch c.Config.Notifx.Provider {
+	case "ses":
+		awsCfg, err := awsConfig.LoadDefaultConfig(context.TODO(),
+			awsConfig.WithRegion(c.Config.Notifx.AWSRegion))
+		if err != nil {
+			logx.Fatalf("Unable to load AWS config for notifx: %v", err)
+		}
+		sesClient := ses.NewFromConfig(awsCfg)
+		provider = notifxses.NewSESProvider(sesClient, c.Config.Notifx.FromAddress)
+		logx.Infof("  Notifx: SES provider (region: %s)", c.Config.Notifx.AWSRegion)
+
+	default:
+		provider = notifxconsole.NewConsoleProvider()
+		logx.Info("  Notifx: console provider (dev mode)")
+	}
+
+	c.NotifxClient = notifx.NewClient(provider)
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+func getEnv(key, fallback string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return fallback
+}
+
+// ---------------------------------------------------------------------------
+// Notification adapters for IAM
+// ---------------------------------------------------------------------------
+
+// NotifxOTPNotifier implements otp.NotificationService using notifx
+type NotifxOTPNotifier struct {
+	client *notifx.Client
+}
+
+func NewNotifxOTPNotifier(client *notifx.Client) *NotifxOTPNotifier {
+	return &NotifxOTPNotifier{client: client}
+}
+
+func (n *NotifxOTPNotifier) SendOTP(ctx context.Context, contact string, code string) error {
+	return n.client.SendEmail(ctx, notifx.EmailMessage{
+		To:       []string{contact},
+		Subject:  "Your verification code",
+		HTMLBody: fmt.Sprintf("<h2>Your verification code is: <strong>%s</strong></h2><p>This code will expire shortly.</p>", code),
+		TextBody: fmt.Sprintf("Your verification code is: %s", code),
+	})
+}
+
+// NotifxInvitationNotifier implements invitation.NotificationService using notifx
+type NotifxInvitationNotifier struct {
+	client *notifx.Client
+}
+
+func NewNotifxInvitationNotifier(client *notifx.Client) *NotifxInvitationNotifier {
+	return &NotifxInvitationNotifier{client: client}
+}
+
+func (n *NotifxInvitationNotifier) SendInvitation(ctx context.Context, email string, token string, tenantID kernel.TenantID, invitedBy kernel.UserID) error {
+	return n.client.SendEmail(ctx, notifx.EmailMessage{
+		To:       []string{email},
+		Subject:  "You've been invited to join",
+		HTMLBody: fmt.Sprintf("<h2>You've been invited!</h2><p>Use the following token to accept your invitation: <strong>%s</strong></p>", token),
+		TextBody: fmt.Sprintf("You've been invited! Use the following token to accept your invitation: %s", token),
+	})
 }
