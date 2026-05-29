@@ -188,7 +188,7 @@ func (t *ListPagesTool) Execute(ctx context.Context, raw json.RawMessage) (strin
 		return "", fmt.Errorf("list_pages: unmarshal input: %w", err)
 	}
 
-	pg := kernel.NewPagination(in.Page, in.PageSize)
+	pg := kernel.NewPaginationOptions(in.Page, in.PageSize)
 
 	var statusFilter *storefront.PageStatus
 	if in.Status != "" {
@@ -315,7 +315,7 @@ func (t *ListProductsTool) Execute(ctx context.Context, raw json.RawMessage) (st
 		return "", fmt.Errorf("list_products: unmarshal input: %w", err)
 	}
 
-	pg := kernel.NewPagination(in.Page, in.PageSize)
+	pg := kernel.NewPaginationOptions(in.Page, in.PageSize)
 	result, err := t.products.List(ctx, t.tenantID, pg)
 	if err != nil {
 		return "", fmt.Errorf("list_products: %w", err)
@@ -443,7 +443,7 @@ func (t *QueryOrdersTool) Execute(ctx context.Context, raw json.RawMessage) (str
 		return "", fmt.Errorf("query_orders: unmarshal input: %w", err)
 	}
 
-	pg := kernel.NewPagination(in.Page, in.PageSize)
+	pg := kernel.NewPaginationOptions(in.Page, in.PageSize)
 	result, err := t.orders.List(ctx, t.tenantID, pg)
 	if err != nil {
 		return "", fmt.Errorf("query_orders: %w", err)
@@ -499,7 +499,7 @@ func (t *SearchCatalogTool) Execute(ctx context.Context, raw json.RawMessage) (s
 		return "", fmt.Errorf("search_catalog: unmarshal input: %w", err)
 	}
 
-	pg := kernel.NewPagination(in.Page, in.PageSize)
+	pg := kernel.NewPaginationOptions(in.Page, in.PageSize)
 
 	switch in.Target {
 	case "categories":
@@ -511,7 +511,7 @@ func (t *SearchCatalogTool) Execute(ctx context.Context, raw json.RawMessage) (s
 	}
 }
 
-func (t *SearchCatalogTool) listCategories(ctx context.Context, pg kernel.Pagination) (string, error) {
+func (t *SearchCatalogTool) listCategories(ctx context.Context, pg kernel.PaginationOptions) (string, error) {
 	result, err := t.catalog.ListCategories(ctx, t.tenantID, pg)
 	if err != nil {
 		return "", fmt.Errorf("list categories: %w", err)
@@ -530,7 +530,7 @@ func (t *SearchCatalogTool) listCategories(ctx context.Context, pg kernel.Pagina
 	return out, nil
 }
 
-func (t *SearchCatalogTool) listCollections(ctx context.Context, pg kernel.Pagination) (string, error) {
+func (t *SearchCatalogTool) listCollections(ctx context.Context, pg kernel.PaginationOptions) (string, error) {
 	result, err := t.catalog.ListCollections(ctx, t.tenantID, pg)
 	if err != nil {
 		return "", fmt.Errorf("list collections: %w", err)

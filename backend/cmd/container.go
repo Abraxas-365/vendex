@@ -147,7 +147,11 @@ func (c *Container) initModules() {
 	c.Catalog = catalogcontainer.New(c.DB)
 	c.Storefront = storefrontcontainer.New(c.DB)
 	c.Promo = promocontainer.New(c.DB)
-	c.Media = mediacontainer.New(c.DB)
+	mediaCont, err := mediacontainer.New(c.DB, "./uploads", fmt.Sprintf("http://localhost:%d/uploads", c.Config.Server.Port))
+	if err != nil {
+		logx.Fatal(fmt.Sprintf("Failed to initialize media module: %v", err))
+	}
+	c.Media = mediaCont
 	c.Marketplace = marketplacecontainer.New(c.DB)
 	c.Analytics = analyticscontainer.New(c.DB)
 	c.Settings = settingscontainer.New(c.DB)

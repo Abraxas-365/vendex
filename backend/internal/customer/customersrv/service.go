@@ -31,8 +31,8 @@ type CreateInput struct {
 
 // Create creates a new customer for the given tenant.
 func (s *Service) Create(ctx context.Context, tenantID kernel.TenantID, in CreateInput) (*customer.Customer, error) {
-	email, err := kernel.NewEmail(in.Email)
-	if err != nil {
+	email := kernel.NewEmail(in.Email)
+	if email.IsEmpty() {
 		return nil, customer.ErrInvalidEmail
 	}
 

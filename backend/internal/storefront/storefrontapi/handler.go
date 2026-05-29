@@ -83,7 +83,7 @@ func (h *Handler) CreatePage(c *fiber.Ctx) error {
 		HTML:      req.HTML,
 		CSS:       req.CSS,
 		Meta:      req.Meta,
-		CreatedBy: string(authCtx.UserID),
+		CreatedBy: authCtx.UserID.String(),
 		ByAgent:   req.ByAgent,
 	})
 	if err != nil {
@@ -150,7 +150,7 @@ func (h *Handler) UpdatePage(c *fiber.Ctx) error {
 		HTML:     req.HTML,
 		CSS:      req.CSS,
 		Meta:     req.Meta,
-		EditedBy: string(authCtx.UserID),
+		EditedBy: authCtx.UserID.String(),
 		Comment:  req.Comment,
 	})
 	if err != nil {

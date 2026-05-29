@@ -56,7 +56,7 @@ func (h *Handler) Upload(c *fiber.Ctx) error {
 		ContentType: file.Header.Get("Content-Type"),
 		Size:        file.Size,
 		Alt:         altText,
-		UploadedBy:  string(authCtx.UserID),
+		UploadedBy:  authCtx.UserID.String(),
 		Data:        src,
 	})
 	if err != nil {

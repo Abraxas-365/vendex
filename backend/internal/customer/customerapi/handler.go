@@ -107,8 +107,8 @@ func (h *Handler) Update(c *fiber.Ctx) error {
 		cust.Phone = req.Phone
 	}
 	if req.Email != "" {
-		email, err := kernel.NewEmail(req.Email)
-		if err != nil {
+		email := kernel.NewEmail(req.Email)
+		if email.IsEmpty() {
 			return customer.ErrInvalidEmail
 		}
 		cust.Email = email

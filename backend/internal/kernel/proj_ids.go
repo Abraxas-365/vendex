@@ -85,3 +85,9 @@ type SettingID string
 func NewSettingID(id string) SettingID { return SettingID(id) }
 func (s SettingID) String() string     { return string(s) }
 func (s SettingID) IsEmpty() bool      { return string(s) == "" }
+
+type VendorID string
+
+func NewVendorID(id string) VendorID { return VendorID(id) }
+func (v VendorID) String() string    { return string(v) }
+func (v VendorID) IsEmpty() bool     { return string(v) == "" }

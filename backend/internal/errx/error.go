@@ -121,6 +121,18 @@ func As(err error, target interface{}) bool {
 	return errors.As(err, target)
 }
 
+// IsNotFound returns true if the error is a not-found error.
+func IsNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	var e *Error
+	if errors.As(err, &e) {
+		return e.Type == TypeNotFound
+	}
+	return false
+}
+
 // typeToHTTPStatus maps error types to HTTP status codes
 func typeToHTTPStatus(t Type) int {
 	switch t {
