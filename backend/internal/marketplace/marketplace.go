@@ -19,30 +19,30 @@ const (
 
 // Plugin represents a plugin available in the marketplace.
 type Plugin struct {
-	ID          kernel.PluginID
-	Name        string // unique slug: "reviews", "loyalty", etc.
-	DisplayName string
-	Description string
-	Author      string
-	Icon        string         // URL or icon name
-	Category    PluginCategory // "official", "community", "custom"
-	Tags        []string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          kernel.PluginID `json:"id"`
+	Name        string          `json:"name"`         // unique slug
+	DisplayName string          `json:"display_name"`
+	Description string          `json:"description"`
+	Author      string          `json:"author"`
+	Icon        string          `json:"icon"`         // URL or icon name
+	Category    PluginCategory  `json:"category"`     // "official", "community", "custom"
+	Tags        []string        `json:"tags"`
+	CreatedAt   time.Time       `json:"created_at"`
+	UpdatedAt   time.Time       `json:"updated_at"`
 }
 
 // PluginVersion is a specific release of a plugin.
 type PluginVersion struct {
-	ID             kernel.PluginVersionID
-	PluginID       kernel.PluginID
-	Version        string // semver: "1.0.0"
-	Changelog      string
-	Permissions    []string // e.g. ["products:read", "orders:read"]
-	ManifestJSON   string   // the full manifest.json content
-	FrontendURL    string   // URL to the plugin's frontend bundle
-	BackendEntry   string   // Go plugin entry point or binary path
-	MinPlatformVer string   // minimum hada-commerce version
-	CreatedAt      time.Time
+	ID             kernel.PluginVersionID `json:"id"`
+	PluginID       kernel.PluginID        `json:"plugin_id"`
+	Version        string                 `json:"version"`
+	Changelog      string                 `json:"changelog"`
+	Permissions    []string               `json:"permissions"`
+	ManifestJSON   string                 `json:"manifest_json"`
+	FrontendURL    string                 `json:"frontend_url"`
+	BackendEntry   string                 `json:"backend_entry"`
+	MinPlatformVer string                 `json:"min_platform_ver"`
+	CreatedAt      time.Time              `json:"created_at"`
 }
 
 // Manifest describes plugin capabilities (parsed from ManifestJSON).

@@ -49,15 +49,15 @@ type OrderItem struct {
 
 // Order is the aggregate root for a purchase.
 type Order struct {
-	ID              kernel.OrderID
-	TenantID        kernel.TenantID
-	CustomerID      kernel.CustomerID
-	Items           []OrderItem
-	Status          OrderStatus
-	TotalAmount     kernel.Money
-	ShippingAddress Address
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	ID              kernel.OrderID    `json:"id"`
+	TenantID        kernel.TenantID   `json:"tenant_id"`
+	CustomerID      kernel.CustomerID `json:"customer_id"`
+	Items           []OrderItem       `json:"items"`
+	Status          OrderStatus       `json:"status"`
+	TotalAmount     kernel.Money      `json:"total_amount"`
+	ShippingAddress Address           `json:"shipping_address"`
+	CreatedAt       time.Time         `json:"created_at"`
+	UpdatedAt       time.Time         `json:"updated_at"`
 }
 
 // CanTransitionTo checks if the status transition is valid.

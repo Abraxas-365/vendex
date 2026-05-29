@@ -17,19 +17,19 @@ const (
 
 // Product is the core entity for sellable items.
 type Product struct {
-	ID          kernel.ProductID
-	TenantID    kernel.TenantID
-	Name        string
-	Description string
-	Price       kernel.Money
-	SKU         string
-	Images      []string
-	CategoryID  kernel.CategoryID
-	Tags        []string
-	Status      Status
-	Stock       int
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          kernel.ProductID  `json:"id"`
+	TenantID    kernel.TenantID   `json:"tenant_id"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Price       kernel.Money      `json:"price"`
+	SKU         string            `json:"sku"`
+	Images      []string          `json:"images"`
+	CategoryID  kernel.CategoryID `json:"category_id"`
+	Tags        []string          `json:"tags"`
+	Status      Status            `json:"status"`
+	Stock       int               `json:"stock"`
+	CreatedAt   time.Time         `json:"created_at"`
+	UpdatedAt   time.Time         `json:"updated_at"`
 }
 
 // Activate transitions the product to active status.

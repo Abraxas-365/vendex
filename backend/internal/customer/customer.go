@@ -18,14 +18,14 @@ type Address struct {
 
 // Customer represents a commerce customer entity.
 type Customer struct {
-	ID        kernel.CustomerID
-	TenantID  kernel.TenantID
-	Email     kernel.Email
-	Name      string
-	Phone     string
-	Addresses []Address
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        kernel.CustomerID `json:"id"`
+	TenantID  kernel.TenantID   `json:"tenant_id"`
+	Email     kernel.Email      `json:"email"`
+	Name      string            `json:"name"`
+	Phone     string            `json:"phone"`
+	Addresses []Address         `json:"addresses"`
+	CreatedAt time.Time         `json:"created_at"`
+	UpdatedAt time.Time         `json:"updated_at"`
 }
 
 // DefaultAddress returns the customer's default address, or nil if none.

@@ -83,7 +83,7 @@ func (r *PostgresRepo) GetDashboardStats(ctx context.Context, tenantID kernel.Te
 
 	// Pages pending review.
 	if err := r.db.QueryRowContext(ctx,
-		`SELECT COUNT(*) FROM storefront_pages WHERE tenant_id = $1 AND status = 'pending_review'`, tid,
+		`SELECT COUNT(*) FROM pages WHERE tenant_id = $1 AND status = 'pending_review'`, tid,
 	).Scan(&stats.PendingPages); err != nil {
 		return nil, fmt.Errorf("counting pending pages: %w", err)
 	}

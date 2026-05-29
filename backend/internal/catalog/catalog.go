@@ -8,14 +8,14 @@ import (
 
 // Category represents a product category in a tenant's catalog.
 type Category struct {
-	ID          kernel.CategoryID
-	TenantID    kernel.TenantID
-	Name        string
-	Slug        string
-	ParentID    *kernel.CategoryID
-	Description string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          kernel.CategoryID  `json:"id"`
+	TenantID    kernel.TenantID    `json:"tenant_id"`
+	Name        string             `json:"name"`
+	Slug        string             `json:"slug"`
+	ParentID    *kernel.CategoryID `json:"parent_id"`
+	Description string             `json:"description"`
+	CreatedAt   time.Time          `json:"created_at"`
+	UpdatedAt   time.Time          `json:"updated_at"`
 }
 
 // IsRoot returns true if this category has no parent.
@@ -25,16 +25,16 @@ func (c *Category) IsRoot() bool {
 
 // Collection represents a curated or automatic grouping of products.
 type Collection struct {
-	ID          kernel.CollectionID
-	TenantID    kernel.TenantID
-	Name        string
-	Slug        string
-	Description string
-	ProductIDs  []kernel.ProductID
-	IsAutomatic bool
-	Rules       map[string]any
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          kernel.CollectionID `json:"id"`
+	TenantID    kernel.TenantID    `json:"tenant_id"`
+	Name        string             `json:"name"`
+	Slug        string             `json:"slug"`
+	Description string             `json:"description"`
+	ProductIDs  []kernel.ProductID `json:"product_ids"`
+	IsAutomatic bool               `json:"is_automatic"`
+	Rules       map[string]any     `json:"rules"`
+	CreatedAt   time.Time          `json:"created_at"`
+	UpdatedAt   time.Time          `json:"updated_at"`
 }
 
 // ContainsProduct checks if a product is in this collection.

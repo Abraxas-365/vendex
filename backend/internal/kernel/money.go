@@ -2,8 +2,8 @@ package kernel
 
 // Money represents a monetary amount in the smallest currency unit (cents).
 type Money struct {
-	Amount   int64  // in cents
-	Currency string // ISO 4217, e.g. "USD", "EUR"
+	Amount   int64  `json:"amount"`   // in cents
+	Currency string `json:"currency"` // ISO 4217, e.g. "USD", "EUR"
 }
 
 func NewMoney(cents int64, currency string) Money {
