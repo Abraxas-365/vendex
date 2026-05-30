@@ -151,3 +151,15 @@ type RefundID string
 func NewRefundID(id string) RefundID { return RefundID(id) }
 func (r RefundID) String() string    { return string(r) }
 func (r RefundID) IsEmpty() bool     { return string(r) == "" }
+
+type VariantID string
+
+func NewVariantID(id string) VariantID { return VariantID(id) }
+func (v VariantID) String() string     { return string(v) }
+func (v VariantID) IsEmpty() bool      { return string(v) == "" }
+
+type OptionID string
+
+func NewOptionID(id string) OptionID { return OptionID(id) }
+func (o OptionID) String() string    { return string(o) }
+func (o OptionID) IsEmpty() bool     { return string(o) == "" }
