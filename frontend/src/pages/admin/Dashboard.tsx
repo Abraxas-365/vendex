@@ -9,6 +9,7 @@ import {
   DollarSign,
   Loader2,
   AlertCircle,
+  ExternalLink,
 } from 'lucide-react'
 import {
   LineChart,
@@ -120,11 +121,22 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Welcome back. Here's what's happening with your store.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Welcome back. Here's what's happening with your store.
+          </p>
+        </div>
+        <a
+          href="/api/v1/storefront/pages/by-slug/home"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100 transition-colors"
+        >
+          <ExternalLink className="h-4 w-4" />
+          Preview Store
+        </a>
       </div>
 
       {/* Stats Grid */}

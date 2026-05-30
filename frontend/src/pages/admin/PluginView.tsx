@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Puzzle, AlertCircle, Loader2, Power, PowerOff, Settings } from 'lucide-react'
+import { ArrowLeft, Puzzle, AlertCircle, Loader2, Power, PowerOff, Settings, Layout, ExternalLink, Circle } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as api from '../../lib/api'
 
@@ -8,7 +8,7 @@ import * as api from '../../lib/api'
 // Route: /admin/plugins/:name  (name is used as plugin ID)
 // ---------------------------------------------------------------------------
 
-type PluginViewTab = 'ui' | 'settings'
+type PluginViewTab = 'ui' | 'widget' | 'settings'
 
 export default function PluginView() {
   const { name } = useParams({ from: '/_admin/admin/plugins/$name' })
@@ -31,7 +31,14 @@ export default function PluginView() {
     enabled: Boolean(name),
   })
 
+  const { data: pluginData } = useQuery({
+    queryKey: ['plugins', name, 'detail'],
+    queryFn: () => api.getMarketplacePlugin(name),
+    enabled: Boolean(name),
+  })
+
   const manifest = manifestData?.manifest
+  const latestVersion = pluginData?.latest_version
 
   // Enable/disable mutations
   const enableMutation = useMutation({
@@ -151,6 +158,17 @@ export default function PluginView() {
             UI
           </button>
           <button
+            onClick={() => setViewTab('widget')}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              viewTab === 'widget'
+                ? 'bg-indigo-50 text-indigo-700'
+                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            <Layout size={12} />
+            Widget
+          </button>
+          <button
             onClick={() => setViewTab('settings')}
             className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
               viewTab === 'settings'
@@ -209,7 +227,109 @@ export default function PluginView() {
 
       {/* Content area */}
       <div className="flex-1 overflow-hidden">
-        {viewTab === 'settings' ? (
+        {viewTab === 'widget' ? (
+          /* ── Frontend Widget section ── */
+          <div className="h-full overflow-y-auto p-6">
+            <div className="mx-auto max-w-2xl space-y-5">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-800">Frontend Widget</h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  Frontend widgets are JavaScript bundles that get automatically injected into the
+                  storefront when this plugin is active.
+                </p>
+              </div>
+
+              {/* Widget bundle URL */}
+              <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                    <Layout size={15} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-slate-800">Frontend Bundle</p>
+                    {latestVersion?.frontend_url ? (
+                      <div className="mt-2 space-y-2">
+                        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                          <code className="flex-1 truncate font-mono text-xs text-slate-700">
+                            {latestVersion.frontend_url}
+                          </code>
+                          <a
+                            href={latestVersion.frontend_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="shrink-0 text-indigo-500 hover:text-indigo-700 transition-colors"
+                            title="Open bundle URL"
+                          >
+                            <ExternalLink size={13} />
+                          </a>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          Version {latestVersion.version} · JS bundle loaded by the storefront
+                          renderer
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="mt-1 text-xs text-slate-400">
+                        No frontend bundle — this plugin runs server-side only.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Widget widgets (slots) */}
+              {(manifest?.ui?.widgets?.length ?? 0) > 0 && (
+                <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-3">
+                  <p className="text-sm font-semibold text-slate-800">Widget Slots</p>
+                  <p className="text-xs text-slate-500">
+                    These components will be rendered in the specified storefront slots.
+                  </p>
+                  <div className="divide-y divide-slate-100 rounded-lg border border-slate-200">
+                    {manifest!.ui.widgets.map((w, i) => (
+                      <div key={i} className="flex items-center gap-3 px-4 py-3">
+                        <code className="rounded bg-indigo-50 px-2 py-0.5 font-mono text-xs text-indigo-700">
+                          {w.slot}
+                        </code>
+                        <span className="flex-1 truncate text-xs text-slate-600">{w.component}</span>
+                        <code className="truncate max-w-[180px] font-mono text-xs text-slate-400">
+                          {w.entry}
+                        </code>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Injection status */}
+              <div className="rounded-xl border border-slate-200 bg-white p-5">
+                <div className="flex items-center gap-3">
+                  {enableMutation.isPending || disableMutation.isPending ? (
+                    <Loader2 size={16} className="animate-spin text-slate-400" />
+                  ) : (
+                    <div className="text-slate-500">
+                      {/* We don't have live installation status here, show based on latest version */}
+                      <Circle size={16} className="text-slate-300" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">Widget Injection Status</p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {latestVersion?.frontend_url
+                        ? 'This plugin has a frontend widget. It will be automatically loaded on the storefront when the plugin is enabled.'
+                        : 'No frontend widget — enabling this plugin will not inject any scripts into the storefront.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Note */}
+              <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-700">
+                <strong>Note:</strong> Frontend widgets are automatically loaded by the storefront
+                renderer when this plugin is active. No manual configuration is required.
+              </div>
+            </div>
+          </div>
+        ) : viewTab === 'settings' ? (
           /* ── Settings editor ── */
           <div className="h-full overflow-y-auto p-6">
             <div className="mx-auto max-w-2xl space-y-4">

@@ -8,7 +8,9 @@ import {
   PowerOff,
   Power,
   Search,
+  LayoutGrid,
 } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import {
   useMarketplacePlugins,
   useInstalledPlugins,
@@ -17,6 +19,7 @@ import {
   useEnablePlugin,
   useDisablePlugin,
 } from '../../lib/hooks'
+import * as api from '../../lib/api'
 import type { Plugin, PluginCategory, InstallationStatus } from '../../types'
 
 // ---------------------------------------------------------------------------
@@ -146,6 +149,7 @@ interface InstalledRowProps {
   versionId: string
   status: InstallationStatus
   installedAt: string
+  hasWidget: boolean
   isUninstalling: boolean
   isTogglingStatus: boolean
   onUninstall: (id: string) => void
@@ -154,11 +158,22 @@ interface InstalledRowProps {
   onDisable: (id: string) => void
 }
 
+// Wrapper that fetches plugin detail to determine hasWidget
+function InstalledRowWithFetch(props: Omit<InstalledRowProps, 'hasWidget'>) {
+  const { data } = useQuery({
+    queryKey: ['plugins', props.pluginId, 'detail'],
+    queryFn: () => api.getMarketplacePlugin(props.pluginId),
+    staleTime: 5 * 60_000,
+  })
+  return <InstalledRow {...props} hasWidget={Boolean(data?.latest_version?.frontend_url)} />
+}
+
 function InstalledRow({
   pluginId,
   versionId,
   status,
   installedAt,
+  hasWidget,
   isUninstalling,
   isTogglingStatus,
   onUninstall,
@@ -174,7 +189,15 @@ function InstalledRow({
             <Puzzle size={14} />
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-800 font-mono">{pluginId}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-slate-800 font-mono">{pluginId}</p>
+              {hasWidget && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                  <LayoutGrid size={10} />
+                  Widget
+                </span>
+              )}
+            </div>
             <p className="text-xs text-slate-400">v{versionId}</p>
           </div>
         </div>
@@ -438,7 +461,7 @@ export default function Marketplace() {
               </thead>
               <tbody>
                 {installed.map((inst) => (
-                  <InstalledRow
+                  <InstalledRowWithFetch
                     key={inst.id}
                     pluginId={inst.plugin_id}
                     versionId={inst.version_id}
