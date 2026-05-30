@@ -175,6 +175,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.Analytics.RegisterRoutes(protected)
 	container.Settings.RegisterRoutes(protected)
 	container.Theme.RegisterRoutes(protected)
+	container.Plugin.RegisterRoutes(protected)
 	logx.Info("  > Commerce domain routes registered")
 
 	logx.Info("All routes registered")
