@@ -6,23 +6,32 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/Abraxas-365/hada-commerce/internal/audit/auditsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/bundle/bundlesrv"
 	"github.com/Abraxas-365/hada-commerce/internal/cartrecovery/cartrecoverysrv"
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/currency/currencysrv"
 	"github.com/Abraxas-365/hada-commerce/internal/customergroup/customergroupsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/dashboard/dashboardsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/giftcard/giftcardsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/i18n/i18nsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/inventory/inventorysrv"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/hada-commerce/internal/loyalty/loyaltysrv"
+	"github.com/Abraxas-365/hada-commerce/internal/notification/notificationsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/order/ordersrv"
 	"github.com/Abraxas-365/hada-commerce/internal/payment/paymentsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/product/productsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/promo/promosrv"
+	"github.com/Abraxas-365/hada-commerce/internal/returns/returnssrv"
+	"github.com/Abraxas-365/hada-commerce/internal/review/reviewsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/search/searchsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/shipping/shippingsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/subscription/subscriptionsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/tax/taxsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/theme/themesrv"
+	"github.com/Abraxas-365/hada-commerce/internal/webhook/webhooksrv"
 )
 
 // Tool is the minimal interface that each agent tool must satisfy.
@@ -58,6 +67,15 @@ type Services struct {
 	Currency       *currencysrv.Service
 	I18n           *i18nsrv.Service
 	Subscriptions  *subscriptionsrv.Service
+	Inventory      *inventorysrv.Service
+	Reviews        *reviewsrv.Service
+	Returns        *returnssrv.Service
+	Webhooks       *webhooksrv.Service
+	Audit          *auditsrv.Service
+	Loyalty        *loyaltysrv.Service
+	Bundles        *bundlesrv.Service
+	Dashboard      *dashboardsrv.Service
+	Notifications  *notificationsrv.Service
 }
 
 // Setup constructs and returns all agent tools wired to the given services.
@@ -150,5 +168,47 @@ func Setup(tenantID kernel.TenantID, svc Services) []Tool {
 		&ListSubscriptionsTool{subscriptions: svc.Subscriptions, tenantID: tenantID},
 		&CreateSubscriptionTool{subscriptions: svc.Subscriptions, tenantID: tenantID},
 		&CancelSubscriptionTool{subscriptions: svc.Subscriptions, tenantID: tenantID},
+
+		// Inventory
+		&ListWarehousesTool{inventory: svc.Inventory, tenantID: tenantID},
+		&CreateWarehouseTool{inventory: svc.Inventory, tenantID: tenantID},
+		&AdjustStockTool{inventory: svc.Inventory, tenantID: tenantID},
+		&GetLowStockTool{inventory: svc.Inventory, tenantID: tenantID},
+
+		// Reviews
+		&ListReviewsTool{reviews: svc.Reviews, tenantID: tenantID},
+		&ApproveReviewTool{reviews: svc.Reviews, tenantID: tenantID},
+		&RejectReviewTool{reviews: svc.Reviews, tenantID: tenantID},
+
+		// Returns
+		&ListReturnsTool{returns: svc.Returns, tenantID: tenantID},
+		&ApproveReturnTool{returns: svc.Returns, tenantID: tenantID},
+
+		// Webhooks
+		&ListWebhooksTool{webhooks: svc.Webhooks, tenantID: tenantID},
+		&CreateWebhookTool{webhooks: svc.Webhooks, tenantID: tenantID},
+		&ToggleWebhookTool{webhooks: svc.Webhooks, tenantID: tenantID},
+
+		// Audit
+		&ListAuditLogsTool{audit: svc.Audit, tenantID: tenantID},
+
+		// Loyalty
+		&ListLoyaltyAccountsTool{loyalty: svc.Loyalty, tenantID: tenantID},
+		&EarnLoyaltyPointsTool{loyalty: svc.Loyalty, tenantID: tenantID},
+		&ListLoyaltyRewardsTool{loyalty: svc.Loyalty, tenantID: tenantID},
+		&CreateLoyaltyRewardTool{loyalty: svc.Loyalty, tenantID: tenantID},
+
+		// Bundles
+		&ListBundlesTool{bundles: svc.Bundles, tenantID: tenantID},
+		&CreateBundleTool{bundles: svc.Bundles, tenantID: tenantID},
+
+		// Dashboard
+		&GetSalesOverviewTool{dashboard: svc.Dashboard, tenantID: tenantID},
+		&GetTopProductsTool{dashboard: svc.Dashboard, tenantID: tenantID},
+		&GetRevenueByDayTool{dashboard: svc.Dashboard, tenantID: tenantID},
+
+		// Notifications
+		&GetUnreadNotificationCountTool{notifications: svc.Notifications, tenantID: tenantID},
+		&MarkAllNotificationsReadTool{notifications: svc.Notifications, tenantID: tenantID},
 	}
 }
