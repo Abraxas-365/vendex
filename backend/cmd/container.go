@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/dashboard/dashboardcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/inventory/inventorycontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/audit/auditcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/cartrecovery/cartrecoverycontainer"
@@ -100,6 +101,7 @@ type Container struct {
 	Media          *mediacontainer.Container
 	Marketplace    *marketplacecontainer.Container
 	Analytics      *analyticscontainer.Container
+	Dashboard      *dashboardcontainer.Container
 	Settings       *settingscontainer.Container
 	Theme          *themecontainer.Container
 	Plugin         *plugincontainer.Container
@@ -235,6 +237,7 @@ func (c *Container) initModules() {
 	c.Media = mediaCont
 	c.Marketplace = marketplacecontainer.New(c.DB)
 	c.Analytics = analyticscontainer.New(c.DB)
+	c.Dashboard = dashboardcontainer.New(c.DB)
 	c.Plugin = plugincontainer.New(c.DB, bus)
 	c.Search = searchcontainer.New(c.DB)
 	c.Shipping = shippingcontainer.New(c.DB, bus)
