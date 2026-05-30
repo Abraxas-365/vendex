@@ -8,6 +8,7 @@ import (
 
 	"github.com/Abraxas-365/hada-commerce/internal/catalog"
 	"github.com/Abraxas-365/hada-commerce/internal/errx"
+	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 )
 
@@ -15,11 +16,12 @@ import (
 type Service struct {
 	categories  catalog.CategoryRepository
 	collections catalog.CollectionRepository
+	bus         eventbus.Bus
 }
 
 // New creates a new catalog service.
-func New(categories catalog.CategoryRepository, collections catalog.CollectionRepository) *Service {
-	return &Service{categories: categories, collections: collections}
+func New(categories catalog.CategoryRepository, collections catalog.CollectionRepository, bus eventbus.Bus) *Service {
+	return &Service{categories: categories, collections: collections, bus: bus}
 }
 
 // --- Category operations ---
@@ -58,6 +60,15 @@ func (s *Service) CreateCategory(ctx context.Context, tenantID kernel.TenantID, 
 	if err := s.categories.Create(ctx, c); err != nil {
 		return nil, errx.Wrap(err, "creating category", errx.TypeInternal)
 	}
+
+	if evt, err := eventbus.NewEvent(eventbus.CategoryCreated, tenantID, eventbus.CategoryPayload{
+		CategoryID: string(c.ID),
+		Name:       c.Name,
+		Slug:       c.Slug,
+	}); err == nil {
+		_ = s.bus.Publish(ctx, evt)
+	}
+
 	return c, nil
 }
 
@@ -136,6 +147,15 @@ func (s *Service) CreateCollection(ctx context.Context, tenantID kernel.TenantID
 	if err := s.collections.Create(ctx, c); err != nil {
 		return nil, errx.Wrap(err, "creating collection", errx.TypeInternal)
 	}
+
+	if evt, err := eventbus.NewEvent(eventbus.CollectionUpdated, tenantID, eventbus.CollectionPayload{
+		CollectionID: string(c.ID),
+		Name:         c.Name,
+		Slug:         c.Slug,
+	}); err == nil {
+		_ = s.bus.Publish(ctx, evt)
+	}
+
 	return c, nil
 }
 
@@ -147,7 +167,19 @@ func (s *Service) GetCollectionByID(ctx context.Context, tenantID kernel.TenantI
 // UpdateCollection persists changes to a collection.
 func (s *Service) UpdateCollection(ctx context.Context, c *catalog.Collection) error {
 	c.UpdatedAt = time.Now()
-	return s.collections.Update(ctx, c)
+	if err := s.collections.Update(ctx, c); err != nil {
+		return err
+	}
+
+	if evt, err := eventbus.NewEvent(eventbus.CollectionUpdated, c.TenantID, eventbus.CollectionPayload{
+		CollectionID: string(c.ID),
+		Name:         c.Name,
+		Slug:         c.Slug,
+	}); err == nil {
+		_ = s.bus.Publish(ctx, evt)
+	}
+
+	return nil
 }
 
 // DeleteCollection removes a collection by ID, scoped to tenant.

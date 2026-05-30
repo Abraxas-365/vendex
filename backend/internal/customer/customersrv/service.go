@@ -8,17 +8,19 @@ import (
 
 	"github.com/Abraxas-365/hada-commerce/internal/customer"
 	"github.com/Abraxas-365/hada-commerce/internal/errx"
+	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 )
 
 // Service handles customer business logic.
 type Service struct {
 	repo customer.Repository
+	bus  eventbus.Bus
 }
 
 // New creates a new customer service.
-func New(repo customer.Repository) *Service {
-	return &Service{repo: repo}
+func New(repo customer.Repository, bus eventbus.Bus) *Service {
+	return &Service{repo: repo, bus: bus}
 }
 
 // CreateInput holds the data needed to create a customer.
@@ -63,6 +65,15 @@ func (s *Service) Create(ctx context.Context, tenantID kernel.TenantID, in Creat
 	if err := s.repo.Create(ctx, c); err != nil {
 		return nil, errx.Wrap(err, "creating customer", errx.TypeInternal)
 	}
+
+	if evt, err := eventbus.NewEvent(eventbus.CustomerRegistered, tenantID, eventbus.CustomerPayload{
+		CustomerID: string(c.ID),
+		Email:      string(c.Email),
+		Name:       c.Name,
+	}); err == nil {
+		_ = s.bus.Publish(ctx, evt)
+	}
+
 	return c, nil
 }
 
@@ -79,7 +90,19 @@ func (s *Service) GetByEmail(ctx context.Context, tenantID kernel.TenantID, emai
 // Update persists changes to a customer.
 func (s *Service) Update(ctx context.Context, c *customer.Customer) error {
 	c.UpdatedAt = time.Now()
-	return s.repo.Update(ctx, c)
+	if err := s.repo.Update(ctx, c); err != nil {
+		return err
+	}
+
+	if evt, err := eventbus.NewEvent(eventbus.CustomerUpdated, c.TenantID, eventbus.CustomerPayload{
+		CustomerID: string(c.ID),
+		Email:      string(c.Email),
+		Name:       c.Name,
+	}); err == nil {
+		_ = s.bus.Publish(ctx, evt)
+	}
+
+	return nil
 }
 
 // Delete removes a customer by ID, scoped to tenant.

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Abraxas-365/hada-commerce/internal/errx"
+	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/storefront"
 )
@@ -14,11 +15,12 @@ type Service struct {
 	pages      storefront.PageRepository
 	versions   storefront.PageVersionRepository
 	blockTypes storefront.BlockTypeRepository
+	bus        eventbus.Bus
 }
 
 // New creates a new storefront Service.
-func New(pages storefront.PageRepository, versions storefront.PageVersionRepository, blockTypes storefront.BlockTypeRepository) *Service {
-	return &Service{pages: pages, versions: versions, blockTypes: blockTypes}
+func New(pages storefront.PageRepository, versions storefront.PageVersionRepository, blockTypes storefront.BlockTypeRepository, bus eventbus.Bus) *Service {
+	return &Service{pages: pages, versions: versions, blockTypes: blockTypes, bus: bus}
 }
 
 // CreatePageInput holds the data needed to create a new page.
@@ -173,6 +175,15 @@ func (s *Service) Publish(ctx context.Context, tenantID kernel.TenantID, id kern
 	if err := s.pages.Update(ctx, page); err != nil {
 		return nil, errx.Wrap(err, "publish page", errx.TypeInternal)
 	}
+
+	if evt, err := eventbus.NewEvent(eventbus.PagePublished, tenantID, eventbus.PagePayload{
+		PageID: string(page.ID),
+		Slug:   page.Slug,
+		Title:  page.Title,
+	}); err == nil {
+		_ = s.bus.Publish(ctx, evt)
+	}
+
 	return page, nil
 }
 
@@ -192,6 +203,15 @@ func (s *Service) Unpublish(ctx context.Context, tenantID kernel.TenantID, id ke
 	if err := s.pages.Update(ctx, page); err != nil {
 		return nil, errx.Wrap(err, "unpublish page", errx.TypeInternal)
 	}
+
+	if evt, err := eventbus.NewEvent(eventbus.PageUnpublished, tenantID, eventbus.PagePayload{
+		PageID: string(page.ID),
+		Slug:   page.Slug,
+		Title:  page.Title,
+	}); err == nil {
+		_ = s.bus.Publish(ctx, evt)
+	}
+
 	return page, nil
 }
 

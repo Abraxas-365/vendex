@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Abraxas-365/hada-commerce/internal/errx"
+	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
 	"github.com/google/uuid"
 
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
@@ -14,11 +15,12 @@ import (
 // Service handles order business logic.
 type Service struct {
 	repo order.Repository
+	bus  eventbus.Bus
 }
 
 // New creates a new order service.
-func New(repo order.Repository) *Service {
-	return &Service{repo: repo}
+func New(repo order.Repository, bus eventbus.Bus) *Service {
+	return &Service{repo: repo, bus: bus}
 }
 
 // CreateItemInput represents one line item when creating an order.
@@ -69,6 +71,18 @@ func (s *Service) Create(ctx context.Context, tenantID kernel.TenantID, in Creat
 	if err := s.repo.Create(ctx, o); err != nil {
 		return nil, errx.Wrap(err, "creating order", errx.TypeInternal)
 	}
+
+	if evt, err := eventbus.NewEvent(eventbus.OrderPlaced, tenantID, eventbus.OrderPayload{
+		OrderID:    string(o.ID),
+		CustomerID: string(o.CustomerID),
+		Status:     string(o.Status),
+		Total:      int(o.TotalAmount.Amount),
+		Currency:   o.TotalAmount.Currency,
+		ItemCount:  len(o.Items),
+	}); err == nil {
+		_ = s.bus.Publish(ctx, evt)
+	}
+
 	return o, nil
 }
 
@@ -91,6 +105,29 @@ func (s *Service) UpdateStatus(ctx context.Context, tenantID kernel.TenantID, id
 	if err := s.repo.Update(ctx, o); err != nil {
 		return nil, errx.Wrap(err, "updating order status", errx.TypeInternal)
 	}
+
+	var evtType eventbus.EventType
+	switch newStatus {
+	case order.StatusConfirmed:
+		evtType = eventbus.OrderConfirmed
+	case order.StatusShipped:
+		evtType = eventbus.OrderShipped
+	case order.StatusDelivered:
+		evtType = eventbus.OrderDelivered
+	}
+	if evtType != "" {
+		if evt, err := eventbus.NewEvent(evtType, tenantID, eventbus.OrderPayload{
+			OrderID:    string(o.ID),
+			CustomerID: string(o.CustomerID),
+			Status:     string(o.Status),
+			Total:      int(o.TotalAmount.Amount),
+			Currency:   o.TotalAmount.Currency,
+			ItemCount:  len(o.Items),
+		}); err == nil {
+			_ = s.bus.Publish(ctx, evt)
+		}
+	}
+
 	return o, nil
 }
 
@@ -112,6 +149,18 @@ func (s *Service) Cancel(ctx context.Context, tenantID kernel.TenantID, id kerne
 	if err := s.repo.Update(ctx, o); err != nil {
 		return nil, errx.Wrap(err, "cancelling order", errx.TypeInternal)
 	}
+
+	if evt, err := eventbus.NewEvent(eventbus.OrderCancelled, tenantID, eventbus.OrderPayload{
+		OrderID:    string(o.ID),
+		CustomerID: string(o.CustomerID),
+		Status:     string(o.Status),
+		Total:      int(o.TotalAmount.Amount),
+		Currency:   o.TotalAmount.Currency,
+		ItemCount:  len(o.Items),
+	}); err == nil {
+		_ = s.bus.Publish(ctx, evt)
+	}
+
 	return o, nil
 }
 

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Abraxas-365/hada-commerce/internal/errx"
+	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/theme"
 )
@@ -14,11 +15,12 @@ import (
 // Service implements the theme business logic.
 type Service struct {
 	repo theme.ThemeRepository
+	bus  eventbus.Bus
 }
 
 // New creates a new theme Service.
-func New(repo theme.ThemeRepository) *Service {
-	return &Service{repo: repo}
+func New(repo theme.ThemeRepository, bus eventbus.Bus) *Service {
+	return &Service{repo: repo, bus: bus}
 }
 
 // CreateThemeInput holds the data needed to create a new theme.
@@ -124,6 +126,14 @@ func (s *Service) UpdateTheme(ctx context.Context, input UpdateThemeInput) (*the
 	if err := s.repo.Update(ctx, t); err != nil {
 		return nil, err
 	}
+
+	if evt, err := eventbus.NewEvent(eventbus.ThemeUpdated, input.TenantID, eventbus.ThemePayload{
+		ThemeID: string(t.ID),
+		Name:    t.Name,
+	}); err == nil {
+		_ = s.bus.Publish(ctx, evt)
+	}
+
 	return t, nil
 }
 
@@ -145,6 +155,14 @@ func (s *Service) ActivateTheme(ctx context.Context, tenantID kernel.TenantID, i
 	if err := s.repo.Update(ctx, t); err != nil {
 		return nil, errx.Wrap(err, "activating theme", errx.TypeInternal)
 	}
+
+	if evt, err := eventbus.NewEvent(eventbus.ThemeActivated, tenantID, eventbus.ThemePayload{
+		ThemeID: string(t.ID),
+		Name:    t.Name,
+	}); err == nil {
+		_ = s.bus.Publish(ctx, evt)
+	}
+
 	return t, nil
 }
 

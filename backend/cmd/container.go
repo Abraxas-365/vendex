@@ -9,6 +9,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/config"
 	"github.com/Abraxas-365/hada-commerce/internal/customer/customercontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
 	"github.com/Abraxas-365/hada-commerce/internal/fsx"
 	"github.com/Abraxas-365/hada-commerce/internal/fsx/fsxlocal"
 	"github.com/Abraxas-365/hada-commerce/internal/fsx/fsxs3"
@@ -51,6 +52,9 @@ type Container struct {
 	// Background services
 	JobClient    *jobx.Client
 	NotifxClient *notifx.Client
+
+	// Event bus
+	EventBus eventbus.Bus
 
 	// IAM
 	IAM *iamcontainer.Container
@@ -142,12 +146,24 @@ func (c *Container) initModules() {
 		InvitationNotifier: NewNotifxInvitationNotifier(c.NotifxClient),
 	})
 
+	// Event bus
+	bus := eventbus.NewInMemoryBus()
+	bus.SubscribeAll(func(ctx context.Context, event eventbus.Event) error {
+		logx.WithFields(logx.Fields{
+			"event_id":   event.ID,
+			"event_type": string(event.Type),
+			"tenant_id":  string(event.TenantID),
+		}).Info("domain event published")
+		return nil
+	})
+	c.EventBus = bus
+
 	// Commerce domains
-	c.Product = productcontainer.New(c.DB)
-	c.Order = ordercontainer.New(c.DB)
-	c.Customer = customercontainer.New(c.DB)
-	c.Catalog = catalogcontainer.New(c.DB)
-	c.Storefront = storefrontcontainer.New(c.DB)
+	c.Product = productcontainer.New(c.DB, bus)
+	c.Order = ordercontainer.New(c.DB, bus)
+	c.Customer = customercontainer.New(c.DB, bus)
+	c.Catalog = catalogcontainer.New(c.DB, bus)
+	c.Storefront = storefrontcontainer.New(c.DB, bus)
 	c.Promo = promocontainer.New(c.DB)
 	mediaCont, err := mediacontainer.New(c.DB, "./uploads", fmt.Sprintf("http://localhost:%d/uploads", c.Config.Server.Port))
 	if err != nil {
@@ -156,8 +172,8 @@ func (c *Container) initModules() {
 	c.Media = mediaCont
 	c.Marketplace = marketplacecontainer.New(c.DB)
 	c.Analytics = analyticscontainer.New(c.DB)
-	c.Settings = settingscontainer.New(c.DB)
-	c.Theme = themecontainer.New(c.DB)
+	c.Settings = settingscontainer.New(c.DB, bus)
+	c.Theme = themecontainer.New(c.DB, bus)
 
 	logx.Info("All modules initialized")
 }

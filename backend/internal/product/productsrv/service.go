@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Abraxas-365/hada-commerce/internal/errx"
+	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/product"
 )
@@ -14,11 +15,12 @@ import (
 // Service handles product business logic.
 type Service struct {
 	repo product.Repository
+	bus  eventbus.Bus
 }
 
 // New creates a new product service.
-func New(repo product.Repository) *Service {
-	return &Service{repo: repo}
+func New(repo product.Repository, bus eventbus.Bus) *Service {
+	return &Service{repo: repo, bus: bus}
 }
 
 // CreateInput holds the data needed to create a product.
@@ -70,6 +72,17 @@ func (s *Service) Create(ctx context.Context, tenantID kernel.TenantID, in Creat
 	if err := s.repo.Create(ctx, p); err != nil {
 		return nil, errx.Wrap(err, "creating product", errx.TypeInternal)
 	}
+
+	if evt, err := eventbus.NewEvent(eventbus.ProductCreated, tenantID, eventbus.ProductPayload{
+		ProductID: string(p.ID),
+		Name:      p.Name,
+		SKU:       p.SKU,
+		Price:     int(p.Price.Amount),
+		Currency:  p.Price.Currency,
+	}); err == nil {
+		_ = s.bus.Publish(ctx, evt)
+	}
+
 	return p, nil
 }
 
@@ -81,12 +94,36 @@ func (s *Service) GetByID(ctx context.Context, tenantID kernel.TenantID, id kern
 // Update persists changes to a product.
 func (s *Service) Update(ctx context.Context, p *product.Product) error {
 	p.UpdatedAt = time.Now()
-	return s.repo.Update(ctx, p)
+	if err := s.repo.Update(ctx, p); err != nil {
+		return err
+	}
+
+	if evt, err := eventbus.NewEvent(eventbus.ProductUpdated, p.TenantID, eventbus.ProductPayload{
+		ProductID: string(p.ID),
+		Name:      p.Name,
+		SKU:       p.SKU,
+		Price:     int(p.Price.Amount),
+		Currency:  p.Price.Currency,
+	}); err == nil {
+		_ = s.bus.Publish(ctx, evt)
+	}
+
+	return nil
 }
 
 // Delete removes a product by ID, scoped to tenant.
 func (s *Service) Delete(ctx context.Context, tenantID kernel.TenantID, id kernel.ProductID) error {
-	return s.repo.Delete(ctx, tenantID, id)
+	if err := s.repo.Delete(ctx, tenantID, id); err != nil {
+		return err
+	}
+
+	if evt, err := eventbus.NewEvent(eventbus.ProductDeleted, tenantID, eventbus.ProductPayload{
+		ProductID: string(id),
+	}); err == nil {
+		_ = s.bus.Publish(ctx, evt)
+	}
+
+	return nil
 }
 
 // List returns a paginated list of products for a tenant.
