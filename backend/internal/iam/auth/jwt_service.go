@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Abraxas-365/hada-commerce/internal/config"
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -84,7 +85,7 @@ func (j *JWTService) ValidateAccessToken(tokenString string) (*TokenClaims, erro
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (any, error) {
 		// Verificar el método de firma
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			return nil, errx.Validation(fmt.Sprintf("unexpected signing method: %v", token.Header["alg"]))
 		}
 		return j.secretKey, nil
 	})

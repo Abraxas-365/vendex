@@ -1,11 +1,12 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 )
 
 type Config struct {
@@ -62,7 +63,7 @@ func Load() (*Config, error) {
 	}
 
 	if err := cfg.Validate(); err != nil {
-		return nil, fmt.Errorf("config validation failed: %w", err)
+		return nil, errx.Wrap(err, "config validation failed", errx.TypeInternal)
 	}
 
 	cfg.Jobx = loadJobxConfig()
