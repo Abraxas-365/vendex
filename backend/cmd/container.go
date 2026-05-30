@@ -32,6 +32,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/order/ordercontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/payment/paymentcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/product/productcontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/giftcard/giftcardcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/promo/promocontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/search/searchcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/settings/settingscontainer"
@@ -80,6 +81,7 @@ type Container struct {
 	CustomerGroup  *customergroupcontainer.Container
 	Catalog        *catalogcontainer.Container
 	Storefront     *storefrontcontainer.Container
+	GiftCard       *giftcardcontainer.Container
 	Promo          *promocontainer.Container
 	Media          *mediacontainer.Container
 	Marketplace    *marketplacecontainer.Container
@@ -197,6 +199,7 @@ func (c *Container) initModules() {
 		CollectionGetter: c.Catalog.Service,
 		SettingsGetter:   c.Settings.Service,
 	})
+	c.GiftCard = giftcardcontainer.New(c.DB)
 	c.Promo = promocontainer.New(c.DB)
 	mediaCont, err := mediacontainer.New(c.DB, "./uploads", fmt.Sprintf("http://localhost:%d/uploads", c.Config.Server.Port))
 	if err != nil {

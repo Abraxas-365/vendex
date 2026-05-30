@@ -189,3 +189,15 @@ func NewCustomerGroupMembershipID(id string) CustomerGroupMembershipID {
 }
 func (c CustomerGroupMembershipID) String() string { return string(c) }
 func (c CustomerGroupMembershipID) IsEmpty() bool  { return string(c) == "" }
+
+type GiftCardID string
+
+func NewGiftCardID(id string) GiftCardID { return GiftCardID(id) }
+func (g GiftCardID) String() string      { return string(g) }
+func (g GiftCardID) IsEmpty() bool       { return string(g) == "" }
+
+type GiftCardTransactionID string
+
+func NewGiftCardTransactionID(id string) GiftCardTransactionID { return GiftCardTransactionID(id) }
+func (g GiftCardTransactionID) String() string                 { return string(g) }
+func (g GiftCardTransactionID) IsEmpty() bool                  { return string(g) == "" }

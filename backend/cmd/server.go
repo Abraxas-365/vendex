@@ -161,6 +161,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.Checkout.RegisterPublicRoutes(public)
 	container.Customer.RegisterPublicRoutes(public)
 	container.Sitemap.RegisterPublicRoutes(public)
+	container.GiftCard.RegisterPublicRoutes(public)
 	logx.Info("  > Public storefront routes registered")
 
 	// Protected routes (require auth)
@@ -192,6 +193,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.Plugin.RegisterRoutes(protected)
 	container.Shipping.RegisterRoutes(protected)
 	container.Tax.RegisterRoutes(protected)
+	container.GiftCard.RegisterRoutes(protected)
 	container.ImportExport.RegisterRoutes(protected)
 	container.Customer.RegisterCustomerProtectedRoutes(public)
 	// Wishlist routes — customer-authenticated (reuse customer JWT middleware)

@@ -72,6 +72,10 @@ const (
 
 	// Tax events
 	TaxRateCreated EventType = "tax_rate.created"
+
+	// Gift card events
+	GiftCardCreated  EventType = "gift_card.created"
+	GiftCardRedeemed EventType = "gift_card.redeemed"
 )
 
 // Event is a domain event that has occurred in the system.
