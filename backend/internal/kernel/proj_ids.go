@@ -219,3 +219,15 @@ type TranslationID string
 func NewTranslationID(id string) TranslationID { return TranslationID(id) }
 func (t TranslationID) String() string         { return string(t) }
 func (t TranslationID) IsEmpty() bool          { return string(t) == "" }
+
+type SubscriptionID string
+
+func NewSubscriptionID(id string) SubscriptionID { return SubscriptionID(id) }
+func (s SubscriptionID) String() string          { return string(s) }
+func (s SubscriptionID) IsEmpty() bool           { return string(s) == "" }
+
+type BillingRecordID string
+
+func NewBillingRecordID(id string) BillingRecordID { return BillingRecordID(id) }
+func (b BillingRecordID) String() string           { return string(b) }
+func (b BillingRecordID) IsEmpty() bool            { return string(b) == "" }

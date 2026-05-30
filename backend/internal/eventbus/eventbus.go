@@ -76,6 +76,11 @@ const (
 	// Gift card events
 	GiftCardCreated  EventType = "gift_card.created"
 	GiftCardRedeemed EventType = "gift_card.redeemed"
+
+	// Subscription events
+	SubscriptionCreated   EventType = "subscription.created"
+	SubscriptionCancelled EventType = "subscription.cancelled"
+	SubscriptionBilled    EventType = "subscription.billed"
 )
 
 // Event is a domain event that has occurred in the system.
