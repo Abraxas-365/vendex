@@ -7,6 +7,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogapi"
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/cataloginfra"
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
 )
 
 // Container wires together all catalog domain dependencies.
@@ -16,10 +17,10 @@ type Container struct {
 }
 
 // New creates a fully-wired catalog container.
-func New(db *sqlx.DB) *Container {
+func New(db *sqlx.DB, bus eventbus.Bus) *Container {
 	categoryRepo := cataloginfra.NewCategoryPostgresRepo(db)
 	collectionRepo := cataloginfra.NewCollectionPostgresRepo(db)
-	svc := catalogsrv.New(categoryRepo, collectionRepo)
+	svc := catalogsrv.New(categoryRepo, collectionRepo, bus)
 	handler := catalogapi.NewHandler(svc)
 	return &Container{
 		Service: svc,

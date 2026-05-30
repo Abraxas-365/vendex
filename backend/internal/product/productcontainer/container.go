@@ -1,6 +1,7 @@
 package productcontainer
 
 import (
+	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
 	"github.com/Abraxas-365/hada-commerce/internal/product/productapi"
 	"github.com/Abraxas-365/hada-commerce/internal/product/productinfra"
 	"github.com/Abraxas-365/hada-commerce/internal/product/productsrv"
@@ -15,9 +16,9 @@ type Container struct {
 }
 
 // New creates a fully-wired product container.
-func New(db *sqlx.DB) *Container {
+func New(db *sqlx.DB, bus eventbus.Bus) *Container {
 	repo := productinfra.NewPostgresRepo(db)
-	svc := productsrv.New(repo)
+	svc := productsrv.New(repo, bus)
 	handler := productapi.NewHandler(svc)
 	return &Container{
 		Service: svc,

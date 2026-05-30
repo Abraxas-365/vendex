@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
+	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
 	"github.com/Abraxas-365/hada-commerce/internal/settings/settingsapi"
 	"github.com/Abraxas-365/hada-commerce/internal/settings/settingsinfra"
 	"github.com/Abraxas-365/hada-commerce/internal/settings/settingssrv"
@@ -16,9 +17,9 @@ type Container struct {
 }
 
 // New creates a fully-wired settings container.
-func New(db *sqlx.DB) *Container {
+func New(db *sqlx.DB, bus eventbus.Bus) *Container {
 	repo := settingsinfra.NewPostgresRepo(db)
-	svc := settingssrv.New(repo)
+	svc := settingssrv.New(repo, bus)
 	handler := settingsapi.NewHandler(svc)
 	return &Container{
 		Service: svc,

@@ -1,6 +1,7 @@
 package ordercontainer
 
 import (
+	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
 	"github.com/Abraxas-365/hada-commerce/internal/order/orderapi"
 	"github.com/Abraxas-365/hada-commerce/internal/order/orderinfra"
 	"github.com/Abraxas-365/hada-commerce/internal/order/ordersrv"
@@ -15,9 +16,9 @@ type Container struct {
 }
 
 // New creates a fully-wired order container.
-func New(db *sqlx.DB) *Container {
+func New(db *sqlx.DB, bus eventbus.Bus) *Container {
 	repo := orderinfra.NewPostgresRepo(db)
-	svc := ordersrv.New(repo)
+	svc := ordersrv.New(repo, bus)
 	handler := orderapi.NewHandler(svc)
 	return &Container{
 		Service: svc,

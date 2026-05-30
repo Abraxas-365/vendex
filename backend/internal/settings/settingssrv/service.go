@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Abraxas-365/hada-commerce/internal/errx"
+	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/settings"
 )
@@ -12,11 +13,12 @@ import (
 // Service handles store-settings business logic.
 type Service struct {
 	repo settings.Repository
+	bus  eventbus.Bus
 }
 
 // New creates a new settings service.
-func New(repo settings.Repository) *Service {
-	return &Service{repo: repo}
+func New(repo settings.Repository, bus eventbus.Bus) *Service {
+	return &Service{repo: repo, bus: bus}
 }
 
 // UpdateInput holds the fields that callers may change.
@@ -72,5 +74,36 @@ func (s *Service) Update(ctx context.Context, tenantID kernel.TenantID, in Updat
 	if err := s.repo.Upsert(ctx, ss); err != nil {
 		return nil, errx.Wrap(err, "upserting settings", errx.TypeInternal)
 	}
+
+	// Build a list of fields that were updated.
+	var changedFields []string
+	if in.StoreName != "" {
+		changedFields = append(changedFields, "store_name")
+	}
+	if in.StoreEmail != "" {
+		changedFields = append(changedFields, "store_email")
+	}
+	if in.StorePhone != "" {
+		changedFields = append(changedFields, "store_phone")
+	}
+	if in.Currency != "" {
+		changedFields = append(changedFields, "currency")
+	}
+	if in.Timezone != "" {
+		changedFields = append(changedFields, "timezone")
+	}
+	if in.LogoURL != "" {
+		changedFields = append(changedFields, "logo_url")
+	}
+	if in.FaviconURL != "" {
+		changedFields = append(changedFields, "favicon_url")
+	}
+
+	if evt, err := eventbus.NewEvent(eventbus.SettingsUpdated, tenantID, eventbus.SettingsPayload{
+		Fields: changedFields,
+	}); err == nil {
+		_ = s.bus.Publish(ctx, evt)
+	}
+
 	return ss, nil
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/customer/customerapi"
 	"github.com/Abraxas-365/hada-commerce/internal/customer/customerinfra"
 	"github.com/Abraxas-365/hada-commerce/internal/customer/customersrv"
+	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )
@@ -15,9 +16,9 @@ type Container struct {
 }
 
 // New creates a fully-wired customer container.
-func New(db *sqlx.DB) *Container {
+func New(db *sqlx.DB, bus eventbus.Bus) *Container {
 	repo := customerinfra.NewPostgresRepo(db)
-	svc := customersrv.New(repo)
+	svc := customersrv.New(repo, bus)
 	handler := customerapi.NewHandler(svc)
 	return &Container{
 		Service: svc,
