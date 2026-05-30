@@ -11,6 +11,8 @@ import {
   Globe,
   Loader2,
   Layers,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import type { Section, BlockType, PageStatus, PageMeta } from '../../types'
 import {
@@ -250,6 +252,7 @@ export default function PageEditor() {
   })
   const [sections, setSections] = useState<Section[]>([])
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null)
+  const [showPreview, setShowPreview] = useState(false)
 
   // Load existing page data
   useEffect(() => {
@@ -360,6 +363,12 @@ export default function PageEditor() {
   const isSaving = createPage.isPending || updatePage.isPending || publishPage.isPending
   const saveError = createPage.error ?? updatePage.error ?? publishPage.error
 
+  // Preview is only available for published pages with a slug
+  const canPreview = status === 'published' && slug.length > 0
+  const previewUrl = canPreview
+    ? `/api/v1/storefront/pages/by-slug/${slug}`
+    : ''
+
   if (isLoading) {
     return (
       <div className="flex h-96 items-center justify-center">
@@ -417,11 +426,57 @@ export default function PageEditor() {
             <Globe className="h-4 w-4" />
             Publish
           </button>
+          {canPreview && (
+            <button
+              onClick={() => setShowPreview((v) => !v)}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                showPreview
+                  ? 'bg-slate-800 text-white hover:bg-slate-900'
+                  : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+              title={showPreview ? 'Hide preview' : 'Preview page'}
+            >
+              {showPreview ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+              {showPreview ? 'Hide Preview' : 'Preview'}
+            </button>
+          )}
         </div>
       </div>
 
+      {/* Preview iframe — full-width overlay when active */}
+      {showPreview && previewUrl && (
+        <div className="flex-1 overflow-hidden border-t border-gray-200 bg-white">
+          <div className="flex h-10 shrink-0 items-center gap-3 border-b border-gray-200 bg-slate-50 px-4">
+            <Eye className="h-4 w-4 text-slate-400" />
+            <span className="text-xs font-medium text-slate-600">Live Preview</span>
+            <span className="rounded bg-slate-200 px-2 py-0.5 font-mono text-xs text-slate-500">
+              /{slug}
+            </span>
+            <div className="flex-1" />
+            <a
+              href={previewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-indigo-600 hover:underline"
+            >
+              Open in new tab ↗
+            </a>
+          </div>
+          <iframe
+            key={previewUrl}
+            src={previewUrl}
+            className="h-[calc(100%-2.5rem)] w-full border-0"
+            title={`Preview: ${title}`}
+          />
+        </div>
+      )}
+
       {/* Three-column layout */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className={`flex overflow-hidden ${showPreview ? 'hidden' : 'flex-1'}`}>
         {/* Left sidebar: Block palette */}
         <aside className="flex w-60 shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-white">
           <div className="border-b border-gray-200 px-4 py-3">

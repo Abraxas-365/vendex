@@ -116,14 +116,11 @@ test.beforeEach(async ({ page }) => {
         { id: 'o5', customer_name: 'Emma Brown', total: 18300, currency: 'USD', status: 'pending', created_at: new Date().toISOString() },
       ])
     }
-    if (url.includes('/marketplace/installed')) {
-      return json([])
-    }
-    if (url.includes('/marketplace/plugins') && !url.includes('/settings')) {
+    if (url.includes('/plugins/installed')) {
       return json({ items: [], total: 0, page: 1, page_size: 20, total_pages: 0 })
     }
-    if (url.includes('/plugins/manifests')) {
-      return json([])
+    if (url.match(/\/plugins\/?(\?.*)?$/) && !url.includes('/settings') && !url.includes('/installed')) {
+      return json({ items: [], total: 0, page: 1, page_size: 20, total_pages: 0 })
     }
     // Settings endpoint (match /settings but not /plugins/.../settings)
     if (url.match(/\/settings\/?(\?.*)?$/) && !url.includes('/plugins/')) {

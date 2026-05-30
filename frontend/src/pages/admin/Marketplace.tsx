@@ -5,6 +5,7 @@ import {
   Download,
   Trash2,
   Settings,
+  PowerOff,
   Power,
   Search,
 } from 'lucide-react'
@@ -13,6 +14,8 @@ import {
   useInstalledPlugins,
   useInstallPlugin,
   useUninstallPlugin,
+  useEnablePlugin,
+  useDisablePlugin,
 } from '../../lib/hooks'
 import type { Plugin, PluginCategory, InstallationStatus } from '../../types'
 
@@ -144,8 +147,11 @@ interface InstalledRowProps {
   status: InstallationStatus
   installedAt: string
   isUninstalling: boolean
+  isTogglingStatus: boolean
   onUninstall: (id: string) => void
   onOpen: (id: string) => void
+  onEnable: (id: string) => void
+  onDisable: (id: string) => void
 }
 
 function InstalledRow({
@@ -154,8 +160,11 @@ function InstalledRow({
   status,
   installedAt,
   isUninstalling,
+  isTogglingStatus,
   onUninstall,
   onOpen,
+  onEnable,
+  onDisable,
 }: InstalledRowProps) {
   return (
     <tr className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
@@ -184,16 +193,28 @@ function InstalledRow({
             onClick={() => onOpen(pluginId)}
             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
           >
-            <Power size={12} />
+            <Settings size={12} />
             Open
           </button>
-          <button
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
-            title="Settings"
-          >
-            <Settings size={12} />
-            Settings
-          </button>
+          {status === 'active' ? (
+            <button
+              onClick={() => onDisable(pluginId)}
+              disabled={isTogglingStatus}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-yellow-200 px-2.5 py-1.5 text-xs font-medium text-yellow-700 hover:bg-yellow-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <PowerOff size={12} />
+              {isTogglingStatus ? 'Disabling…' : 'Disable'}
+            </button>
+          ) : (
+            <button
+              onClick={() => onEnable(pluginId)}
+              disabled={isTogglingStatus}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 px-2.5 py-1.5 text-xs font-medium text-green-700 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <Power size={12} />
+              {isTogglingStatus ? 'Enabling…' : 'Enable'}
+            </button>
+          )}
           <button
             onClick={() => onUninstall(pluginId)}
             disabled={isUninstalling}
@@ -219,13 +240,17 @@ export default function Marketplace() {
   const [search, setSearch] = useState('')
   const [installingId, setInstallingId] = useState<string | null>(null)
   const [uninstallingId, setUninstallingId] = useState<string | null>(null)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
 
   const { data: pluginsPage, isLoading: loadingPlugins, error: pluginsError } = useMarketplacePlugins()
-  const { data: installed, isLoading: loadingInstalled } = useInstalledPlugins()
+  const { data: installedPage, isLoading: loadingInstalled } = useInstalledPlugins()
   const installPlugin = useInstallPlugin()
   const uninstallPlugin = useUninstallPlugin()
+  const enablePlugin = useEnablePlugin()
+  const disablePlugin = useDisablePlugin()
 
-  const installedIds = new Set((installed ?? []).map((i) => i.plugin_id))
+  const installed = installedPage?.items ?? []
+  const installedIds = new Set(installed.map((i) => i.plugin_id))
 
   // Filter plugins
   const allPlugins: Plugin[] = pluginsPage?.items ?? []
@@ -254,6 +279,20 @@ export default function Marketplace() {
     setUninstallingId(pluginId)
     uninstallPlugin.mutate(pluginId, {
       onSettled: () => setUninstallingId(null),
+    })
+  }
+
+  function handleEnable(pluginId: string) {
+    setTogglingId(pluginId)
+    enablePlugin.mutate(pluginId, {
+      onSettled: () => setTogglingId(null),
+    })
+  }
+
+  function handleDisable(pluginId: string) {
+    setTogglingId(pluginId)
+    disablePlugin.mutate(pluginId, {
+      onSettled: () => setTogglingId(null),
     })
   }
 
@@ -287,9 +326,9 @@ export default function Marketplace() {
             }`}
           >
             {tab}
-            {tab === 'installed' && installed && installed.length > 0 && (
+            {tab === 'installed' && installed.length > 0 && (
               <span className="ml-1.5 rounded-full bg-indigo-500/20 px-1.5 text-xs">
-                {installed.length}
+                {installedPage?.total ?? installed.length}
               </span>
             )}
           </button>
@@ -368,7 +407,7 @@ export default function Marketplace() {
         <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
           {loadingInstalled ? (
             <div className="p-8 text-center text-sm text-slate-500">Loading…</div>
-          ) : !installed || installed.length === 0 ? (
+          ) : installed.length === 0 ? (
             <div className="p-12 text-center">
               <Puzzle size={32} className="mx-auto mb-3 text-slate-300" />
               <p className="text-sm text-slate-500">No plugins installed yet</p>
@@ -406,8 +445,11 @@ export default function Marketplace() {
                     status={inst.status}
                     installedAt={inst.installed_at}
                     isUninstalling={uninstallingId === inst.plugin_id}
+                    isTogglingStatus={togglingId === inst.plugin_id}
                     onUninstall={handleUninstall}
                     onOpen={handleOpen}
+                    onEnable={handleEnable}
+                    onDisable={handleDisable}
                   />
                 ))}
               </tbody>

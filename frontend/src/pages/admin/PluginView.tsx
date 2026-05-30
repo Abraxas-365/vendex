@@ -1,19 +1,28 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Puzzle, AlertCircle, Loader2 } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
+import { ArrowLeft, Puzzle, AlertCircle, Loader2, Power, PowerOff, Settings } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as api from '../../lib/api'
 
 // ---------------------------------------------------------------------------
-// Route: /admin/plugins/:name
+// Route: /admin/plugins/:name  (name is used as plugin ID)
 // ---------------------------------------------------------------------------
+
+type PluginViewTab = 'ui' | 'settings'
 
 export default function PluginView() {
   const { name } = useParams({ from: '/_admin/admin/plugins/$name' })
   const navigate = useNavigate()
+  const qc = useQueryClient()
+
+  const [activeUiTab, setActiveUiTab] = useState(0)
+  const [viewTab, setViewTab] = useState<PluginViewTab>('ui')
+  const [settingsJson, setSettingsJson] = useState('')
+  const [settingsError, setSettingsError] = useState('')
+  const [savingSettings, setSavingSettings] = useState(false)
 
   const {
-    data: manifest,
+    data: manifestData,
     isLoading,
     error,
   } = useQuery({
@@ -22,11 +31,49 @@ export default function PluginView() {
     enabled: Boolean(name),
   })
 
+  const manifest = manifestData?.manifest
+
+  // Enable/disable mutations
+  const enableMutation = useMutation({
+    mutationFn: () => api.enablePlugin(name),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['marketplace'] })
+      void qc.invalidateQueries({ queryKey: ['plugins'] })
+    },
+  })
+
+  const disableMutation = useMutation({
+    mutationFn: () => api.disablePlugin(name),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['marketplace'] })
+      void qc.invalidateQueries({ queryKey: ['plugins'] })
+    },
+  })
+
   const tabs = manifest?.ui?.tabs ?? []
-  const [activeTab, setActiveTab] = useState(0)
 
   function handleBack() {
     void navigate({ to: '/admin/marketplace' })
+  }
+
+  async function handleSaveSettings() {
+    setSettingsError('')
+    let parsed: Record<string, unknown>
+    try {
+      parsed = JSON.parse(settingsJson) as Record<string, unknown>
+    } catch {
+      setSettingsError('Invalid JSON — please check your syntax.')
+      return
+    }
+    setSavingSettings(true)
+    try {
+      await api.updatePluginSettings(name, parsed)
+      void qc.invalidateQueries({ queryKey: ['marketplace'] })
+    } catch (err) {
+      setSettingsError(err instanceof Error ? err.message : 'Failed to save settings.')
+    } finally {
+      setSavingSettings(false)
+    }
   }
 
   // ── Loading state ──
@@ -63,38 +110,7 @@ export default function PluginView() {
     )
   }
 
-  // ── No UI tabs ──
-  if (tabs.length === 0) {
-    return (
-      <div className="space-y-4">
-        <button
-          onClick={handleBack}
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors"
-        >
-          <ArrowLeft size={16} />
-          Back to Marketplace
-        </button>
-        <div className="rounded-xl border border-slate-200 bg-white">
-          {/* Header */}
-          <div className="flex items-center gap-4 border-b border-slate-200 px-6 py-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
-              <Puzzle size={20} />
-            </div>
-            <div>
-              <h2 className="text-base font-semibold text-slate-800">{manifest.display_name}</h2>
-              <p className="text-xs text-slate-500">v{manifest.version} · by {manifest.author}</p>
-            </div>
-          </div>
-          <div className="flex flex-col items-center gap-2 p-12 text-center">
-            <Puzzle size={28} className="text-slate-300" />
-            <p className="text-sm text-slate-500">This plugin has no UI tabs.</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const activeEntry = tabs[activeTab]?.entry ?? ''
+  const activeEntry = tabs[activeUiTab]?.entry ?? ''
 
   return (
     <div className="flex h-full flex-col space-y-0 -m-6">
@@ -118,19 +134,46 @@ export default function PluginView() {
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
             v{manifest.version}
           </span>
+          <span className="text-xs text-slate-400">by {manifest.author}</span>
         </div>
 
-        {/* Tabs */}
-        {tabs.length > 1 && (
+        {/* View tabs: UI / Settings */}
+        <div className="h-4 w-px bg-slate-200" />
+        <nav className="flex gap-1">
+          <button
+            onClick={() => setViewTab('ui')}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              viewTab === 'ui'
+                ? 'bg-indigo-50 text-indigo-700'
+                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            UI
+          </button>
+          <button
+            onClick={() => setViewTab('settings')}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              viewTab === 'settings'
+                ? 'bg-indigo-50 text-indigo-700'
+                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            <Settings size={12} />
+            Settings
+          </button>
+        </nav>
+
+        {/* UI sub-tabs */}
+        {viewTab === 'ui' && tabs.length > 1 && (
           <>
             <div className="h-4 w-px bg-slate-200" />
             <nav className="flex gap-1">
               {tabs.map((tab, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setActiveTab(idx)}
+                  onClick={() => setActiveUiTab(idx)}
                   className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                    activeTab === idx
+                    activeUiTab === idx
                       ? 'bg-indigo-50 text-indigo-700'
                       : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                   }`}
@@ -141,17 +184,93 @@ export default function PluginView() {
             </nav>
           </>
         )}
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Enable/Disable */}
+        <button
+          onClick={() => disableMutation.mutate()}
+          disabled={disableMutation.isPending || enableMutation.isPending}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-yellow-200 px-3 py-1.5 text-xs font-medium text-yellow-700 hover:bg-yellow-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <PowerOff size={12} />
+          {disableMutation.isPending ? 'Disabling…' : 'Disable'}
+        </button>
+        <button
+          onClick={() => enableMutation.mutate()}
+          disabled={enableMutation.isPending || disableMutation.isPending}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <Power size={12} />
+          {enableMutation.isPending ? 'Enabling…' : 'Enable'}
+        </button>
       </div>
 
-      {/* iframe container — fills remaining viewport height */}
+      {/* Content area */}
       <div className="flex-1 overflow-hidden">
-        {activeEntry ? (
+        {viewTab === 'settings' ? (
+          /* ── Settings editor ── */
+          <div className="h-full overflow-y-auto p-6">
+            <div className="mx-auto max-w-2xl space-y-4">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-800">Plugin Settings</h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  Edit the JSON configuration for this plugin. Changes are applied immediately on save.
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <label className="mb-2 block text-xs font-medium text-slate-600">
+                  Settings (JSON)
+                </label>
+                <textarea
+                  rows={16}
+                  value={settingsJson}
+                  onChange={(e) => {
+                    setSettingsJson(e.target.value)
+                    setSettingsError('')
+                  }}
+                  placeholder='{\n  "key": "value"\n}'
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs text-slate-800 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                />
+                {settingsError && (
+                  <p className="mt-2 text-xs text-red-600">{settingsError}</p>
+                )}
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => void handleSaveSettings()}
+                  disabled={savingSettings}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {savingSettings ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : null}
+                  {savingSettings ? 'Saving…' : 'Save Settings'}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : tabs.length === 0 ? (
+          /* ── No UI tabs ── */
+          <div className="flex h-full flex-col items-center justify-center gap-3">
+            <Puzzle size={28} className="text-slate-300" />
+            <p className="text-sm text-slate-500">This plugin has no UI tabs.</p>
+            <button
+              onClick={() => setViewTab('settings')}
+              className="text-xs font-medium text-indigo-600 hover:underline"
+            >
+              Open Settings →
+            </button>
+          </div>
+        ) : activeEntry ? (
+          /* ── iframe for plugin UI ── */
           <iframe
             key={activeEntry}
             src={activeEntry}
             sandbox="allow-scripts allow-same-origin"
             className="h-full w-full border-0"
-            title={tabs[activeTab]?.label ?? manifest.display_name}
+            title={tabs[activeUiTab]?.label ?? manifest.display_name}
           />
         ) : (
           <div className="flex h-full items-center justify-center">

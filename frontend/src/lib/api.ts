@@ -458,43 +458,43 @@ export function deleteMedia(id: string): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Marketplace
+// Plugins (marketplace + runtime)
 // ---------------------------------------------------------------------------
 
 export function listMarketplacePlugins(params?: PaginationParams): Promise<PaginatedResult<Plugin>> {
-  return get<PaginatedResult<Plugin>>('/marketplace/plugins', params as Record<string, string | number | undefined>)
+  return get<PaginatedResult<Plugin>>('/plugins', params as Record<string, string | number | undefined>)
 }
 
 export function getMarketplacePlugin(id: string): Promise<Plugin & { latest_version?: PluginVersion }> {
-  return get<Plugin & { latest_version?: PluginVersion }>(`/marketplace/plugins/${id}`)
+  return get<Plugin & { latest_version?: PluginVersion }>(`/plugins/${id}`)
 }
 
 export function installPlugin(pluginId: string): Promise<PluginInstallation> {
-  return post<PluginInstallation>('/marketplace/install', { plugin_id: pluginId })
+  return post<PluginInstallation>('/plugins/install', { plugin_id: pluginId })
 }
 
 export function uninstallPlugin(pluginId: string): Promise<void> {
-  return post<void>('/marketplace/uninstall', { plugin_id: pluginId })
+  return post<void>(`/plugins/${pluginId}/uninstall`)
 }
 
-export function listInstalledPlugins(): Promise<PluginInstallation[]> {
-  return get<PluginInstallation[]>('/marketplace/installed')
+export function listInstalledPlugins(params?: PaginationParams): Promise<PaginatedResult<PluginInstallation>> {
+  return get<PaginatedResult<PluginInstallation>>('/plugins/installed', params as Record<string, string | number | undefined>)
 }
 
 export function updatePluginSettings(pluginId: string, settings: Record<string, unknown>): Promise<PluginInstallation> {
-  return put<PluginInstallation>(`/marketplace/plugins/${pluginId}/settings`, { settings })
+  return put<PluginInstallation>(`/plugins/${pluginId}/settings`, settings)
 }
 
-// ---------------------------------------------------------------------------
-// Plugin Runtime
-// ---------------------------------------------------------------------------
-
-export function listPluginManifests(): Promise<PluginManifest[]> {
-  return get<PluginManifest[]>('/plugins/manifests')
+export function enablePlugin(pluginId: string): Promise<PluginInstallation> {
+  return post<PluginInstallation>(`/plugins/${pluginId}/enable`)
 }
 
-export function getPluginManifest(name: string): Promise<PluginManifest> {
-  return get<PluginManifest>(`/plugins/${name}/manifest`)
+export function disablePlugin(pluginId: string): Promise<PluginInstallation> {
+  return post<PluginInstallation>(`/plugins/${pluginId}/disable`)
+}
+
+export function getPluginManifest(id: string): Promise<{ manifest: PluginManifest }> {
+  return get<{ manifest: PluginManifest }>(`/plugins/${id}/manifest`)
 }
 
 // ---------------------------------------------------------------------------
