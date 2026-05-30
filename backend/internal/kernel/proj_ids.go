@@ -189,3 +189,9 @@ func NewCustomerGroupMembershipID(id string) CustomerGroupMembershipID {
 }
 func (c CustomerGroupMembershipID) String() string { return string(c) }
 func (c CustomerGroupMembershipID) IsEmpty() bool  { return string(c) == "" }
+
+type CurrencyRateID string
+
+func NewCurrencyRateID(id string) CurrencyRateID { return CurrencyRateID(id) }
+func (c CurrencyRateID) String() string          { return string(c) }
+func (c CurrencyRateID) IsEmpty() bool           { return string(c) == "" }
