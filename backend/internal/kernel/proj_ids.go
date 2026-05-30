@@ -163,3 +163,17 @@ type OptionID string
 func NewOptionID(id string) OptionID { return OptionID(id) }
 func (o OptionID) String() string    { return string(o) }
 func (o OptionID) IsEmpty() bool     { return string(o) == "" }
+
+type CustomerGroupID string
+
+func NewCustomerGroupID(id string) CustomerGroupID { return CustomerGroupID(id) }
+func (c CustomerGroupID) String() string           { return string(c) }
+func (c CustomerGroupID) IsEmpty() bool            { return string(c) == "" }
+
+type CustomerGroupMembershipID string
+
+func NewCustomerGroupMembershipID(id string) CustomerGroupMembershipID {
+	return CustomerGroupMembershipID(id)
+}
+func (c CustomerGroupMembershipID) String() string { return string(c) }
+func (c CustomerGroupMembershipID) IsEmpty() bool  { return string(c) == "" }

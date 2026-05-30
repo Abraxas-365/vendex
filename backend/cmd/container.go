@@ -8,6 +8,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/emails"
 	"github.com/Abraxas-365/hada-commerce/internal/cart/cartcontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/customergroup/customergroupcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/checkout/checkoutcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/config"
@@ -68,24 +69,25 @@ type Container struct {
 	IAM *iamcontainer.Container
 
 	// Commerce domains
-	Cart        *cartcontainer.Container
-	Product     *productcontainer.Container
-	Order       *ordercontainer.Container
-	Payment     *paymentcontainer.Container
-	Customer    *customercontainer.Container
-	Catalog     *catalogcontainer.Container
-	Storefront  *storefrontcontainer.Container
-	Promo       *promocontainer.Container
-	Media       *mediacontainer.Container
-	Marketplace *marketplacecontainer.Container
-	Analytics   *analyticscontainer.Container
-	Settings    *settingscontainer.Container
-	Theme       *themecontainer.Container
-	Plugin      *plugincontainer.Container
-	Search      *searchcontainer.Container
-	Shipping    *shippingcontainer.Container
-	Tax         *taxcontainer.Container
-	Checkout    *checkoutcontainer.Container
+	Cart           *cartcontainer.Container
+	Product        *productcontainer.Container
+	Order          *ordercontainer.Container
+	Payment        *paymentcontainer.Container
+	Customer       *customercontainer.Container
+	CustomerGroup  *customergroupcontainer.Container
+	Catalog        *catalogcontainer.Container
+	Storefront     *storefrontcontainer.Container
+	Promo          *promocontainer.Container
+	Media          *mediacontainer.Container
+	Marketplace    *marketplacecontainer.Container
+	Analytics      *analyticscontainer.Container
+	Settings       *settingscontainer.Container
+	Theme          *themecontainer.Container
+	Plugin         *plugincontainer.Container
+	Search         *searchcontainer.Container
+	Shipping       *shippingcontainer.Container
+	Tax            *taxcontainer.Container
+	Checkout       *checkoutcontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -179,6 +181,7 @@ func (c *Container) initModules() {
 	c.Order = ordercontainer.New(c.DB, bus)
 	c.Payment = paymentcontainer.New(c.DB, bus)
 	c.Customer = customercontainer.New(c.DB, bus, c.Config.Auth.JWT.SecretKey, c.Order.Service)
+	c.CustomerGroup = customergroupcontainer.New(c.DB)
 	c.Catalog = catalogcontainer.New(c.DB, bus)
 	c.Theme = themecontainer.New(c.DB, bus)
 	// Settings must be initialized before Storefront so the renderer can fetch store branding.
