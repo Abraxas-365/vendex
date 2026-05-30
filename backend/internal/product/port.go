@@ -16,3 +16,20 @@ type Repository interface {
 	ListByCategory(ctx context.Context, tenantID kernel.TenantID, categoryID kernel.CategoryID, pg kernel.PaginationOptions) (kernel.Paginated[Product], error)
 	GetBySKU(ctx context.Context, tenantID kernel.TenantID, sku string) (*Product, error)
 }
+
+// VariantRepository defines persistence operations for product options and variants.
+type VariantRepository interface {
+	// Options
+	CreateOption(ctx context.Context, opt *ProductOption) error
+	ListOptions(ctx context.Context, tenantID kernel.TenantID, productID kernel.ProductID) ([]ProductOption, error)
+	UpdateOption(ctx context.Context, opt *ProductOption) error
+	DeleteOption(ctx context.Context, tenantID kernel.TenantID, id kernel.OptionID) error
+
+	// Variants
+	CreateVariant(ctx context.Context, v *ProductVariant) error
+	GetVariantByID(ctx context.Context, tenantID kernel.TenantID, id kernel.VariantID) (*ProductVariant, error)
+	ListVariants(ctx context.Context, tenantID kernel.TenantID, productID kernel.ProductID) ([]ProductVariant, error)
+	UpdateVariant(ctx context.Context, v *ProductVariant) error
+	DeleteVariant(ctx context.Context, tenantID kernel.TenantID, id kernel.VariantID) error
+	GetVariantBySKU(ctx context.Context, tenantID kernel.TenantID, sku string) (*ProductVariant, error)
+}

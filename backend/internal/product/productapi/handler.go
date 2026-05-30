@@ -24,10 +24,23 @@ func NewHandler(svc *productsrv.Service) *Handler {
 func (h *Handler) RegisterRoutes(router fiber.Router) {
 	g := router.Group("/products")
 	g.Post("/", h.Create)
-	g.Get("/:id", h.GetByID)
 	g.Get("/", h.List)
+	g.Get("/:id", h.GetByID)
 	g.Put("/:id", h.Update)
 	g.Delete("/:id", h.Delete)
+
+	// Option routes
+	g.Post("/:id/options", h.CreateOption)
+	g.Get("/:id/options", h.ListOptions)
+	g.Put("/options/:optionId", h.UpdateOption)
+	g.Delete("/options/:optionId", h.DeleteOption)
+
+	// Variant routes
+	g.Post("/:id/variants", h.CreateVariant)
+	g.Get("/:id/variants", h.ListVariants)
+	g.Get("/variants/:variantId", h.GetVariant)
+	g.Put("/variants/:variantId", h.UpdateVariant)
+	g.Delete("/variants/:variantId", h.DeleteVariant)
 }
 
 // RegisterPublicRoutes registers unauthenticated, read-only product routes.
@@ -36,6 +49,8 @@ func (h *Handler) RegisterPublicRoutes(router fiber.Router) {
 	g := router.Group("/products")
 	g.Get("/", h.ListProductsPublic)
 	g.Get("/:id", h.GetProductPublic)
+	g.Get("/:id/options", h.ListOptionsPublic)
+	g.Get("/:id/variants", h.ListVariantsPublic)
 }
 
 // createRequest is the JSON body for creating a product.
@@ -146,7 +161,179 @@ func (h *Handler) Delete(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-// --- Public handlers ---
+// ─── Option handlers ──────────────────────────────────────────────────────────
+
+type createOptionRequest struct {
+	Name     string   `json:"name"`
+	Position int      `json:"position"`
+	Values   []string `json:"values"`
+}
+
+// CreateOption handles POST /products/:id/options.
+func (h *Handler) CreateOption(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	productID := kernel.ProductID(c.Params("id"))
+
+	var req createOptionRequest
+	if err := c.BodyParser(&req); err != nil {
+		return errx.New("invalid request body", errx.TypeValidation)
+	}
+	if req.Name == "" {
+		return errx.New("option name is required", errx.TypeValidation)
+	}
+
+	opt, err := h.svc.CreateOption(c.Context(), authCtx.TenantID, productID, req.Name, req.Position, req.Values)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(opt)
+}
+
+// ListOptions handles GET /products/:id/options.
+func (h *Handler) ListOptions(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	productID := kernel.ProductID(c.Params("id"))
+
+	opts, err := h.svc.ListOptions(c.Context(), authCtx.TenantID, productID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(opts)
+}
+
+// UpdateOption handles PUT /products/options/:optionId.
+func (h *Handler) UpdateOption(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	optionID := kernel.OptionID(c.Params("optionId"))
+
+	var req createOptionRequest
+	if err := c.BodyParser(&req); err != nil {
+		return errx.New("invalid request body", errx.TypeValidation)
+	}
+	if req.Name == "" {
+		return errx.New("option name is required", errx.TypeValidation)
+	}
+
+	opt, err := h.svc.UpdateOption(c.Context(), authCtx.TenantID, optionID, req.Name, req.Position, req.Values)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(opt)
+}
+
+// DeleteOption handles DELETE /products/options/:optionId.
+func (h *Handler) DeleteOption(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	optionID := kernel.OptionID(c.Params("optionId"))
+
+	if err := h.svc.DeleteOption(c.Context(), authCtx.TenantID, optionID); err != nil {
+		return err
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
+// ─── Variant handlers ─────────────────────────────────────────────────────────
+
+type createVariantRequest struct {
+	SKU         string            `json:"sku"`
+	PriceAmount int64             `json:"price_amount"`
+	Currency    string            `json:"currency"`
+	Stock       int               `json:"stock"`
+	Options     map[string]string `json:"options"`
+}
+
+type updateVariantRequest struct {
+	SKU         string            `json:"sku"`
+	PriceAmount int64             `json:"price_amount"`
+	Currency    string            `json:"currency"`
+	Stock       int               `json:"stock"`
+	Options     map[string]string `json:"options"`
+	Active      bool              `json:"active"`
+}
+
+// CreateVariant handles POST /products/:id/variants.
+func (h *Handler) CreateVariant(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	productID := kernel.ProductID(c.Params("id"))
+
+	var req createVariantRequest
+	if err := c.BodyParser(&req); err != nil {
+		return errx.New("invalid request body", errx.TypeValidation)
+	}
+
+	v, err := h.svc.CreateVariant(c.Context(), authCtx.TenantID, productID,
+		req.SKU, kernel.NewMoney(req.PriceAmount, req.Currency), req.Stock, req.Options,
+	)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(v)
+}
+
+// ListVariants handles GET /products/:id/variants.
+func (h *Handler) ListVariants(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	productID := kernel.ProductID(c.Params("id"))
+
+	variants, err := h.svc.ListVariants(c.Context(), authCtx.TenantID, productID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(variants)
+}
+
+// GetVariant handles GET /products/variants/:variantId.
+func (h *Handler) GetVariant(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	variantID := kernel.VariantID(c.Params("variantId"))
+
+	v, err := h.svc.GetVariant(c.Context(), authCtx.TenantID, variantID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(v)
+}
+
+// UpdateVariant handles PUT /products/variants/:variantId.
+func (h *Handler) UpdateVariant(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	variantID := kernel.VariantID(c.Params("variantId"))
+
+	var req updateVariantRequest
+	if err := c.BodyParser(&req); err != nil {
+		return errx.New("invalid request body", errx.TypeValidation)
+	}
+
+	v, err := h.svc.UpdateVariant(c.Context(), authCtx.TenantID, variantID,
+		req.SKU, kernel.NewMoney(req.PriceAmount, req.Currency), req.Stock, req.Options, req.Active,
+	)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(v)
+}
+
+// DeleteVariant handles DELETE /products/variants/:variantId.
+func (h *Handler) DeleteVariant(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	variantID := kernel.VariantID(c.Params("variantId"))
+
+	if err := h.svc.DeleteVariant(c.Context(), authCtx.TenantID, variantID); err != nil {
+		return err
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
+// ─── Public handlers ──────────────────────────────────────────────────────────
 
 // ListProductsPublic handles GET /products (public, no auth).
 // Accepts optional query params: page, page_size, category_id.
@@ -189,7 +376,37 @@ func (h *Handler) GetProductPublic(c *fiber.Ctx) error {
 	return c.JSON(p)
 }
 
-// --- helpers ---
+// ListOptionsPublic handles GET /products/:id/options (public).
+func (h *Handler) ListOptionsPublic(c *fiber.Ctx) error {
+	tenantID := kernel.TenantID(c.Get("X-Tenant-ID"))
+	if tenantID == "" {
+		return errx.New("X-Tenant-ID header is required", errx.TypeValidation)
+	}
+
+	productID := kernel.ProductID(c.Params("id"))
+	opts, err := h.svc.ListOptions(c.Context(), tenantID, productID)
+	if err != nil {
+		return err
+	}
+	return c.JSON(opts)
+}
+
+// ListVariantsPublic handles GET /products/:id/variants (public).
+func (h *Handler) ListVariantsPublic(c *fiber.Ctx) error {
+	tenantID := kernel.TenantID(c.Get("X-Tenant-ID"))
+	if tenantID == "" {
+		return errx.New("X-Tenant-ID header is required", errx.TypeValidation)
+	}
+
+	productID := kernel.ProductID(c.Params("id"))
+	variants, err := h.svc.ListVariants(c.Context(), tenantID, productID)
+	if err != nil {
+		return err
+	}
+	return c.JSON(variants)
+}
+
+// ─── helpers ──────────────────────────────────────────────────────────────────
 
 func paginationFromQuery(c *fiber.Ctx) kernel.PaginationOptions {
 	page, _ := strconv.Atoi(c.Query("page"))

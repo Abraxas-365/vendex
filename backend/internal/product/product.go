@@ -28,6 +28,9 @@ type Product struct {
 	Tags        []string          `json:"tags"`
 	Status      Status            `json:"status" db:"status"`
 	Stock       int               `json:"stock" db:"stock"`
+	HasVariants bool              `json:"has_variants" db:"has_variants"`
+	Options     []ProductOption   `json:"options,omitempty"`
+	Variants    []ProductVariant  `json:"variants,omitempty"`
 	CreatedAt   time.Time         `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time         `json:"updated_at" db:"updated_at"`
 }

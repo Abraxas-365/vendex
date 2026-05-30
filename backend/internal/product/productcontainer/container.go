@@ -18,7 +18,8 @@ type Container struct {
 // New creates a fully-wired product container.
 func New(db *sqlx.DB, bus eventbus.Bus) *Container {
 	repo := productinfra.NewPostgresRepo(db)
-	svc := productsrv.New(repo, bus)
+	variantRepo := productinfra.NewVariantPostgresRepo(db)
+	svc := productsrv.New(repo, variantRepo, bus)
 	handler := productapi.NewHandler(svc)
 	return &Container{
 		Service: svc,

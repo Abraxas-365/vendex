@@ -33,12 +33,12 @@ func (r *PostgresRepo) Create(ctx context.Context, p *product.Product) error {
 	}
 
 	_, err = r.db.ExecContext(ctx, `
-		INSERT INTO products (id, tenant_id, name, description, price_amount, price_currency, sku, images, category_id, tags, status, stock, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+		INSERT INTO products (id, tenant_id, name, description, price_amount, price_currency, sku, images, category_id, tags, status, stock, has_variants, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
 		string(p.ID), string(p.TenantID), p.Name, p.Description,
 		p.Price.Amount, p.Price.Currency, p.SKU,
 		string(imagesJSON), string(p.CategoryID), string(tagsJSON),
-		string(p.Status), p.Stock, p.CreatedAt, p.UpdatedAt,
+		string(p.Status), p.Stock, p.HasVariants, p.CreatedAt, p.UpdatedAt,
 	)
 	if err != nil {
 		return errx.Wrap(err, "inserting product", errx.TypeInternal)
@@ -48,7 +48,7 @@ func (r *PostgresRepo) Create(ctx context.Context, p *product.Product) error {
 
 func (r *PostgresRepo) GetByID(ctx context.Context, tenantID kernel.TenantID, id kernel.ProductID) (*product.Product, error) {
 	row := r.db.QueryRowContext(ctx, `
-		SELECT id, tenant_id, name, description, price_amount, price_currency, sku, images, category_id, tags, status, stock, created_at, updated_at
+		SELECT id, tenant_id, name, description, price_amount, price_currency, sku, images, category_id, tags, status, stock, has_variants, created_at, updated_at
 		FROM products WHERE id = $1 AND tenant_id = $2`,
 		string(id), string(tenantID),
 	)
@@ -64,7 +64,7 @@ func (r *PostgresRepo) GetByID(ctx context.Context, tenantID kernel.TenantID, id
 
 func (r *PostgresRepo) GetBySKU(ctx context.Context, tenantID kernel.TenantID, sku string) (*product.Product, error) {
 	row := r.db.QueryRowContext(ctx, `
-		SELECT id, tenant_id, name, description, price_amount, price_currency, sku, images, category_id, tags, status, stock, created_at, updated_at
+		SELECT id, tenant_id, name, description, price_amount, price_currency, sku, images, category_id, tags, status, stock, has_variants, created_at, updated_at
 		FROM products WHERE sku = $1 AND tenant_id = $2`,
 		sku, string(tenantID),
 	)
@@ -89,11 +89,11 @@ func (r *PostgresRepo) Update(ctx context.Context, p *product.Product) error {
 	}
 
 	_, err = r.db.ExecContext(ctx, `
-		UPDATE products SET name=$1, description=$2, price_amount=$3, price_currency=$4, sku=$5, images=$6, category_id=$7, tags=$8, status=$9, stock=$10, updated_at=$11
-		WHERE id=$12 AND tenant_id=$13`,
+		UPDATE products SET name=$1, description=$2, price_amount=$3, price_currency=$4, sku=$5, images=$6, category_id=$7, tags=$8, status=$9, stock=$10, has_variants=$11, updated_at=$12
+		WHERE id=$13 AND tenant_id=$14`,
 		p.Name, p.Description, p.Price.Amount, p.Price.Currency,
 		p.SKU, string(imagesJSON), string(p.CategoryID), string(tagsJSON),
-		string(p.Status), p.Stock, p.UpdatedAt,
+		string(p.Status), p.Stock, p.HasVariants, p.UpdatedAt,
 		string(p.ID), string(p.TenantID),
 	)
 	if err != nil {
@@ -134,7 +134,7 @@ func (r *PostgresRepo) queryProducts(ctx context.Context, tenantID kernel.Tenant
 
 	nextParam := len(args) + 1
 	dataQuery := fmt.Sprintf(`
-		SELECT id, tenant_id, name, description, price_amount, price_currency, sku, images, category_id, tags, status, stock, created_at, updated_at
+		SELECT id, tenant_id, name, description, price_amount, price_currency, sku, images, category_id, tags, status, stock, has_variants, created_at, updated_at
 		FROM products WHERE tenant_id = $1 %s
 		ORDER BY created_at DESC
 		LIMIT $%d OFFSET $%d`, extraWhere, nextParam, nextParam+1)
@@ -183,7 +183,7 @@ func scanFields(s scanner) (*product.Product, error) {
 		&id, &tenantID, &p.Name, &p.Description,
 		&p.Price.Amount, &p.Price.Currency, &p.SKU,
 		&imagesJSON, &categoryID, &tagsJSON,
-		&status, &p.Stock, &p.CreatedAt, &p.UpdatedAt,
+		&status, &p.Stock, &p.HasVariants, &p.CreatedAt, &p.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
