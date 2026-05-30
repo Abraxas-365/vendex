@@ -12,6 +12,9 @@ import {
   ChevronDown,
   ChevronRight,
   Save,
+  ExternalLink,
+  Monitor,
+  X,
 } from 'lucide-react'
 import type { Theme, ThemeTokens, ThemeColors, ThemeTypography, ThemeSpacing, ThemeBorders, ThemeShadows } from '../../types'
 import {
@@ -329,6 +332,8 @@ function ThemeEditorForm({ theme, onBack }: ThemeEditorFormProps) {
   const [name, setName] = useState(theme.name)
   const [tokens, setTokens] = useState<ThemeTokens>(theme.tokens ?? DEFAULT_TOKENS)
   const [saved, setSaved] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
+  const [previewLoading, setPreviewLoading] = useState(false)
 
   // Helpers
   function setColors(patch: Partial<ThemeColors>) {
@@ -587,10 +592,68 @@ function ThemeEditorForm({ theme, onBack }: ThemeEditorFormProps) {
         </div>
 
         {/* Right: live preview (40%) */}
-        <div className="w-2/5 sticky top-0">
+        <div className="w-2/5 sticky top-0 space-y-3">
           <LivePreview tokens={tokens} />
+          {/* Preview storefront button */}
+          <button
+            onClick={() => {
+              setShowPreview(true)
+              setPreviewLoading(true)
+            }}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 transition-colors"
+          >
+            <Monitor className="h-4 w-4" />
+            Preview Storefront
+          </button>
         </div>
       </div>
+
+      {/* Storefront preview modal */}
+      {showPreview && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-black/60 backdrop-blur-sm">
+          {/* Modal header */}
+          <div className="flex h-12 shrink-0 items-center gap-3 border-b border-gray-200 bg-white px-4">
+            <Monitor className="h-4 w-4 text-gray-500" />
+            <span className="flex-1 truncate font-mono text-xs text-gray-600">
+              /api/v1/storefront/pages/by-slug/home
+            </span>
+            <a
+              href="/api/v1/storefront/pages/by-slug/home"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Open in new tab
+            </a>
+            <button
+              onClick={() => setShowPreview(false)}
+              className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+              aria-label="Close preview"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* iframe */}
+          <div className="relative flex-1 bg-white">
+            {previewLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+                <div className="flex flex-col items-center gap-3 text-gray-500">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                  <p className="text-sm">Loading storefront…</p>
+                </div>
+              </div>
+            )}
+            <iframe
+              src="/api/v1/storefront/pages/by-slug/home"
+              className="h-full w-full border-0"
+              title={`Storefront preview — ${theme.name}`}
+              onLoad={() => setPreviewLoading(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
