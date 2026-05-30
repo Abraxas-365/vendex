@@ -277,3 +277,8 @@ type WebhookDeliveryID string
 func NewWebhookDeliveryID(id string) WebhookDeliveryID { return WebhookDeliveryID(id) }
 func (w WebhookDeliveryID) String() string             { return string(w) }
 func (w WebhookDeliveryID) IsEmpty() bool              { return string(w) == "" }
+type AuditEntryID string
+
+func NewAuditEntryID(id string) AuditEntryID { return AuditEntryID(id) }
+func (a AuditEntryID) String() string        { return string(a) }
+func (a AuditEntryID) IsEmpty() bool         { return string(a) == "" }

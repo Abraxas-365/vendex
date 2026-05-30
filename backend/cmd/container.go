@@ -7,6 +7,7 @@ import (
 
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/inventory/inventorycontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/audit/auditcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/cartrecovery/cartrecoverycontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/sitemap"
 	"github.com/Abraxas-365/hada-commerce/internal/emails"
@@ -79,6 +80,9 @@ type Container struct {
 
 	// IAM
 	IAM *iamcontainer.Container
+
+	// Audit log
+	Audit *auditcontainer.Container
 
 	// Commerce domains
 	Cart           *cartcontainer.Container
@@ -198,6 +202,9 @@ func (c *Container) initModules() {
 		return nil
 	})
 	c.EventBus = bus
+
+	// Audit log
+	c.Audit = auditcontainer.New(c.DB)
 
 	// Commerce domains
 	c.Cart = cartcontainer.New(c.DB, bus)
