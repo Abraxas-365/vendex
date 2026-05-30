@@ -207,3 +207,9 @@ type RecoveryID string
 func NewRecoveryID(id string) RecoveryID { return RecoveryID(id) }
 func (r RecoveryID) String() string      { return string(r) }
 func (r RecoveryID) IsEmpty() bool       { return string(r) == "" }
+
+type CurrencyRateID string
+
+func NewCurrencyRateID(id string) CurrencyRateID { return CurrencyRateID(id) }
+func (c CurrencyRateID) String() string          { return string(c) }
+func (c CurrencyRateID) IsEmpty() bool           { return string(c) == "" }
