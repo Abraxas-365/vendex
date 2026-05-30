@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/sitemap"
 	"github.com/Abraxas-365/hada-commerce/internal/emails"
 	"github.com/Abraxas-365/hada-commerce/internal/cart/cartcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/checkout/checkoutcontainer"
@@ -86,6 +87,7 @@ type Container struct {
 	Shipping    *shippingcontainer.Container
 	Tax         *taxcontainer.Container
 	Checkout    *checkoutcontainer.Container
+	Sitemap     *sitemap.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -209,6 +211,9 @@ func (c *Container) initModules() {
 		c.Payment.Service,
 		c.Promo.Service,
 	)
+
+	// Sitemap — reads products, categories/collections, and published pages.
+	c.Sitemap = sitemap.New(c.Product.Service, c.Catalog.Service, c.Storefront.Service)
 
 	// Transactional email notifications — wired last so all domain containers exist.
 	emailHandler := emails.New(
