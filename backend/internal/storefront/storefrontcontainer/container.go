@@ -18,10 +18,22 @@ type Container struct {
 	Renderer *renderer.Renderer
 }
 
+// Deps holds all optional resolver dependencies for the storefront renderer.
+// All fields are optional — the renderer degrades gracefully when nil.
+type Deps struct {
+	ProductLister    renderer.ProductLister
+	CollectionGetter renderer.CollectionGetter
+	SettingsGetter   renderer.SettingsGetter
+}
+
 // New creates a fully-wired storefront container.
+//
 // themeGetter is used by the renderer to resolve the active theme for HTML rendering.
 // Pass nil to disable HTML rendering (JSON-only mode).
-func New(db *sqlx.DB, bus eventbus.Bus, themeGetter renderer.ThemeGetter) *Container {
+//
+// deps provides optional data resolvers for live product/collection/settings data.
+// Use an empty Deps{} if no data resolvers are available yet.
+func New(db *sqlx.DB, bus eventbus.Bus, themeGetter renderer.ThemeGetter, deps Deps) *Container {
 	pagesRepo := storefrontinfra.NewPagePostgresRepo(db)
 	versionsRepo := storefrontinfra.NewPageVersionPostgresRepo(db)
 	blockTypesRepo := storefrontinfra.NewBlockTypePostgresRepo(db)
@@ -29,7 +41,16 @@ func New(db *sqlx.DB, bus eventbus.Bus, themeGetter renderer.ThemeGetter) *Conta
 
 	var r *renderer.Renderer
 	if themeGetter != nil {
-		r = renderer.New(themeGetter)
+		navRepo := storefrontinfra.NewNavMenuPostgresRepo(db)
+		overrideRepo := storefrontinfra.NewTemplateOverridePostgresRepo(db)
+
+		r = renderer.NewWithConfig(themeGetter, renderer.Config{
+			ProductLister:    deps.ProductLister,
+			CollectionGetter: deps.CollectionGetter,
+			SettingsGetter:   deps.SettingsGetter,
+			NavRepo:          navRepo,
+			OverrideRepo:     overrideRepo,
+		})
 	}
 
 	handler := storefrontapi.NewHandler(svc, r)
