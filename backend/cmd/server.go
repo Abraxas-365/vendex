@@ -153,6 +153,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.Product.Handler.RegisterPublicRoutes(public)
 	container.Catalog.Handler.RegisterPublicRoutes(public)
 	container.Settings.Handler.RegisterPublicRoutes(public)
+	container.Plugin.Handler.RegisterPublicRoutes(public)
 	logx.Info("  > Public storefront routes registered")
 
 	// Protected routes (require auth)
