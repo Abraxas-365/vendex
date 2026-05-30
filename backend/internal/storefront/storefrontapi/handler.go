@@ -1,8 +1,10 @@
 package storefrontapi
 
 import (
+	"context"
 	"encoding/json"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -12,14 +14,21 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontsrv"
 )
 
+// PageRenderer renders a storefront page as a full HTML5 document.
+type PageRenderer interface {
+	RenderPage(ctx context.Context, page *storefront.Page) (string, error)
+}
+
 // Handler exposes HTTP endpoints for the storefront domain.
 type Handler struct {
-	svc *storefrontsrv.Service
+	svc      *storefrontsrv.Service
+	renderer PageRenderer
 }
 
 // NewHandler creates a new storefront API handler.
-func NewHandler(svc *storefrontsrv.Service) *Handler {
-	return &Handler{svc: svc}
+// renderer is optional — pass nil to disable HTML rendering (JSON-only mode).
+func NewHandler(svc *storefrontsrv.Service, renderer PageRenderer) *Handler {
+	return &Handler{svc: svc, renderer: renderer}
 }
 
 // RegisterRoutes registers all storefront admin routes on the given Fiber router.
@@ -52,7 +61,10 @@ func (h *Handler) RegisterPublicRoutes(router fiber.Router) {
 
 // --- Public handler ---
 
-// GetPublishedPage handles GET /storefront/:slug — public page serving.
+// GetPublishedPage handles GET /storefront/pages/by-slug/:slug — public page serving.
+//
+// If the request Accept header contains "text/html" and a renderer is configured,
+// the page is returned as a fully rendered HTML5 document. Otherwise JSON is returned.
 func (h *Handler) GetPublishedPage(c *fiber.Ctx) error {
 	tenantID := kernel.TenantID(c.Get("X-Tenant-ID"))
 	if tenantID == "" {
@@ -62,6 +74,17 @@ func (h *Handler) GetPublishedPage(c *fiber.Ctx) error {
 	page, err := h.svc.GetPublishedPage(c.Context(), tenantID, c.Params("slug"))
 	if err != nil {
 		return err
+	}
+
+	// If client wants HTML and we have a renderer, render the page.
+	accept := c.Get("Accept")
+	if h.renderer != nil && strings.Contains(accept, "text/html") {
+		html, err := h.renderer.RenderPage(context.Background(), page)
+		if err != nil {
+			return errx.Wrap(err, "failed to render page", errx.TypeInternal)
+		}
+		c.Set("Content-Type", "text/html; charset=utf-8")
+		return c.SendString(html)
 	}
 
 	return c.JSON(page)

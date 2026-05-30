@@ -163,7 +163,8 @@ func (c *Container) initModules() {
 	c.Order = ordercontainer.New(c.DB, bus)
 	c.Customer = customercontainer.New(c.DB, bus)
 	c.Catalog = catalogcontainer.New(c.DB, bus)
-	c.Storefront = storefrontcontainer.New(c.DB, bus)
+	c.Theme = themecontainer.New(c.DB, bus)
+	c.Storefront = storefrontcontainer.New(c.DB, bus, c.Theme.Service)
 	c.Promo = promocontainer.New(c.DB)
 	mediaCont, err := mediacontainer.New(c.DB, "./uploads", fmt.Sprintf("http://localhost:%d/uploads", c.Config.Server.Port))
 	if err != nil {
@@ -173,7 +174,6 @@ func (c *Container) initModules() {
 	c.Marketplace = marketplacecontainer.New(c.DB)
 	c.Analytics = analyticscontainer.New(c.DB)
 	c.Settings = settingscontainer.New(c.DB, bus)
-	c.Theme = themecontainer.New(c.DB, bus)
 
 	logx.Info("All modules initialized")
 }
