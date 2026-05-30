@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/fsx"
 )
 
@@ -20,12 +21,12 @@ type LocalFileSystem struct {
 func NewLocalFileSystem(basePath string) (*LocalFileSystem, error) {
 	// Create base directory if it doesn't exist
 	if err := os.MkdirAll(basePath, 0755); err != nil {
-		return nil, fmt.Errorf("failed to create base directory: %w", err)
+		return nil, errx.Wrap(err, "failed to create base directory", errx.TypeExternal)
 	}
 
 	absPath, err := filepath.Abs(basePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve absolute path: %w", err)
+		return nil, errx.Wrap(err, "failed to resolve absolute path", errx.TypeExternal)
 	}
 
 	return &LocalFileSystem{
@@ -42,9 +43,9 @@ func (fs *LocalFileSystem) ReadFile(ctx context.Context, path string) ([]byte, e
 	data, err := os.ReadFile(fullPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("file not found: %s", path)
+			return nil, errx.NotFound(fmt.Sprintf("file not found: %s", path))
 		}
-		return nil, fmt.Errorf("failed to read file: %w", err)
+		return nil, errx.Wrap(err, "failed to read file", errx.TypeExternal)
 	}
 	return data, nil
 }
@@ -54,9 +55,9 @@ func (fs *LocalFileSystem) ReadFileStream(ctx context.Context, path string) (io.
 	file, err := os.Open(fullPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("file not found: %s", path)
+			return nil, errx.NotFound(fmt.Sprintf("file not found: %s", path))
 		}
-		return nil, fmt.Errorf("failed to open file: %w", err)
+		return nil, errx.Wrap(err, "failed to open file", errx.TypeExternal)
 	}
 	return file, nil
 }
@@ -66,9 +67,9 @@ func (fs *LocalFileSystem) Stat(ctx context.Context, path string) (fsx.FileInfo,
 	info, err := os.Stat(fullPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fsx.FileInfo{}, fmt.Errorf("file not found: %s", path)
+			return fsx.FileInfo{}, errx.NotFound(fmt.Sprintf("file not found: %s", path))
 		}
-		return fsx.FileInfo{}, fmt.Errorf("failed to stat file: %w", err)
+		return fsx.FileInfo{}, errx.Wrap(err, "failed to stat file", errx.TypeExternal)
 	}
 
 	return fsx.FileInfo{
@@ -86,9 +87,9 @@ func (fs *LocalFileSystem) List(ctx context.Context, path string) ([]fsx.FileInf
 	entries, err := os.ReadDir(fullPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("directory not found: %s", path)
+			return nil, errx.NotFound(fmt.Sprintf("directory not found: %s", path))
 		}
-		return nil, fmt.Errorf("failed to list directory: %w", err)
+		return nil, errx.Wrap(err, "failed to list directory", errx.TypeExternal)
 	}
 
 	fileInfos := make([]fsx.FileInfo, 0, len(entries))
@@ -132,12 +133,12 @@ func (fs *LocalFileSystem) WriteFile(ctx context.Context, path string, data []by
 
 	// Create parent directories
 	if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
-		return fmt.Errorf("failed to create directories: %w", err)
+		return errx.Wrap(err, "failed to create directories", errx.TypeExternal)
 	}
 
 	// Write file
 	if err := os.WriteFile(fullPath, data, 0644); err != nil {
-		return fmt.Errorf("failed to write file: %w", err)
+		return errx.Wrap(err, "failed to write file", errx.TypeExternal)
 	}
 
 	return nil
@@ -148,19 +149,19 @@ func (fs *LocalFileSystem) WriteFileStream(ctx context.Context, path string, r i
 
 	// Create parent directories
 	if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
-		return fmt.Errorf("failed to create directories: %w", err)
+		return errx.Wrap(err, "failed to create directories", errx.TypeExternal)
 	}
 
 	// Create file
 	file, err := os.Create(fullPath)
 	if err != nil {
-		return fmt.Errorf("failed to create file: %w", err)
+		return errx.Wrap(err, "failed to create file", errx.TypeExternal)
 	}
 	defer file.Close()
 
 	// Copy data
 	if _, err := io.Copy(file, r); err != nil {
-		return fmt.Errorf("failed to write file: %w", err)
+		return errx.Wrap(err, "failed to write file", errx.TypeExternal)
 	}
 
 	return nil
@@ -169,7 +170,7 @@ func (fs *LocalFileSystem) WriteFileStream(ctx context.Context, path string, r i
 func (fs *LocalFileSystem) CreateDir(ctx context.Context, path string) error {
 	fullPath := fs.fullPath(path)
 	if err := os.MkdirAll(fullPath, 0755); err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
+		return errx.Wrap(err, "failed to create directory", errx.TypeExternal)
 	}
 	return nil
 }
@@ -184,7 +185,7 @@ func (fs *LocalFileSystem) DeleteFile(ctx context.Context, path string) error {
 		if os.IsNotExist(err) {
 			return nil // Already deleted
 		}
-		return fmt.Errorf("failed to delete file: %w", err)
+		return errx.Wrap(err, "failed to delete file", errx.TypeExternal)
 	}
 	return nil
 }
@@ -194,11 +195,11 @@ func (fs *LocalFileSystem) DeleteDir(ctx context.Context, path string, recursive
 
 	if recursive {
 		if err := os.RemoveAll(fullPath); err != nil {
-			return fmt.Errorf("failed to delete directory: %w", err)
+			return errx.Wrap(err, "failed to delete directory", errx.TypeExternal)
 		}
 	} else {
 		if err := os.Remove(fullPath); err != nil {
-			return fmt.Errorf("failed to delete directory: %w", err)
+			return errx.Wrap(err, "failed to delete directory", errx.TypeExternal)
 		}
 	}
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/iam/auth"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -34,13 +35,13 @@ func (sm *RedisStateManager) GenerateState() string {
 func (sm *RedisStateManager) StoreState(ctx context.Context, state string, data map[string]any) error {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return fmt.Errorf("failed to marshal state data: %w", err)
+		return errx.Wrap(err, "failed to marshal state data", errx.TypeInternal)
 	}
 
 	key := fmt.Sprintf("oauth_state:%s", state)
 	err = sm.client.Set(ctx, key, jsonData, sm.ttl).Err()
 	if err != nil {
-		return fmt.Errorf("failed to store state in Redis: %w", err)
+		return errx.Wrap(err, "failed to store state in Redis", errx.TypeExternal)
 	}
 
 	return nil
@@ -69,12 +70,12 @@ func (sm *RedisStateManager) GetStateData(ctx context.Context, state string) (ma
 		if err == redis.Nil {
 			return nil, auth.ErrInvalidState()
 		}
-		return nil, fmt.Errorf("failed to get state from Redis: %w", err)
+		return nil, errx.Wrap(err, "failed to get state from Redis", errx.TypeExternal)
 	}
 
 	var data map[string]any
 	if err := json.Unmarshal([]byte(jsonData), &data); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal state data: %w", err)
+		return nil, errx.Wrap(err, "failed to unmarshal state data", errx.TypeInternal)
 	}
 
 	return data, nil
