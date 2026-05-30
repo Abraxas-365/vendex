@@ -788,3 +788,307 @@ export interface BillingRecord {
   billed_at: string
   created_at: string
 }
+
+// ---------------------------------------------------------------------------
+// Inventory (027)
+// ---------------------------------------------------------------------------
+
+export interface Warehouse {
+  id: string
+  tenant_id: string
+  name: string
+  address: string
+  is_default: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface StockLevel {
+  product_id: string
+  warehouse_id: string
+  warehouse_name: string
+  quantity: number
+  reserved: number
+  available: number
+}
+
+export interface StockMovement {
+  id: string
+  tenant_id: string
+  product_id: string
+  warehouse_id: string
+  type: 'adjustment' | 'sale' | 'return' | 'transfer'
+  quantity: number
+  note: string
+  created_at: string
+}
+
+export interface LowStockAlert {
+  product_id: string
+  product_name: string
+  sku: string
+  warehouse_id: string
+  warehouse_name: string
+  quantity: number
+  threshold: number
+}
+
+// ---------------------------------------------------------------------------
+// Reviews (028)
+// ---------------------------------------------------------------------------
+
+export type ReviewStatus = 'pending' | 'approved' | 'rejected'
+
+export interface Review {
+  id: string
+  tenant_id: string
+  product_id: string
+  product_name: string
+  customer_id: string
+  customer_name: string
+  rating: number
+  title: string
+  body: string
+  status: ReviewStatus
+  admin_response: string | null
+  created_at: string
+  updated_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Returns (029)
+// ---------------------------------------------------------------------------
+
+export type ReturnStatus = 'pending' | 'approved' | 'received' | 'refunded' | 'closed' | 'rejected'
+
+export interface ReturnItem {
+  id: string
+  return_id: string
+  product_id: string
+  product_name: string
+  quantity: number
+  reason: string
+}
+
+export interface ReturnRequest {
+  id: string
+  tenant_id: string
+  order_id: string
+  customer_id: string
+  status: ReturnStatus
+  items: ReturnItem[]
+  refund_amount: Money | null
+  notes: string
+  created_at: string
+  updated_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Webhooks (030)
+// ---------------------------------------------------------------------------
+
+export interface Webhook {
+  id: string
+  tenant_id: string
+  url: string
+  events: string[]
+  active: boolean
+  secret: string
+  created_at: string
+  updated_at: string
+}
+
+export type WebhookDeliveryStatus = 'success' | 'failed' | 'pending'
+
+export interface WebhookDelivery {
+  id: string
+  webhook_id: string
+  event: string
+  payload: string
+  status: WebhookDeliveryStatus
+  response_code: number | null
+  response_body: string | null
+  attempts: number
+  created_at: string
+  delivered_at: string | null
+}
+
+// ---------------------------------------------------------------------------
+// Audit Logs (031)
+// ---------------------------------------------------------------------------
+
+export interface AuditLog {
+  id: string
+  tenant_id: string
+  user_id: string
+  user_email: string
+  action: string
+  resource_type: string
+  resource_id: string
+  changes: Record<string, unknown>
+  ip_address: string
+  created_at: string
+}
+
+export interface AuditStats {
+  total_actions: number
+  actions_by_type: Record<string, number>
+  actions_by_user: Array<{ user_email: string; count: number }>
+  recent_activity: number
+}
+
+// ---------------------------------------------------------------------------
+// Loyalty (032)
+// ---------------------------------------------------------------------------
+
+export type RewardType = 'points_multiplier' | 'fixed_discount' | 'free_shipping' | 'free_product'
+
+export interface LoyaltyReward {
+  id: string
+  tenant_id: string
+  name: string
+  description: string
+  type: RewardType
+  points_cost: number
+  value: number
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type LoyaltyTier = 'bronze' | 'silver' | 'gold' | 'platinum'
+
+export interface LoyaltyAccount {
+  id: string
+  tenant_id: string
+  customer_id: string
+  customer_name: string
+  customer_email: string
+  points: number
+  lifetime_points: number
+  tier: LoyaltyTier
+  created_at: string
+  updated_at: string
+}
+
+export interface LoyaltyTransaction {
+  id: string
+  account_id: string
+  tenant_id: string
+  type: 'earn' | 'redeem' | 'adjust' | 'expire'
+  points: number
+  note: string
+  order_id: string | null
+  created_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Bundles (033)
+// ---------------------------------------------------------------------------
+
+export interface BundleItem {
+  id: string
+  bundle_id: string
+  product_id: string
+  product_name: string
+  quantity: number
+  discount_percent: number
+}
+
+export interface Bundle {
+  id: string
+  tenant_id: string
+  name: string
+  description: string
+  price: Money | null
+  discount_percent: number
+  active: boolean
+  items: BundleItem[]
+  created_at: string
+  updated_at: string
+}
+
+export interface BundlePrice {
+  original_total: Money
+  discount_amount: Money
+  final_price: Money
+  savings_percent: number
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard Reporting (034)
+// ---------------------------------------------------------------------------
+
+export interface SalesOverview {
+  total_revenue: Money
+  total_orders: number
+  average_order_value: Money
+  period: string
+}
+
+export interface RevenueData {
+  date: string
+  revenue: number
+  orders: number
+}
+
+export interface TopProductReport {
+  product_id: string
+  product_name: string
+  units_sold: number
+  revenue: number
+  currency: string
+}
+
+export interface CustomerStats {
+  total_customers: number
+  new_customers: number
+  returning_customers: number
+  average_lifetime_value: Money
+}
+
+export interface FunnelStep {
+  step: string
+  count: number
+  conversion_rate: number
+}
+
+// ---------------------------------------------------------------------------
+// Social Accounts (035)
+// ---------------------------------------------------------------------------
+
+export type SocialProvider = 'google' | 'facebook'
+
+export interface SocialAccount {
+  id: string
+  tenant_id: string
+  customer_id: string
+  customer_name: string
+  customer_email: string
+  provider: SocialProvider
+  provider_user_id: string
+  created_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Notifications (036)
+// ---------------------------------------------------------------------------
+
+export type NotificationSeverity = 'info' | 'warning' | 'error' | 'success'
+
+export interface AdminNotification {
+  id: string
+  tenant_id: string
+  title: string
+  body: string
+  severity: NotificationSeverity
+  read: boolean
+  resource_type: string | null
+  resource_id: string | null
+  created_at: string
+  read_at: string | null
+}
+
+export interface UnreadCount {
+  count: number
+}

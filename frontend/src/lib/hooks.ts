@@ -46,6 +46,33 @@ import type {
   TranslationBundle,
   Subscription,
   BillingRecord,
+  Warehouse,
+  StockLevel,
+  StockMovement,
+  LowStockAlert,
+  Review,
+  ReviewStatus,
+  ReturnRequest,
+  ReturnStatus,
+  Webhook,
+  WebhookDelivery,
+  AuditLog,
+  AuditStats,
+  LoyaltyReward,
+  LoyaltyAccount,
+  LoyaltyTransaction,
+  Bundle,
+  BundleItem,
+  BundlePrice,
+  SalesOverview,
+  RevenueData,
+  TopProductReport,
+  CustomerStats,
+  FunnelStep,
+  SocialAccount,
+  SocialProvider,
+  AdminNotification,
+  UnreadCount,
 } from '../types'
 import * as api from './api'
 import type { PaginationParams } from './api'
@@ -158,6 +185,65 @@ export const queryKeys = {
     due: ['subscriptions', 'due'] as const,
     detail: (id: string) => ['subscriptions', 'detail', id] as const,
     billing: (id: string, params?: PaginationParams) => ['subscriptions', id, 'billing', params] as const,
+  },
+  inventory: {
+    warehouses: ['inventory', 'warehouses'] as const,
+    stock: (productId: string) => ['inventory', 'stock', productId] as const,
+    lowStock: ['inventory', 'low-stock'] as const,
+    movements: (productId: string) => ['inventory', 'movements', productId] as const,
+  },
+  reviews: {
+    all: ['reviews'] as const,
+    list: (params?: PaginationParams & { status?: ReviewStatus }) => ['reviews', 'list', params] as const,
+    detail: (id: string) => ['reviews', 'detail', id] as const,
+  },
+  returns: {
+    all: ['returns'] as const,
+    list: (params?: PaginationParams & { status?: ReturnStatus }) => ['returns', 'list', params] as const,
+    detail: (id: string) => ['returns', 'detail', id] as const,
+  },
+  webhooks: {
+    all: ['webhooks'] as const,
+    list: ['webhooks', 'list'] as const,
+    deliveries: (webhookId: string) => ['webhooks', webhookId, 'deliveries'] as const,
+  },
+  auditLogs: {
+    all: ['audit'] as const,
+    list: (params?: Record<string, string | number | undefined>) => ['audit', 'list', params] as const,
+    detail: (id: string) => ['audit', 'detail', id] as const,
+    stats: ['audit', 'stats'] as const,
+  },
+  loyalty: {
+    rewards: ['loyalty', 'rewards'] as const,
+    accounts: {
+      all: ['loyalty', 'accounts'] as const,
+      list: (params?: PaginationParams) => ['loyalty', 'accounts', 'list', params] as const,
+      detail: (id: string) => ['loyalty', 'accounts', id] as const,
+      transactions: (id: string) => ['loyalty', 'accounts', id, 'transactions'] as const,
+    },
+  },
+  bundles: {
+    all: ['bundles'] as const,
+    list: (params?: PaginationParams) => ['bundles', 'list', params] as const,
+    detail: (id: string) => ['bundles', 'detail', id] as const,
+    price: (id: string) => ['bundles', id, 'price'] as const,
+  },
+  dashboardReporting: {
+    sales: (params?: { from?: string; to?: string }) => ['dashboard-reporting', 'sales', params] as const,
+    topProducts: (params?: { from?: string; to?: string }) => ['dashboard-reporting', 'top-products', params] as const,
+    revenue: (params?: { from?: string; to?: string }) => ['dashboard-reporting', 'revenue', params] as const,
+    customers: (params?: { from?: string; to?: string }) => ['dashboard-reporting', 'customers', params] as const,
+    funnel: (params?: { from?: string; to?: string }) => ['dashboard-reporting', 'funnel', params] as const,
+  },
+  socialAccounts: {
+    all: ['social-accounts'] as const,
+    list: (params?: PaginationParams & { provider?: SocialProvider }) => ['social-accounts', 'list', params] as const,
+    byCustomer: (customerId: string) => ['social-accounts', 'customer', customerId] as const,
+  },
+  notifications: {
+    all: ['notifications'] as const,
+    list: (params?: PaginationParams & { read?: boolean }) => ['notifications', 'list', params] as const,
+    unreadCount: ['notifications', 'unread-count'] as const,
   },
 } as const
 
@@ -1436,5 +1522,488 @@ export function useBillingRecords(subscriptionId: string, params?: PaginationPar
     queryKey: queryKeys.subscriptions.billing(subscriptionId, params),
     queryFn: () => api.listBillingRecords(subscriptionId, params),
     enabled: Boolean(subscriptionId),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Inventory (027)
+// ---------------------------------------------------------------------------
+
+export function useWarehouses(): UseQueryResult<Warehouse[]> {
+  return useQuery({
+    queryKey: queryKeys.inventory.warehouses,
+    queryFn: () => api.listWarehouses(),
+  })
+}
+
+export function useCreateWarehouse(): UseMutationResult<Warehouse, Error, Partial<Warehouse>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createWarehouse(data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses }) },
+  })
+}
+
+export function useUpdateWarehouse(): UseMutationResult<Warehouse, Error, { id: string; data: Partial<Warehouse> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateWarehouse(id, data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses }) },
+  })
+}
+
+export function useDeleteWarehouse(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteWarehouse(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses }) },
+  })
+}
+
+export function useStockLevels(productId: string): UseQueryResult<StockLevel[]> {
+  return useQuery({
+    queryKey: queryKeys.inventory.stock(productId),
+    queryFn: () => api.getStockLevels(productId),
+    enabled: Boolean(productId),
+  })
+}
+
+export function useAdjustStock(): UseMutationResult<StockMovement, Error, { product_id: string; warehouse_id: string; quantity: number; note?: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.adjustStock(data),
+    onSuccess: (_data, vars) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stock(vars.product_id) })
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.lowStock })
+    },
+  })
+}
+
+export function useLowStockAlerts(): UseQueryResult<LowStockAlert[]> {
+  return useQuery({
+    queryKey: queryKeys.inventory.lowStock,
+    queryFn: () => api.getLowStockAlerts(),
+  })
+}
+
+export function useStockMovements(productId: string): UseQueryResult<StockMovement[]> {
+  return useQuery({
+    queryKey: queryKeys.inventory.movements(productId),
+    queryFn: () => api.getStockMovements(productId),
+    enabled: Boolean(productId),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Reviews (028)
+// ---------------------------------------------------------------------------
+
+export function useReviews(params?: PaginationParams & { status?: ReviewStatus }): UseQueryResult<PaginatedResult<Review>> {
+  return useQuery({
+    queryKey: queryKeys.reviews.list(params),
+    queryFn: () => api.listReviews(params),
+  })
+}
+
+export function useReview(id: string): UseQueryResult<Review> {
+  return useQuery({
+    queryKey: queryKeys.reviews.detail(id),
+    queryFn: () => api.getReview(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useApproveReview(): UseMutationResult<Review, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.approveReview(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.reviews.all }) },
+  })
+}
+
+export function useRejectReview(): UseMutationResult<Review, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.rejectReview(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.reviews.all }) },
+  })
+}
+
+export function useRespondToReview(): UseMutationResult<Review, Error, { id: string; response: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, response }) => api.respondToReview(id, response),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.reviews.all }) },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Returns (029)
+// ---------------------------------------------------------------------------
+
+export function useReturns(params?: PaginationParams & { status?: ReturnStatus }): UseQueryResult<PaginatedResult<ReturnRequest>> {
+  return useQuery({
+    queryKey: queryKeys.returns.list(params),
+    queryFn: () => api.listReturns(params),
+  })
+}
+
+export function useReturn(id: string): UseQueryResult<ReturnRequest> {
+  return useQuery({
+    queryKey: queryKeys.returns.detail(id),
+    queryFn: () => api.getReturn(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useApproveReturn(): UseMutationResult<ReturnRequest, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.approveReturn(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.returns.all }) },
+  })
+}
+
+export function useRejectReturn(): UseMutationResult<ReturnRequest, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.rejectReturn(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.returns.all }) },
+  })
+}
+
+export function useMarkReturnReceived(): UseMutationResult<ReturnRequest, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.markReturnReceived(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.returns.all }) },
+  })
+}
+
+export function useMarkReturnRefunded(): UseMutationResult<ReturnRequest, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.markReturnRefunded(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.returns.all }) },
+  })
+}
+
+export function useCloseReturn(): UseMutationResult<ReturnRequest, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.closeReturn(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.returns.all }) },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Webhooks (030)
+// ---------------------------------------------------------------------------
+
+export function useWebhooks(): UseQueryResult<Webhook[]> {
+  return useQuery({
+    queryKey: queryKeys.webhooks.list,
+    queryFn: () => api.listWebhooks(),
+  })
+}
+
+export function useCreateWebhook(): UseMutationResult<Webhook, Error, Partial<Webhook>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createWebhook(data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }) },
+  })
+}
+
+export function useUpdateWebhook(): UseMutationResult<Webhook, Error, { id: string; data: Partial<Webhook> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateWebhook(id, data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }) },
+  })
+}
+
+export function useDeleteWebhook(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteWebhook(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }) },
+  })
+}
+
+export function useToggleWebhook(): UseMutationResult<Webhook, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.toggleWebhook(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }) },
+  })
+}
+
+export function useWebhookDeliveries(webhookId: string): UseQueryResult<WebhookDelivery[]> {
+  return useQuery({
+    queryKey: queryKeys.webhooks.deliveries(webhookId),
+    queryFn: () => api.listWebhookDeliveries(webhookId),
+    enabled: Boolean(webhookId),
+  })
+}
+
+export function useRetryWebhookDelivery(): UseMutationResult<WebhookDelivery, Error, { deliveryId: string; webhookId: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ deliveryId }) => api.retryWebhookDelivery(deliveryId),
+    onSuccess: (_data, { webhookId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.webhooks.deliveries(webhookId) })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Audit Logs (031)
+// ---------------------------------------------------------------------------
+
+export function useAuditLogs(params?: PaginationParams & {
+  user_id?: string; action?: string; resource_type?: string; from?: string; to?: string
+}): UseQueryResult<PaginatedResult<AuditLog>> {
+  return useQuery({
+    queryKey: queryKeys.auditLogs.list(params as Record<string, string | number | undefined>),
+    queryFn: () => api.listAuditLogs(params),
+  })
+}
+
+export function useAuditLog(id: string): UseQueryResult<AuditLog> {
+  return useQuery({
+    queryKey: queryKeys.auditLogs.detail(id),
+    queryFn: () => api.getAuditLog(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useAuditStats(): UseQueryResult<AuditStats> {
+  return useQuery({
+    queryKey: queryKeys.auditLogs.stats,
+    queryFn: () => api.getAuditStats(),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Loyalty (032)
+// ---------------------------------------------------------------------------
+
+export function useLoyaltyRewards(): UseQueryResult<LoyaltyReward[]> {
+  return useQuery({
+    queryKey: queryKeys.loyalty.rewards,
+    queryFn: () => api.listLoyaltyRewards(),
+  })
+}
+
+export function useCreateLoyaltyReward(): UseMutationResult<LoyaltyReward, Error, Partial<LoyaltyReward>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createLoyaltyReward(data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.loyalty.rewards }) },
+  })
+}
+
+export function useUpdateLoyaltyReward(): UseMutationResult<LoyaltyReward, Error, { id: string; data: Partial<LoyaltyReward> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateLoyaltyReward(id, data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.loyalty.rewards }) },
+  })
+}
+
+export function useLoyaltyAccounts(params?: PaginationParams): UseQueryResult<PaginatedResult<LoyaltyAccount>> {
+  return useQuery({
+    queryKey: queryKeys.loyalty.accounts.list(params),
+    queryFn: () => api.listLoyaltyAccounts(params),
+  })
+}
+
+export function useLoyaltyAccount(id: string): UseQueryResult<LoyaltyAccount> {
+  return useQuery({
+    queryKey: queryKeys.loyalty.accounts.detail(id),
+    queryFn: () => api.getLoyaltyAccount(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useAdjustLoyaltyPoints(): UseMutationResult<LoyaltyAccount, Error, { id: string; points: number; note: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...data }) => api.adjustLoyaltyPoints(id, data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.loyalty.accounts.all }) },
+  })
+}
+
+export function useLoyaltyTransactions(id: string): UseQueryResult<LoyaltyTransaction[]> {
+  return useQuery({
+    queryKey: queryKeys.loyalty.accounts.transactions(id),
+    queryFn: () => api.getLoyaltyTransactions(id),
+    enabled: Boolean(id),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Bundles (033)
+// ---------------------------------------------------------------------------
+
+export function useBundles(params?: PaginationParams): UseQueryResult<PaginatedResult<Bundle>> {
+  return useQuery({
+    queryKey: queryKeys.bundles.list(params),
+    queryFn: () => api.listBundles(params),
+  })
+}
+
+export function useCreateBundle(): UseMutationResult<Bundle, Error, Partial<Bundle>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createBundle(data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.bundles.all }) },
+  })
+}
+
+export function useUpdateBundle(): UseMutationResult<Bundle, Error, { id: string; data: Partial<Bundle> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateBundle(id, data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.bundles.all }) },
+  })
+}
+
+export function useDeleteBundle(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteBundle(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.bundles.all }) },
+  })
+}
+
+export function useAddBundleItem(): UseMutationResult<BundleItem, Error, { bundleId: string; product_id: string; quantity: number; discount_percent: number }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ bundleId, ...data }) => api.addBundleItem(bundleId, data),
+    onSuccess: (_data, { bundleId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.bundles.detail(bundleId) })
+      void qc.invalidateQueries({ queryKey: queryKeys.bundles.price(bundleId) })
+    },
+  })
+}
+
+export function useRemoveBundleItem(): UseMutationResult<void, Error, { bundleId: string; itemId: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ bundleId, itemId }) => api.removeBundleItem(bundleId, itemId),
+    onSuccess: (_data, { bundleId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.bundles.detail(bundleId) })
+      void qc.invalidateQueries({ queryKey: queryKeys.bundles.price(bundleId) })
+    },
+  })
+}
+
+export function useBundlePrice(bundleId: string): UseQueryResult<BundlePrice> {
+  return useQuery({
+    queryKey: queryKeys.bundles.price(bundleId),
+    queryFn: () => api.getBundlePrice(bundleId),
+    enabled: Boolean(bundleId),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard Reporting (034)
+// ---------------------------------------------------------------------------
+
+export function useDashboardSales(params?: { from?: string; to?: string }): UseQueryResult<SalesOverview> {
+  return useQuery({
+    queryKey: queryKeys.dashboardReporting.sales(params),
+    queryFn: () => api.getDashboardSales(params),
+  })
+}
+
+export function useDashboardTopProducts(params?: { from?: string; to?: string }): UseQueryResult<TopProductReport[]> {
+  return useQuery({
+    queryKey: queryKeys.dashboardReporting.topProducts(params),
+    queryFn: () => api.getDashboardTopProducts(params),
+  })
+}
+
+export function useDashboardRevenue(params?: { from?: string; to?: string }): UseQueryResult<RevenueData[]> {
+  return useQuery({
+    queryKey: queryKeys.dashboardReporting.revenue(params),
+    queryFn: () => api.getDashboardRevenue(params),
+  })
+}
+
+export function useDashboardCustomers(params?: { from?: string; to?: string }): UseQueryResult<CustomerStats> {
+  return useQuery({
+    queryKey: queryKeys.dashboardReporting.customers(params),
+    queryFn: () => api.getDashboardCustomers(params),
+  })
+}
+
+export function useDashboardFunnel(params?: { from?: string; to?: string }): UseQueryResult<FunnelStep[]> {
+  return useQuery({
+    queryKey: queryKeys.dashboardReporting.funnel(params),
+    queryFn: () => api.getDashboardFunnel(params),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Social Accounts (035)
+// ---------------------------------------------------------------------------
+
+export function useSocialAccounts(params?: PaginationParams & { provider?: SocialProvider }): UseQueryResult<PaginatedResult<SocialAccount>> {
+  return useQuery({
+    queryKey: queryKeys.socialAccounts.list(params),
+    queryFn: () => api.listSocialAccounts(params),
+  })
+}
+
+export function useCustomerSocialAccounts(customerId: string): UseQueryResult<SocialAccount[]> {
+  return useQuery({
+    queryKey: queryKeys.socialAccounts.byCustomer(customerId),
+    queryFn: () => api.listCustomerSocialAccounts(customerId),
+    enabled: Boolean(customerId),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Notifications (036)
+// ---------------------------------------------------------------------------
+
+export function useNotifications(params?: PaginationParams & { read?: boolean }): UseQueryResult<PaginatedResult<AdminNotification>> {
+  return useQuery({
+    queryKey: queryKeys.notifications.list(params),
+    queryFn: () => api.listNotifications(params),
+  })
+}
+
+export function useUnreadCount(): UseQueryResult<UnreadCount> {
+  return useQuery({
+    queryKey: queryKeys.notifications.unreadCount,
+    queryFn: () => api.getUnreadCount(),
+  })
+}
+
+export function useMarkAllNotificationsRead(): UseMutationResult<void, Error, void> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api.markAllNotificationsRead(),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.notifications.all }) },
+  })
+}
+
+export function useMarkNotificationRead(): UseMutationResult<AdminNotification, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.markNotificationRead(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.notifications.all }) },
+  })
+}
+
+export function useDeleteNotification(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteNotification(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.notifications.all }) },
   })
 }
