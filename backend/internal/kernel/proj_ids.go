@@ -282,3 +282,15 @@ type AuditEntryID string
 func NewAuditEntryID(id string) AuditEntryID { return AuditEntryID(id) }
 func (a AuditEntryID) String() string        { return string(a) }
 func (a AuditEntryID) IsEmpty() bool         { return string(a) == "" }
+
+type BundleID string
+
+func NewBundleID(id string) BundleID { return BundleID(id) }
+func (b BundleID) String() string    { return string(b) }
+func (b BundleID) IsEmpty() bool     { return string(b) == "" }
+
+type BundleItemID string
+
+func NewBundleItemID(id string) BundleItemID { return BundleItemID(id) }
+func (b BundleItemID) String() string        { return string(b) }
+func (b BundleItemID) IsEmpty() bool         { return string(b) == "" }

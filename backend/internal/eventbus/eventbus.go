@@ -94,6 +94,10 @@ const (
 	ReturnRequested EventType = "return.requested"
 	ReturnApproved  EventType = "return.approved"
 	ReturnCompleted EventType = "return.completed"
+
+	// Bundle events
+	BundleCreated EventType = "bundle.created"
+	BundleUpdated EventType = "bundle.updated"
 )
 
 // Event is a domain event that has occurred in the system.
