@@ -12,6 +12,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/product/productsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/promo/promosrv"
 	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/theme/themesrv"
 )
 
 // Tool is the minimal interface that each agent tool must satisfy.
@@ -36,6 +37,7 @@ type Services struct {
 	Orders     *ordersrv.Service
 	Promos     *promosrv.Service
 	Catalog    *catalogsrv.Service
+	Themes     *themesrv.Service
 }
 
 // Setup constructs and returns all agent tools wired to the given services.
@@ -51,6 +53,10 @@ func Setup(tenantID kernel.TenantID, svc Services) []Tool {
 		&UpdatePageTool{sf: sf, tenantID: tenantID},
 		&ListPagesTool{sf: sf, tenantID: tenantID},
 
+		// Block types (storefront editor)
+		&ListBlockTypesTool{sf: sf},
+		&CreateBlockTypeTool{sf: sf},
+
 		// Products
 		&CreateProductTool{products: svc.Products, tenantID: tenantID},
 		&ListProductsTool{products: svc.Products, tenantID: tenantID},
@@ -63,5 +69,12 @@ func Setup(tenantID kernel.TenantID, svc Services) []Tool {
 
 		// Catalog
 		&SearchCatalogTool{catalog: svc.Catalog, tenantID: tenantID},
+
+		// Themes
+		&ListThemesTool{themes: svc.Themes, tenantID: tenantID},
+		&GetActiveThemeTool{themes: svc.Themes, tenantID: tenantID},
+		&CreateThemeTool{themes: svc.Themes, tenantID: tenantID},
+		&UpdateThemeTool{themes: svc.Themes, tenantID: tenantID},
+		&ActivateThemeTool{themes: svc.Themes, tenantID: tenantID},
 	}
 }

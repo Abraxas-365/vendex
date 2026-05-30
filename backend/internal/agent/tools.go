@@ -15,6 +15,8 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/promo/promosrv"
 	"github.com/Abraxas-365/hada-commerce/internal/storefront"
 	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/theme"
+	"github.com/Abraxas-365/hada-commerce/internal/theme/themesrv"
 )
 
 // ─── CreatePageTool ──────────────────────────────────────────────────────────
@@ -547,6 +549,392 @@ func (t *SearchCatalogTool) listCollections(ctx context.Context, pg kernel.Pagin
 	return out, nil
 }
 
+// ─── ListBlockTypesTool ───────────────────────────────────────────────────────
+
+// ListBlockTypesTool lets the agent browse registered block types, optionally
+// filtered by category.
+type ListBlockTypesTool struct {
+	sf *storefrontsrv.Service
+}
+
+type listBlockTypesInput struct {
+	Category string `json:"category,omitempty"`
+}
+
+func (t *ListBlockTypesTool) Name() string { return "list_block_types" }
+
+func (t *ListBlockTypesTool) Description() string {
+	return "List registered storefront block types. Optionally filter by category: content, commerce, media, layout."
+}
+
+func (t *ListBlockTypesTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"category": map[string]any{
+				"type":        "string",
+				"description": "Optional category filter: content | commerce | media | layout",
+			},
+		},
+	}
+}
+
+func (t *ListBlockTypesTool) Execute(ctx context.Context, raw json.RawMessage) (string, error) {
+	var in listBlockTypesInput
+	if err := json.Unmarshal(raw, &in); err != nil {
+		return "", errx.Wrap(err, "list_block_types: unmarshal input", errx.TypeValidation)
+	}
+
+	bts, err := t.sf.ListBlockTypes(ctx, in.Category)
+	if err != nil {
+		return "", errx.Wrap(err, "list_block_types", errx.TypeInternal)
+	}
+
+	if len(bts) == 0 {
+		return "No block types found.", nil
+	}
+
+	out := fmt.Sprintf("Block types (%d):\n\n", len(bts))
+	for _, bt := range bts {
+		out += fmt.Sprintf("- ID: %s | Name: %s | Display: %s | Category: %s | Icon: %s\n",
+			bt.ID, bt.Name, bt.DisplayName, bt.Category, bt.Icon)
+	}
+	return out, nil
+}
+
+var _ Tool = (*ListBlockTypesTool)(nil)
+
+// ─── CreateBlockTypeTool ──────────────────────────────────────────────────────
+
+// CreateBlockTypeTool lets the agent register a new block type in the storefront.
+type CreateBlockTypeTool struct {
+	sf *storefrontsrv.Service
+}
+
+type createBlockTypeInput struct {
+	Name            string          `json:"name"`
+	DisplayName     string          `json:"display_name"`
+	Category        string          `json:"category"`
+	Schema          json.RawMessage `json:"schema,omitempty"`
+	DefaultSettings json.RawMessage `json:"default_settings,omitempty"`
+	Icon            string          `json:"icon,omitempty"`
+}
+
+func (t *CreateBlockTypeTool) Name() string { return "create_block_type" }
+
+func (t *CreateBlockTypeTool) Description() string {
+	return "Register a new storefront block type with its JSON schema and default settings."
+}
+
+func (t *CreateBlockTypeTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"name":             map[string]any{"type": "string", "description": "Unique machine-readable name, e.g. 'hero_banner'"},
+			"display_name":     map[string]any{"type": "string", "description": "Human-readable label shown in the editor"},
+			"category":         map[string]any{"type": "string", "description": "One of: content, commerce, media, layout"},
+			"schema":           map[string]any{"type": "object", "description": "JSON Schema describing the block's settings (optional)"},
+			"default_settings": map[string]any{"type": "object", "description": "Default values matching the schema (optional)"},
+			"icon":             map[string]any{"type": "string", "description": "Icon identifier or SVG string (optional)"},
+		},
+		"required": []string{"name", "display_name", "category"},
+	}
+}
+
+func (t *CreateBlockTypeTool) Execute(ctx context.Context, raw json.RawMessage) (string, error) {
+	var in createBlockTypeInput
+	if err := json.Unmarshal(raw, &in); err != nil {
+		return "", errx.Wrap(err, "create_block_type: unmarshal input", errx.TypeValidation)
+	}
+
+	// Convert optional JSON objects to []byte (nil if not provided).
+	var schemaBytes, defaultSettingsBytes []byte
+	if len(in.Schema) > 0 && string(in.Schema) != "null" {
+		schemaBytes = []byte(in.Schema)
+	}
+	if len(in.DefaultSettings) > 0 && string(in.DefaultSettings) != "null" {
+		defaultSettingsBytes = []byte(in.DefaultSettings)
+	}
+
+	bt, err := t.sf.CreateBlockType(ctx, storefrontsrv.CreateBlockTypeInput{
+		Name:            in.Name,
+		DisplayName:     in.DisplayName,
+		Category:        in.Category,
+		Schema:          schemaBytes,
+		DefaultSettings: defaultSettingsBytes,
+		Icon:            in.Icon,
+	})
+	if err != nil {
+		return "", errx.Wrap(err, "create_block_type", errx.TypeInternal)
+	}
+
+	return fmt.Sprintf(
+		"Block type created.\nID: %s\nName: %s\nDisplay: %s\nCategory: %s",
+		bt.ID, bt.Name, bt.DisplayName, bt.Category,
+	), nil
+}
+
+var _ Tool = (*CreateBlockTypeTool)(nil)
+
+// ─── ListThemesTool ───────────────────────────────────────────────────────────
+
+// ListThemesTool lets the agent browse all themes for a tenant.
+type ListThemesTool struct {
+	themes   *themesrv.Service
+	tenantID kernel.TenantID
+}
+
+func (t *ListThemesTool) Name() string { return "list_themes" }
+
+func (t *ListThemesTool) Description() string {
+	return "List all themes for the tenant, showing which one is currently active."
+}
+
+func (t *ListThemesTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type":       "object",
+		"properties": map[string]any{},
+	}
+}
+
+func (t *ListThemesTool) Execute(ctx context.Context, raw json.RawMessage) (string, error) {
+	themes, err := t.themes.ListThemes(ctx, t.tenantID)
+	if err != nil {
+		return "", errx.Wrap(err, "list_themes", errx.TypeInternal)
+	}
+
+	if len(themes) == 0 {
+		return "No themes found.", nil
+	}
+
+	out := fmt.Sprintf("Themes (%d):\n\n", len(themes))
+	for _, th := range themes {
+		active := ""
+		if th.IsActive {
+			active = " [ACTIVE]"
+		}
+		out += fmt.Sprintf("- ID: %s | Name: %s%s | Updated: %s\n",
+			th.ID, th.Name, active, th.UpdatedAt.Format("2006-01-02"))
+	}
+	return out, nil
+}
+
+var _ Tool = (*ListThemesTool)(nil)
+
+// ─── GetActiveThemeTool ───────────────────────────────────────────────────────
+
+// GetActiveThemeTool retrieves the currently active theme and its design tokens.
+type GetActiveThemeTool struct {
+	themes   *themesrv.Service
+	tenantID kernel.TenantID
+}
+
+func (t *GetActiveThemeTool) Name() string { return "get_active_theme" }
+
+func (t *GetActiveThemeTool) Description() string {
+	return "Get the currently active theme and all its design tokens (colors, typography, spacing, borders, shadows)."
+}
+
+func (t *GetActiveThemeTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type":       "object",
+		"properties": map[string]any{},
+	}
+}
+
+func (t *GetActiveThemeTool) Execute(ctx context.Context, raw json.RawMessage) (string, error) {
+	th, err := t.themes.GetActiveTheme(ctx, t.tenantID)
+	if err != nil {
+		return "", errx.Wrap(err, "get_active_theme", errx.TypeInternal)
+	}
+
+	return formatTheme(th), nil
+}
+
+var _ Tool = (*GetActiveThemeTool)(nil)
+
+// ─── CreateThemeTool ──────────────────────────────────────────────────────────
+
+// CreateThemeTool lets the agent create a new theme with design tokens.
+type CreateThemeTool struct {
+	themes   *themesrv.Service
+	tenantID kernel.TenantID
+}
+
+type createThemeInput struct {
+	Name   string            `json:"name"`
+	Tokens *theme.ThemeTokens `json:"tokens,omitempty"`
+}
+
+func (t *CreateThemeTool) Name() string { return "create_theme" }
+
+func (t *CreateThemeTool) Description() string {
+	return "Create a new theme with optional design tokens. Unset tokens use sensible defaults."
+}
+
+func (t *CreateThemeTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"name": map[string]any{"type": "string", "description": "Theme name, e.g. 'Dark Mode' or 'Holiday Special'"},
+			"tokens": map[string]any{
+				"type":        "object",
+				"description": "Optional design tokens to override defaults (colors, typography, spacing, borders, shadows)",
+			},
+		},
+		"required": []string{"name"},
+	}
+}
+
+func (t *CreateThemeTool) Execute(ctx context.Context, raw json.RawMessage) (string, error) {
+	var in createThemeInput
+	if err := json.Unmarshal(raw, &in); err != nil {
+		return "", errx.Wrap(err, "create_theme: unmarshal input", errx.TypeValidation)
+	}
+
+	th, err := t.themes.CreateTheme(ctx, themesrv.CreateThemeInput{
+		TenantID: t.tenantID,
+		Name:     in.Name,
+		Tokens:   in.Tokens,
+	})
+	if err != nil {
+		return "", errx.Wrap(err, "create_theme", errx.TypeInternal)
+	}
+
+	return fmt.Sprintf(
+		"Theme created.\nID: %s\nName: %s\nActive: %v\nPrimary color: %s\nFont heading: %s",
+		th.ID, th.Name, th.IsActive, th.Tokens.Colors.Primary, th.Tokens.Typography.FontHeading,
+	), nil
+}
+
+var _ Tool = (*CreateThemeTool)(nil)
+
+// ─── UpdateThemeTool ──────────────────────────────────────────────────────────
+
+// UpdateThemeTool lets the agent update a theme's name or design tokens.
+type UpdateThemeTool struct {
+	themes   *themesrv.Service
+	tenantID kernel.TenantID
+}
+
+type updateThemeInput struct {
+	ID     string             `json:"id"`
+	Name   *string            `json:"name,omitempty"`
+	Tokens *theme.ThemeTokens `json:"tokens,omitempty"`
+}
+
+func (t *UpdateThemeTool) Name() string { return "update_theme" }
+
+func (t *UpdateThemeTool) Description() string {
+	return "Update a theme's name or design tokens. Only the provided fields are changed."
+}
+
+func (t *UpdateThemeTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"id":   map[string]any{"type": "string", "description": "Theme ID to update"},
+			"name": map[string]any{"type": "string", "description": "New name for the theme (optional)"},
+			"tokens": map[string]any{
+				"type":        "object",
+				"description": "Design tokens to apply; merges with existing values (optional)",
+			},
+		},
+		"required": []string{"id"},
+	}
+}
+
+func (t *UpdateThemeTool) Execute(ctx context.Context, raw json.RawMessage) (string, error) {
+	var in updateThemeInput
+	if err := json.Unmarshal(raw, &in); err != nil {
+		return "", errx.Wrap(err, "update_theme: unmarshal input", errx.TypeValidation)
+	}
+
+	th, err := t.themes.UpdateTheme(ctx, themesrv.UpdateThemeInput{
+		TenantID: t.tenantID,
+		ID:       kernel.ThemeID(in.ID),
+		Name:     in.Name,
+		Tokens:   in.Tokens,
+	})
+	if err != nil {
+		return "", errx.Wrap(err, "update_theme", errx.TypeInternal)
+	}
+
+	return fmt.Sprintf(
+		"Theme updated.\nID: %s\nName: %s\nActive: %v\nPrimary color: %s",
+		th.ID, th.Name, th.IsActive, th.Tokens.Colors.Primary,
+	), nil
+}
+
+var _ Tool = (*UpdateThemeTool)(nil)
+
+// ─── ActivateThemeTool ────────────────────────────────────────────────────────
+
+// ActivateThemeTool switches the active theme for the tenant.
+type ActivateThemeTool struct {
+	themes   *themesrv.Service
+	tenantID kernel.TenantID
+}
+
+type activateThemeInput struct {
+	ID string `json:"id"`
+}
+
+func (t *ActivateThemeTool) Name() string { return "activate_theme" }
+
+func (t *ActivateThemeTool) Description() string {
+	return "Activate a theme for the tenant. Deactivates all other themes. The active theme is applied to the storefront."
+}
+
+func (t *ActivateThemeTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"id": map[string]any{"type": "string", "description": "ID of the theme to activate"},
+		},
+		"required": []string{"id"},
+	}
+}
+
+func (t *ActivateThemeTool) Execute(ctx context.Context, raw json.RawMessage) (string, error) {
+	var in activateThemeInput
+	if err := json.Unmarshal(raw, &in); err != nil {
+		return "", errx.Wrap(err, "activate_theme: unmarshal input", errx.TypeValidation)
+	}
+
+	th, err := t.themes.ActivateTheme(ctx, t.tenantID, kernel.ThemeID(in.ID))
+	if err != nil {
+		return "", errx.Wrap(err, "activate_theme", errx.TypeInternal)
+	}
+
+	return fmt.Sprintf(
+		"Theme activated.\nID: %s\nName: %s\nActive: %v",
+		th.ID, th.Name, th.IsActive,
+	), nil
+}
+
+var _ Tool = (*ActivateThemeTool)(nil)
+
+// ─── formatTheme ─────────────────────────────────────────────────────────────
+
+// formatTheme returns a human-readable summary of a theme and its design tokens.
+func formatTheme(th *theme.Theme) string {
+	return fmt.Sprintf(
+		"Theme: %s\nID: %s\nActive: %v\nUpdated: %s\n\nColors:\n  Primary: %s\n  Secondary: %s\n  Background: %s\n  Surface: %s\n  Text: %s\n  Text Muted: %s\n  Border: %s\n  Error: %s\n  Success: %s\n  Warning: %s\n  Info: %s\n\nTypography:\n  Font Heading: %s\n  Font Body: %s\n  Base Size: %s\n  Scale Ratio: %.2f\n\nSpacing:\n  Unit: %s\n  Section Padding: %s\n\nBorders:\n  Sm: %s\n  Md: %s\n  Lg: %s\n  Full: %s\n\nShadows:\n  Sm: %s\n  Md: %s\n  Lg: %s",
+		th.Name, th.ID, th.IsActive, th.UpdatedAt.Format("2006-01-02 15:04"),
+		th.Tokens.Colors.Primary, th.Tokens.Colors.Secondary, th.Tokens.Colors.Background,
+		th.Tokens.Colors.Surface, th.Tokens.Colors.Text, th.Tokens.Colors.TextMuted,
+		th.Tokens.Colors.Border, th.Tokens.Colors.Error, th.Tokens.Colors.Success,
+		th.Tokens.Colors.Warning, th.Tokens.Colors.Info,
+		th.Tokens.Typography.FontHeading, th.Tokens.Typography.FontBody,
+		th.Tokens.Typography.BaseSize, th.Tokens.Typography.ScaleRatio,
+		th.Tokens.Spacing.Unit, th.Tokens.Spacing.SectionPadding,
+		th.Tokens.Borders.RadiusSm, th.Tokens.Borders.RadiusMd,
+		th.Tokens.Borders.RadiusLg, th.Tokens.Borders.RadiusFull,
+		th.Tokens.Shadows.Sm, th.Tokens.Shadows.Md, th.Tokens.Shadows.Lg,
+	)
+}
+
 // ─── compile-time guards ──────────────────────────────────────────────────────
 
 var (
@@ -558,4 +946,11 @@ var (
 	_ Tool = (*CreatePromoTool)(nil)
 	_ Tool = (*QueryOrdersTool)(nil)
 	_ Tool = (*SearchCatalogTool)(nil)
+	_ Tool = (*ListBlockTypesTool)(nil)
+	_ Tool = (*CreateBlockTypeTool)(nil)
+	_ Tool = (*ListThemesTool)(nil)
+	_ Tool = (*GetActiveThemeTool)(nil)
+	_ Tool = (*CreateThemeTool)(nil)
+	_ Tool = (*UpdateThemeTool)(nil)
+	_ Tool = (*ActivateThemeTool)(nil)
 )
