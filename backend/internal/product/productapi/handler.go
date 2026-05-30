@@ -30,6 +30,14 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 	g.Delete("/:id", h.Delete)
 }
 
+// RegisterPublicRoutes registers unauthenticated, read-only product routes.
+// Tenant is identified via the X-Tenant-ID header.
+func (h *Handler) RegisterPublicRoutes(router fiber.Router) {
+	g := router.Group("/products")
+	g.Get("/", h.ListProductsPublic)
+	g.Get("/:id", h.GetProductPublic)
+}
+
 // createRequest is the JSON body for creating a product.
 type createRequest struct {
 	Name        string   `json:"name"`
@@ -136,6 +144,49 @@ func (h *Handler) Delete(c *fiber.Ctx) error {
 	}
 
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+// --- Public handlers ---
+
+// ListProductsPublic handles GET /products (public, no auth).
+// Accepts optional query params: page, page_size, category_id.
+func (h *Handler) ListProductsPublic(c *fiber.Ctx) error {
+	tenantID := kernel.TenantID(c.Get("X-Tenant-ID"))
+	if tenantID == "" {
+		return errx.New("X-Tenant-ID header is required", errx.TypeValidation)
+	}
+
+	pg := paginationFromQuery(c)
+	categoryIDStr := c.Query("category_id")
+
+	if categoryIDStr != "" {
+		result, err := h.svc.ListByCategory(c.Context(), tenantID, kernel.CategoryID(categoryIDStr), pg)
+		if err != nil {
+			return err
+		}
+		return c.JSON(result)
+	}
+
+	result, err := h.svc.List(c.Context(), tenantID, pg)
+	if err != nil {
+		return err
+	}
+	return c.JSON(result)
+}
+
+// GetProductPublic handles GET /products/:id (public, no auth).
+func (h *Handler) GetProductPublic(c *fiber.Ctx) error {
+	tenantID := kernel.TenantID(c.Get("X-Tenant-ID"))
+	if tenantID == "" {
+		return errx.New("X-Tenant-ID header is required", errx.TypeValidation)
+	}
+
+	id := kernel.ProductID(c.Params("id"))
+	p, err := h.svc.GetByID(c.Context(), tenantID, id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(p)
 }
 
 // --- helpers ---
