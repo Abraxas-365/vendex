@@ -91,3 +91,15 @@ type VendorID string
 func NewVendorID(id string) VendorID { return VendorID(id) }
 func (v VendorID) String() string    { return string(v) }
 func (v VendorID) IsEmpty() bool     { return string(v) == "" }
+
+type ThemeID string
+
+func NewThemeID(id string) ThemeID { return ThemeID(id) }
+func (t ThemeID) String() string   { return string(t) }
+func (t ThemeID) IsEmpty() bool    { return string(t) == "" }
+
+type BlockID string
+
+func NewBlockID(id string) BlockID { return BlockID(id) }
+func (b BlockID) String() string   { return string(b) }
+func (b BlockID) IsEmpty() bool    { return string(b) == "" }
