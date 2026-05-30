@@ -172,6 +172,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.Cart.RegisterRoutes(protected)
 	container.Product.RegisterRoutes(protected)
 	container.Order.RegisterRoutes(protected)
+	container.Payment.RegisterRoutes(protected)
 	container.Customer.RegisterRoutes(protected)
 	container.Catalog.RegisterRoutes(protected)
 	container.Storefront.RegisterRoutes(protected)

@@ -25,6 +25,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/notifx/notifxconsole"
 	"github.com/Abraxas-365/hada-commerce/internal/notifx/notifxses"
 	"github.com/Abraxas-365/hada-commerce/internal/order/ordercontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/payment/paymentcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/product/productcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/promo/promocontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/settings/settingscontainer"
@@ -65,6 +66,7 @@ type Container struct {
 	Cart        *cartcontainer.Container
 	Product     *productcontainer.Container
 	Order       *ordercontainer.Container
+	Payment     *paymentcontainer.Container
 	Customer    *customercontainer.Container
 	Catalog     *catalogcontainer.Container
 	Storefront  *storefrontcontainer.Container
@@ -166,6 +168,7 @@ func (c *Container) initModules() {
 	c.Cart = cartcontainer.New(c.DB, bus)
 	c.Product = productcontainer.New(c.DB, bus)
 	c.Order = ordercontainer.New(c.DB, bus)
+	c.Payment = paymentcontainer.New(c.DB, bus)
 	c.Customer = customercontainer.New(c.DB, bus)
 	c.Catalog = catalogcontainer.New(c.DB, bus)
 	c.Theme = themecontainer.New(c.DB, bus)
