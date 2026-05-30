@@ -11,6 +11,7 @@ import (
 
 // Container wires together the promo domain's repository, service, and handler.
 type Container struct {
+	Service *promosrv.Service
 	Handler *promoapi.Handler
 }
 
@@ -19,7 +20,7 @@ func New(db *sqlx.DB) *Container {
 	repo := promoinfra.NewPostgresPromoRepository(db)
 	svc := promosrv.New(repo)
 	handler := promoapi.New(svc)
-	return &Container{Handler: handler}
+	return &Container{Service: svc, Handler: handler}
 }
 
 // RegisterRoutes wires all promo routes onto the provided Fiber router.

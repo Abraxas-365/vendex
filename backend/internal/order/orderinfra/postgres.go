@@ -100,6 +100,51 @@ func (r *PostgresRepo) Update(ctx context.Context, o *order.Order) error {
 	return nil
 }
 
+func (r *PostgresRepo) UpdateCheckoutFields(ctx context.Context, o *order.Order) error {
+	var billingJSON []byte
+	if o.BillingAddress != nil {
+		var err error
+		billingJSON, err = json.Marshal(o.BillingAddress)
+		if err != nil {
+			return errx.Wrap(err, "marshaling billing address", errx.TypeInternal)
+		}
+	}
+
+	_, err := r.db.ExecContext(ctx, `
+		UPDATE orders SET
+			subtotal_amount=$1, subtotal_currency=$2,
+			shipping_amount=$3, shipping_currency=$4,
+			tax_amount=$5, tax_currency=$6,
+			discount_amount=$7, discount_currency=$8,
+			shipping_method=$9, billing_address=$10,
+			payment_status=$11, payment_method=$12,
+			promo_code=$13, cart_id=$14,
+			updated_at=$15
+		WHERE id=$16 AND tenant_id=$17`,
+		o.SubtotalAmount.Amount, o.SubtotalAmount.Currency,
+		o.ShippingAmount.Amount, o.ShippingAmount.Currency,
+		o.TaxAmount.Amount, o.TaxAmount.Currency,
+		o.DiscountAmount.Amount, o.DiscountAmount.Currency,
+		nullableString(o.ShippingMethod), billingJSON,
+		nullableString(o.PaymentStatus), nullableString(o.PaymentMethod),
+		nullableString(o.PromoCode), nullableString(o.CartID),
+		o.UpdatedAt,
+		string(o.ID), string(o.TenantID),
+	)
+	if err != nil {
+		return errx.Wrap(err, "updating order checkout fields", errx.TypeInternal)
+	}
+	return nil
+}
+
+// nullableString returns nil for empty strings (stored as NULL in DB).
+func nullableString(s string) interface{} {
+	if s == "" {
+		return nil
+	}
+	return s
+}
+
 func (r *PostgresRepo) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[order.Order], error) {
 	return r.queryOrders(ctx, tenantID, pg, "", nil)
 }
