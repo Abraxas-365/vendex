@@ -218,6 +218,12 @@ func (s *Service) Disable(ctx context.Context, tenantID kernel.TenantID, pluginI
 	return s.setStatus(ctx, tenantID, pluginID, plugin.StatusInactive)
 }
 
+// GetJSManifest returns the list of JS script entries for all active plugin
+// installations in the tenant that expose a frontend bundle URL.
+func (s *Service) GetJSManifest(ctx context.Context, tenantID kernel.TenantID) ([]plugin.PluginScript, error) {
+	return s.installRepo.GetJSManifestData(ctx, tenantID)
+}
+
 func (s *Service) setStatus(ctx context.Context, tenantID kernel.TenantID, pluginID kernel.PluginID, status plugin.InstallationStatus) (*plugin.PluginInstallation, error) {
 	installation, err := s.installRepo.GetByTenantAndPlugin(ctx, tenantID, pluginID)
 	if err != nil {
