@@ -7,11 +7,16 @@ import (
 	"encoding/json"
 
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/customergroup/customergroupsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/order/ordersrv"
+	"github.com/Abraxas-365/hada-commerce/internal/payment/paymentsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/product/productsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/promo/promosrv"
+	"github.com/Abraxas-365/hada-commerce/internal/search/searchsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/shipping/shippingsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/tax/taxsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/theme/themesrv"
 )
 
@@ -32,12 +37,17 @@ type Tool interface {
 
 // Services bundles all domain services the agent tools need.
 type Services struct {
-	Storefront *storefrontsrv.Service
-	Products   *productsrv.Service
-	Orders     *ordersrv.Service
-	Promos     *promosrv.Service
-	Catalog    *catalogsrv.Service
-	Themes     *themesrv.Service
+	Storefront     *storefrontsrv.Service
+	Products       *productsrv.Service
+	Orders         *ordersrv.Service
+	Promos         *promosrv.Service
+	Catalog        *catalogsrv.Service
+	Themes         *themesrv.Service
+	Shipping       *shippingsrv.Service
+	Tax            *taxsrv.Service
+	Payment        *paymentsrv.Service
+	Search         *searchsrv.Service
+	CustomerGroups *customergroupsrv.Service
 }
 
 // Setup constructs and returns all agent tools wired to the given services.
@@ -76,5 +86,34 @@ func Setup(tenantID kernel.TenantID, svc Services) []Tool {
 		&CreateThemeTool{themes: svc.Themes, tenantID: tenantID},
 		&UpdateThemeTool{themes: svc.Themes, tenantID: tenantID},
 		&ActivateThemeTool{themes: svc.Themes, tenantID: tenantID},
+
+		// Shipping
+		&ListShippingZonesTool{shipping: svc.Shipping, tenantID: tenantID},
+		&CreateShippingZoneTool{shipping: svc.Shipping, tenantID: tenantID},
+		&CalculateShippingTool{shipping: svc.Shipping, tenantID: tenantID},
+
+		// Tax
+		&ListTaxRatesTool{tax: svc.Tax, tenantID: tenantID},
+		&CreateTaxRateTool{tax: svc.Tax, tenantID: tenantID},
+		&CalculateTaxTool{tax: svc.Tax, tenantID: tenantID},
+
+		// Payments
+		&GetOrderPaymentTool{payment: svc.Payment, tenantID: tenantID},
+		&ListRefundsTool{payment: svc.Payment, tenantID: tenantID},
+
+		// Search
+		&SearchProductsTool{search: svc.Search, tenantID: tenantID},
+		&SearchSuggestionsTool{search: svc.Search, tenantID: tenantID},
+
+		// Product variants
+		&CreateProductOptionTool{products: svc.Products, tenantID: tenantID},
+		&ListProductOptionsTool{products: svc.Products, tenantID: tenantID},
+		&CreateProductVariantTool{products: svc.Products, tenantID: tenantID},
+		&ListProductVariantsTool{products: svc.Products, tenantID: tenantID},
+
+		// Customer groups
+		&ListCustomerGroupsTool{groups: svc.CustomerGroups, tenantID: tenantID},
+		&CreateCustomerGroupTool{groups: svc.CustomerGroups, tenantID: tenantID},
+		&AddGroupMemberTool{groups: svc.CustomerGroups, tenantID: tenantID},
 	}
 }
