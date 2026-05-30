@@ -126,3 +126,12 @@ type CheckoutPayload struct {
 	Total      int64  `json:"total"`
 	Currency   string `json:"currency"`
 }
+
+// ReviewPayload is the payload for review.* events.
+type ReviewPayload struct {
+	ReviewID   string `json:"review_id"`
+	ProductID  string `json:"product_id"`
+	CustomerID string `json:"customer_id"`
+	Rating     int    `json:"rating"`
+	Status     string `json:"status"`
+}

@@ -249,3 +249,9 @@ type StockMovementID string
 func NewStockMovementID(id string) StockMovementID { return StockMovementID(id) }
 func (s StockMovementID) String() string           { return string(s) }
 func (s StockMovementID) IsEmpty() bool            { return string(s) == "" }
+
+type ReviewID string
+
+func NewReviewID(id string) ReviewID { return ReviewID(id) }
+func (r ReviewID) String() string    { return string(r) }
+func (r ReviewID) IsEmpty() bool     { return string(r) == "" }

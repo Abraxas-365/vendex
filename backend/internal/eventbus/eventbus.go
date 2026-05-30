@@ -85,6 +85,11 @@ const (
 	// Inventory events
 	StockUpdated  EventType = "stock.updated"
 	StockLowAlert EventType = "stock.low_alert"
+
+	// Review events
+	ReviewCreated  EventType = "review.created"
+	ReviewApproved EventType = "review.approved"
+	ReviewRejected EventType = "review.rejected"
 )
 
 // Event is a domain event that has occurred in the system.

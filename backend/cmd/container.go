@@ -44,6 +44,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/currency/currencycontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/i18n/i18ncontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/subscription/subscriptioncontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/review/reviewcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/tax/taxcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/theme/themecontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/wishlist/wishlistcontainer"
@@ -106,6 +107,7 @@ type Container struct {
 	CartRecovery   *cartrecoverycontainer.Container
 	Subscription   *subscriptioncontainer.Container
 	Inventory      *inventorycontainer.Container
+	Review         *reviewcontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -237,6 +239,7 @@ func (c *Container) initModules() {
 	c.CartRecovery = cartrecoverycontainer.New(c.DB)
 	c.Subscription = subscriptioncontainer.New(c.DB, bus)
 	c.Inventory = inventorycontainer.New(c.DB, bus)
+	c.Review = reviewcontainer.New(c.DB, bus)
 
 	// Import/Export — depends on Product, Order, and Customer services.
 	c.ImportExport = importexport.New(
