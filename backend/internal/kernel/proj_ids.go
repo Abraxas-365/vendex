@@ -316,3 +316,8 @@ type SocialAccountID string
 func NewSocialAccountID(id string) SocialAccountID { return SocialAccountID(id) }
 func (s SocialAccountID) String() string           { return string(s) }
 func (s SocialAccountID) IsEmpty() bool            { return string(s) == "" }
+type NotificationID string
+
+func NewNotificationID(id string) NotificationID { return NotificationID(id) }
+func (n NotificationID) String() string          { return string(n) }
+func (n NotificationID) IsEmpty() bool           { return string(n) == "" }

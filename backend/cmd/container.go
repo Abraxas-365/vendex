@@ -55,6 +55,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/wishlist/wishlistcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/loyalty/loyaltycontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/bundle/bundlecontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/notification/notificationcontainer"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
@@ -124,6 +125,7 @@ type Container struct {
 	Loyalty        *loyaltycontainer.Container
 	Bundle         *bundlecontainer.Container
 	SocialAuth     *socialauthcontainer.Container
+	Notification   *notificationcontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -265,6 +267,7 @@ func (c *Container) initModules() {
 	c.Loyalty = loyaltycontainer.New(c.DB, bus)
 	c.Bundle = bundlecontainer.New(c.DB, bus)
 	c.SocialAuth = socialauthcontainer.New(c.DB)
+	c.Notification = notificationcontainer.New(c.DB, bus)
 
 	// Import/Export — depends on Product, Order, and Customer services.
 	c.ImportExport = importexport.New(
