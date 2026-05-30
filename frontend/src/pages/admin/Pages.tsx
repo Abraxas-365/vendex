@@ -10,7 +10,9 @@ import {
   ArrowLeft,
   Search,
   X,
+  LayoutGrid,
 } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
 import type { Page, PageStatus, PageMeta } from '../../types'
 import {
   usePages,
@@ -361,6 +363,7 @@ function PageEditor({ page, onSave, onCancel }: PageEditorProps) {
 // ---------------------------------------------------------------------------
 
 export default function Pages() {
+  const navigate = useNavigate()
   const [view, setView] = useState<'list' | 'editor'>('list')
   const [editingPage, setEditingPage] = useState<Page | undefined>(undefined)
   const [searchQuery, setSearchQuery] = useState('')
@@ -388,6 +391,12 @@ export default function Pages() {
   }
 
   function handleEdit(page: Page) {
+    // Block-type pages use the dedicated block editor route
+    const contentType = (page as unknown as { content_type?: string }).content_type
+    if (contentType === 'blocks') {
+      void navigate({ to: '/admin/pages/$pageId/edit', params: { pageId: page.id } })
+      return
+    }
     setEditingPage(page)
     setView('editor')
   }
@@ -445,13 +454,22 @@ export default function Pages() {
             Manage storefront pages &mdash; create, review, and publish content
           </p>
         </div>
-        <button
-          onClick={handleCreate}
-          className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-gray-800 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Create Page
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => void navigate({ to: '/admin/pages/new-block' })}
+            className="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 transition-colors"
+          >
+            <LayoutGrid className="h-4 w-4" />
+            New Block Page
+          </button>
+          <button
+            onClick={handleCreate}
+            className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-gray-800 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Create Page
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -512,11 +530,18 @@ export default function Pages() {
                     </td>
                     <td className="px-6 py-4 text-sm font-mono text-gray-500">/{page.slug}</td>
                     <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[page.status]}`}
-                      >
-                        {statusLabels[page.status]}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[page.status]}`}
+                        >
+                          {statusLabels[page.status]}
+                        </span>
+                        {(page as unknown as { content_type?: string }).content_type === 'blocks' && (
+                          <span className="inline-flex rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
+                            Blocks
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">{page.created_by}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">

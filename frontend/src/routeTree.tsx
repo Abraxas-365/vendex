@@ -19,6 +19,7 @@ import {
   Puzzle,
   Settings2,
   LogOut,
+  Palette,
 } from 'lucide-react'
 
 // Store pages
@@ -45,6 +46,8 @@ import Marketplace from './pages/admin/Marketplace'
 import PluginView from './pages/admin/PluginView'
 import Catalog from './pages/admin/Catalog'
 import Settings from './pages/admin/Settings'
+import PageEditor from './pages/admin/PageEditor'
+import ThemeEditor from './pages/admin/ThemeEditor'
 
 // Auth pages
 import Login from './pages/auth/Login'
@@ -98,6 +101,7 @@ const adminNavItems: NavItem[] = [
   { to: '/admin/media', label: 'Media', icon: Image },
   { to: '/admin/agent', label: 'Agent Chat', icon: Bot },
   { to: '/admin/marketplace', label: 'Marketplace', icon: Puzzle },
+  { to: '/admin/theme', label: 'Theme', icon: Palette },
   { to: '/admin/settings', label: 'Settings', icon: Settings2 },
 ]
 
@@ -358,6 +362,24 @@ const adminSettingsRoute = createRoute({
   component: Settings,
 })
 
+const adminPageEditorRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/pages/$pageId/edit',
+  component: PageEditor,
+})
+
+const adminNewBlockPageRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/pages/new-block',
+  component: PageEditor,
+})
+
+const adminThemeRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/theme',
+  component: ThemeEditor,
+})
+
 // ─── Route tree ───────────────────────────────────────────────────────────────
 
 const storeTree = storeLayoutRoute.addChildren([
@@ -378,11 +400,14 @@ const adminTree = adminLayoutRoute.addChildren([
   adminCustomersRoute,
   adminCustomerDetailRoute,
   adminPagesRoute,
+  adminNewBlockPageRoute,
+  adminPageEditorRoute,
   adminPromosRoute,
   adminMediaRoute,
   adminAgentRoute,
   adminMarketplaceRoute,
   adminPluginViewRoute,
+  adminThemeRoute,
   adminSettingsRoute,
 ])
 
