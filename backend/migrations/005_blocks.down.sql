@@ -1,0 +1,3 @@
+ALTER TABLE pages DROP COLUMN IF EXISTS sections;
+ALTER TABLE pages DROP COLUMN IF EXISTS content_type;
+DROP TABLE IF EXISTS block_types;

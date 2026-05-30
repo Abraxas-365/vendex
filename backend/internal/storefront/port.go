@@ -34,3 +34,20 @@ type PageVersionRepository interface {
 	// ListByPage returns all versions for a page ordered by version desc.
 	ListByPage(ctx context.Context, tenantID kernel.TenantID, pageID kernel.PageID) ([]PageVersion, error)
 }
+
+// BlockTypeRepository defines persistence operations for BlockType entities.
+// BlockTypes are global (not per-tenant) — they define the available block vocabulary.
+type BlockTypeRepository interface {
+	// Create persists a new block type.
+	Create(ctx context.Context, bt *BlockType) error
+	// GetByID retrieves a block type by its ID.
+	GetByID(ctx context.Context, id kernel.BlockTypeID) (*BlockType, error)
+	// GetByName retrieves a block type by its unique name.
+	GetByName(ctx context.Context, name string) (*BlockType, error)
+	// List returns all block types, optionally filtered by category (empty string = all).
+	List(ctx context.Context, category string) ([]BlockType, error)
+	// Update persists changes to an existing block type.
+	Update(ctx context.Context, bt *BlockType) error
+	// Delete removes a block type by ID.
+	Delete(ctx context.Context, id kernel.BlockTypeID) error
+}

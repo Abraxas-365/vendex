@@ -1,6 +1,7 @@
 package storefront
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
@@ -24,6 +25,43 @@ type PageMeta struct {
 	Keywords    []string `json:"keywords"`
 }
 
+// ContentType distinguishes between legacy HTML pages and block-based pages.
+type ContentType string
+
+const (
+	ContentTypeHTML   ContentType = "html"
+	ContentTypeBlocks ContentType = "blocks"
+)
+
+// Block is a nested component within a section.
+type Block struct {
+	ID       string          `json:"id"`
+	Type     string          `json:"type"`
+	Settings json.RawMessage `json:"settings"`
+}
+
+// Section is a top-level composable unit on a page.
+type Section struct {
+	ID       string          `json:"id"`
+	Type     string          `json:"type"`
+	Settings json.RawMessage `json:"settings"`
+	Blocks   []Block         `json:"blocks"`
+}
+
+// BlockType defines a registered type of section/block available for page composition.
+type BlockType struct {
+	ID              kernel.BlockTypeID `json:"id"`
+	Name            string             `json:"name"`
+	DisplayName     string             `json:"display_name"`
+	Category        string             `json:"category"`
+	Schema          json.RawMessage    `json:"schema"`
+	DefaultSettings json.RawMessage    `json:"default_settings"`
+	Icon            string             `json:"icon"`
+	PluginID        *kernel.PluginID   `json:"plugin_id,omitempty"`
+	CreatedAt       time.Time          `json:"created_at"`
+	UpdatedAt       time.Time          `json:"updated_at"`
+}
+
 // Page is the core CMS entity representing a storefront page.
 // Business rules:
 //   - Pages created by an agent always start as pending_review.
@@ -39,6 +77,8 @@ type Page struct {
 	HTML        string          `json:"html" db:"html"`
 	CSS         string          `json:"css" db:"css"`
 	Meta        PageMeta        `json:"meta" db:"meta"`
+	ContentType ContentType     `json:"content_type" db:"content_type"`
+	Sections    []Section       `json:"sections"`
 	Status      PageStatus      `json:"status" db:"status"`
 	Version     int             `json:"version" db:"version"`
 	CreatedBy   string          `json:"created_by" db:"created_by"`

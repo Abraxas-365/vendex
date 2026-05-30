@@ -11,24 +11,27 @@ import (
 
 // Service implements the storefront business logic.
 type Service struct {
-	pages    storefront.PageRepository
-	versions storefront.PageVersionRepository
+	pages      storefront.PageRepository
+	versions   storefront.PageVersionRepository
+	blockTypes storefront.BlockTypeRepository
 }
 
 // New creates a new storefront Service.
-func New(pages storefront.PageRepository, versions storefront.PageVersionRepository) *Service {
-	return &Service{pages: pages, versions: versions}
+func New(pages storefront.PageRepository, versions storefront.PageVersionRepository, blockTypes storefront.BlockTypeRepository) *Service {
+	return &Service{pages: pages, versions: versions, blockTypes: blockTypes}
 }
 
 // CreatePageInput holds the data needed to create a new page.
 type CreatePageInput struct {
-	TenantID  kernel.TenantID
-	Slug      string
-	Title     string
-	HTML      string
-	CSS       string
-	Meta      storefront.PageMeta
-	CreatedBy string
+	TenantID    kernel.TenantID
+	Slug        string
+	Title       string
+	HTML        string
+	CSS         string
+	Meta        storefront.PageMeta
+	ContentType storefront.ContentType
+	Sections    []storefront.Section
+	CreatedBy   string
 	// ByAgent — when true the page starts as pending_review instead of draft.
 	ByAgent bool
 }
@@ -40,20 +43,32 @@ func (s *Service) CreatePage(ctx context.Context, input CreatePageInput) (*store
 		status = storefront.PageStatusPendingReview
 	}
 
+	contentType := input.ContentType
+	if contentType == "" {
+		contentType = storefront.ContentTypeHTML
+	}
+
+	sections := input.Sections
+	if sections == nil {
+		sections = []storefront.Section{}
+	}
+
 	now := time.Now().UTC()
 	page := &storefront.Page{
-		ID:        kernel.PageID(newID()),
-		TenantID:  input.TenantID,
-		Slug:      input.Slug,
-		Title:     input.Title,
-		HTML:      input.HTML,
-		CSS:       input.CSS,
-		Meta:      input.Meta,
-		Status:    status,
-		Version:   1,
-		CreatedBy: input.CreatedBy,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:          kernel.PageID(newID()),
+		TenantID:    input.TenantID,
+		Slug:        input.Slug,
+		Title:       input.Title,
+		HTML:        input.HTML,
+		CSS:         input.CSS,
+		Meta:        input.Meta,
+		ContentType: contentType,
+		Sections:    sections,
+		Status:      status,
+		Version:     1,
+		CreatedBy:   input.CreatedBy,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 
 	if err := s.pages.Create(ctx, page); err != nil {
@@ -252,6 +267,94 @@ func (s *Service) GetVersion(ctx context.Context, tenantID kernel.TenantID, page
 func (s *Service) ResolveTemplateTags(ctx context.Context, tenantID kernel.TenantID, html string) (string, []storefront.TemplateTag, error) {
 	// TODO: walk html, extract {{...}} tags, build TemplateTag structs, call resolvers.
 	return html, nil, nil
+}
+
+// --- BlockType methods ---
+
+// CreateBlockTypeInput holds the data needed to create a new block type.
+type CreateBlockTypeInput struct {
+	Name            string
+	DisplayName     string
+	Category        string
+	Schema          []byte
+	DefaultSettings []byte
+	Icon            string
+	PluginID        *kernel.PluginID
+}
+
+// CreateBlockType persists a new block type.
+func (s *Service) CreateBlockType(ctx context.Context, input CreateBlockTypeInput) (*storefront.BlockType, error) {
+	now := time.Now().UTC()
+	bt := &storefront.BlockType{
+		ID:              kernel.BlockTypeID(newID()),
+		Name:            input.Name,
+		DisplayName:     input.DisplayName,
+		Category:        input.Category,
+		Schema:          input.Schema,
+		DefaultSettings: input.DefaultSettings,
+		Icon:            input.Icon,
+		PluginID:        input.PluginID,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}
+
+	if err := s.blockTypes.Create(ctx, bt); err != nil {
+		return nil, err
+	}
+	return bt, nil
+}
+
+// GetBlockType retrieves a block type by ID.
+func (s *Service) GetBlockType(ctx context.Context, id kernel.BlockTypeID) (*storefront.BlockType, error) {
+	return s.blockTypes.GetByID(ctx, id)
+}
+
+// ListBlockTypes returns all block types, optionally filtered by category.
+func (s *Service) ListBlockTypes(ctx context.Context, category string) ([]storefront.BlockType, error) {
+	return s.blockTypes.List(ctx, category)
+}
+
+// UpdateBlockTypeInput holds the fields that can change on a block type.
+type UpdateBlockTypeInput struct {
+	ID              kernel.BlockTypeID
+	Name            string
+	DisplayName     string
+	Category        string
+	Schema          []byte
+	DefaultSettings []byte
+	Icon            string
+	PluginID        *kernel.PluginID
+}
+
+// UpdateBlockType applies changes to an existing block type.
+func (s *Service) UpdateBlockType(ctx context.Context, input UpdateBlockTypeInput) (*storefront.BlockType, error) {
+	bt, err := s.blockTypes.GetByID(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	bt.Name = input.Name
+	bt.DisplayName = input.DisplayName
+	bt.Category = input.Category
+	bt.Schema = input.Schema
+	bt.DefaultSettings = input.DefaultSettings
+	bt.Icon = input.Icon
+	bt.PluginID = input.PluginID
+	bt.UpdatedAt = time.Now().UTC()
+
+	if err := s.blockTypes.Update(ctx, bt); err != nil {
+		return nil, err
+	}
+	return bt, nil
+}
+
+// DeleteBlockType removes a block type by ID.
+func (s *Service) DeleteBlockType(ctx context.Context, id kernel.BlockTypeID) error {
+	// Verify it exists first.
+	if _, err := s.blockTypes.GetByID(ctx, id); err != nil {
+		return err
+	}
+	return s.blockTypes.Delete(ctx, id)
 }
 
 // newID generates a new UUID-like unique string identifier.
