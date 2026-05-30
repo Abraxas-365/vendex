@@ -81,6 +81,11 @@ const (
 	SubscriptionCreated   EventType = "subscription.created"
 	SubscriptionCancelled EventType = "subscription.cancelled"
 	SubscriptionBilled    EventType = "subscription.billed"
+
+	// Review events
+	ReviewCreated  EventType = "review.created"
+	ReviewApproved EventType = "review.approved"
+	ReviewRejected EventType = "review.rejected"
 )
 
 // Event is a domain event that has occurred in the system.

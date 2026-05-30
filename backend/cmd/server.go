@@ -164,6 +164,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.Customer.RegisterPublicRoutes(public)
 	container.Sitemap.RegisterPublicRoutes(public)
 	container.GiftCard.RegisterPublicRoutes(public)
+	container.Review.RegisterPublicRoutes(public)
 	logx.Info("  > Public storefront routes registered")
 
 	// Protected routes (require auth)
@@ -205,6 +206,11 @@ func registerRoutes(app *fiber.App, container *Container) {
 	// Wishlist routes — customer-authenticated (reuse customer JWT middleware)
 	wishlistProtected := public.Group("", container.Customer.AuthMiddleware.Authenticate())
 	container.Wishlist.RegisterCustomerRoutes(wishlistProtected)
+	// Review customer routes — customer-authenticated (POST /products/:productId/reviews)
+	reviewCustomerProtected := public.Group("", container.Customer.AuthMiddleware.Authenticate())
+	container.Review.RegisterCustomerRoutes(reviewCustomerProtected)
+	// Review admin routes
+	container.Review.RegisterRoutes(protected)
 	logx.Info("  > Commerce domain routes registered")
 
 	logx.Info("All routes registered")
