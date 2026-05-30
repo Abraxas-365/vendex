@@ -7,6 +7,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/giftcard"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/google/uuid"
 )
 
 // Service implements gift card business logic.
@@ -27,7 +28,7 @@ func (s *Service) Create(ctx context.Context, tenantID kernel.TenantID, input gi
 
 	now := time.Now().UTC()
 	gc := &giftcard.GiftCard{
-		ID:            kernel.GiftCardID(generateUUID()),
+		ID:            kernel.GiftCardID(uuid.NewString()),
 		TenantID:      tenantID,
 		Code:          input.Code,
 		InitialAmount: input.InitialAmount,
@@ -45,7 +46,7 @@ func (s *Service) Create(ctx context.Context, tenantID kernel.TenantID, input gi
 
 	// Record the initial credit transaction.
 	tx := &giftcard.GiftCardTransaction{
-		ID:         kernel.GiftCardTransactionID(generateUUID()),
+		ID:         kernel.GiftCardTransactionID(uuid.NewString()),
 		GiftCardID: gc.ID,
 		TenantID:   tenantID,
 		Type:       giftcard.TransactionTypeCredit,
@@ -118,7 +119,7 @@ func (s *Service) Redeem(ctx context.Context, tenantID kernel.TenantID, input Re
 		note = "redemption"
 	}
 	tx := &giftcard.GiftCardTransaction{
-		ID:         kernel.GiftCardTransactionID(generateUUID()),
+		ID:         kernel.GiftCardTransactionID(uuid.NewString()),
 		GiftCardID: gc.ID,
 		TenantID:   tenantID,
 		Type:       giftcard.TransactionTypeDebit,
