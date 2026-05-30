@@ -24,6 +24,8 @@ import type {
   RefreshResponse,
   TokenResponse,
   MeResponse,
+  BlockType,
+  Theme,
 } from '../types'
 
 // ---------------------------------------------------------------------------
@@ -529,4 +531,64 @@ export function getSettings(): Promise<StoreSettings> {
 
 export function updateSettings(data: Partial<StoreSettings>): Promise<StoreSettings> {
   return put<StoreSettings>('/settings', data)
+}
+
+// ---------------------------------------------------------------------------
+// Block Types
+// ---------------------------------------------------------------------------
+
+export function listBlockTypes(category?: string): Promise<BlockType[]> {
+  return get<BlockType[]>('/block-types', category ? { category } : undefined)
+}
+
+export function getBlockType(id: string): Promise<BlockType> {
+  return get<BlockType>(`/block-types/${id}`)
+}
+
+export function createBlockType(data: Partial<BlockType>): Promise<BlockType> {
+  return post<BlockType>('/block-types', data)
+}
+
+export function updateBlockType(id: string, data: Partial<BlockType>): Promise<BlockType> {
+  return put<BlockType>(`/block-types/${id}`, data)
+}
+
+export function deleteBlockType(id: string): Promise<void> {
+  return del(`/block-types/${id}`)
+}
+
+// ---------------------------------------------------------------------------
+// Themes
+// ---------------------------------------------------------------------------
+
+export function listThemes(): Promise<Theme[]> {
+  return get<Theme[]>('/themes')
+}
+
+export function getActiveTheme(): Promise<Theme> {
+  return get<Theme>('/themes/active')
+}
+
+export function getTheme(id: string): Promise<Theme> {
+  return get<Theme>(`/themes/${id}`)
+}
+
+export function createTheme(data: Partial<Theme>): Promise<Theme> {
+  return post<Theme>('/themes', data)
+}
+
+export function updateTheme(id: string, data: Partial<Theme>): Promise<Theme> {
+  return put<Theme>(`/themes/${id}`, data)
+}
+
+export function activateTheme(id: string): Promise<Theme> {
+  return post<Theme>(`/themes/${id}/activate`)
+}
+
+export function duplicateTheme(id: string, name: string): Promise<Theme> {
+  return post<Theme>(`/themes/${id}/duplicate`, { name })
+}
+
+export function deleteTheme(id: string): Promise<void> {
+  return del(`/themes/${id}`)
 }

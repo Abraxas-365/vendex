@@ -124,12 +124,26 @@ export interface Collection {
 // ---------------------------------------------------------------------------
 
 export type PageStatus = 'draft' | 'pending_review' | 'published' | 'archived'
+export type ContentType = 'html' | 'blocks'
 
 export interface PageMeta {
   description: string
   og_title: string
   og_image: string
   keywords: string[]
+}
+
+export interface Block {
+  id: string
+  type: string
+  settings: Record<string, unknown>
+}
+
+export interface Section {
+  id: string
+  type: string
+  settings: Record<string, unknown>
+  blocks: Block[]
 }
 
 export interface Page {
@@ -140,10 +154,92 @@ export interface Page {
   html: string
   css: string
   meta: PageMeta
+  content_type: ContentType
+  sections: Section[]
   status: PageStatus
   version: number
   created_by: string
   published_at?: string
+  created_at: string
+  updated_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Block Types
+// ---------------------------------------------------------------------------
+
+export type BlockCategory = 'content' | 'commerce' | 'media' | 'layout'
+
+export interface BlockType {
+  id: string
+  name: string
+  display_name: string
+  category: BlockCategory
+  schema: Record<string, unknown>
+  default_settings: Record<string, unknown>
+  icon: string
+  plugin_id?: string
+  created_at: string
+  updated_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Themes
+// ---------------------------------------------------------------------------
+
+export interface ThemeColors {
+  primary: string
+  secondary: string
+  background: string
+  surface: string
+  text: string
+  text_muted: string
+  border: string
+  error: string
+  success: string
+  warning: string
+  info: string
+}
+
+export interface ThemeTypography {
+  font_heading: string
+  font_body: string
+  base_size: string
+  scale_ratio: number
+}
+
+export interface ThemeSpacing {
+  unit: string
+  section_padding: string
+}
+
+export interface ThemeBorders {
+  radius_sm: string
+  radius_md: string
+  radius_lg: string
+  radius_full: string
+}
+
+export interface ThemeShadows {
+  sm: string
+  md: string
+  lg: string
+}
+
+export interface ThemeTokens {
+  colors: ThemeColors
+  typography: ThemeTypography
+  spacing: ThemeSpacing
+  borders: ThemeBorders
+  shadows: ThemeShadows
+}
+
+export interface Theme {
+  id: string
+  tenant_id: string
+  name: string
+  is_active: boolean
+  tokens: ThemeTokens
   created_at: string
   updated_at: string
 }

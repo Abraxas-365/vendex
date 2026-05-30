@@ -27,6 +27,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/promo/promocontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/settings/settingscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontcontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/theme/themecontainer"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
@@ -65,6 +66,7 @@ type Container struct {
 	Marketplace *marketplacecontainer.Container
 	Analytics   *analyticscontainer.Container
 	Settings    *settingscontainer.Container
+	Theme       *themecontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -155,6 +157,7 @@ func (c *Container) initModules() {
 	c.Marketplace = marketplacecontainer.New(c.DB)
 	c.Analytics = analyticscontainer.New(c.DB)
 	c.Settings = settingscontainer.New(c.DB)
+	c.Theme = themecontainer.New(c.DB)
 
 	logx.Info("All modules initialized")
 }

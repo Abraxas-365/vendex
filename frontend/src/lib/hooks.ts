@@ -27,6 +27,8 @@ import type {
   RecentOrder,
   StoreSettings,
   MeResponse,
+  BlockType,
+  Theme,
 } from '../types'
 import * as api from './api'
 import type { PaginationParams } from './api'
@@ -76,6 +78,17 @@ export const queryKeys = {
   media: {
     all: ['media'] as const,
     list: (params?: PaginationParams) => ['media', 'list', params] as const,
+  },
+  blockTypes: {
+    all: ['block-types'] as const,
+    list: (category?: string) => ['block-types', 'list', category] as const,
+    detail: (id: string) => ['block-types', 'detail', id] as const,
+  },
+  themes: {
+    all: ['themes'] as const,
+    list: () => ['themes', 'list'] as const,
+    detail: (id: string) => ['themes', 'detail', id] as const,
+    active: () => ['themes', 'active'] as const,
   },
 } as const
 
@@ -590,6 +603,133 @@ export function useLogout(): UseMutationResult<{ message: string }, Error, void>
       // Even on error, clear local state
       qc.clear()
       void logout()
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Block Types
+// ---------------------------------------------------------------------------
+
+export function useBlockTypes(category?: string): UseQueryResult<BlockType[]> {
+  return useQuery({
+    queryKey: queryKeys.blockTypes.list(category),
+    queryFn: () => api.listBlockTypes(category),
+  })
+}
+
+export function useBlockType(id: string): UseQueryResult<BlockType> {
+  return useQuery({
+    queryKey: queryKeys.blockTypes.detail(id),
+    queryFn: () => api.getBlockType(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useCreateBlockType(): UseMutationResult<BlockType, Error, Partial<BlockType>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createBlockType(data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.blockTypes.all })
+    },
+  })
+}
+
+export function useUpdateBlockType(): UseMutationResult<BlockType, Error, { id: string; data: Partial<BlockType> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateBlockType(id, data),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.blockTypes.all })
+      qc.setQueryData(queryKeys.blockTypes.detail(updated.id), updated)
+    },
+  })
+}
+
+export function useDeleteBlockType(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteBlockType(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.blockTypes.all })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Themes
+// ---------------------------------------------------------------------------
+
+export function useThemes(): UseQueryResult<Theme[]> {
+  return useQuery({
+    queryKey: queryKeys.themes.list(),
+    queryFn: () => api.listThemes(),
+  })
+}
+
+export function useActiveTheme(): UseQueryResult<Theme> {
+  return useQuery({
+    queryKey: queryKeys.themes.active(),
+    queryFn: () => api.getActiveTheme(),
+  })
+}
+
+export function useTheme(id: string): UseQueryResult<Theme> {
+  return useQuery({
+    queryKey: queryKeys.themes.detail(id),
+    queryFn: () => api.getTheme(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useCreateTheme(): UseMutationResult<Theme, Error, Partial<Theme>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createTheme(data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.themes.all })
+    },
+  })
+}
+
+export function useUpdateTheme(): UseMutationResult<Theme, Error, { id: string; data: Partial<Theme> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateTheme(id, data),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.themes.all })
+      qc.setQueryData(queryKeys.themes.detail(updated.id), updated)
+    },
+  })
+}
+
+export function useActivateTheme(): UseMutationResult<Theme, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.activateTheme(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.themes.all })
+    },
+  })
+}
+
+export function useDuplicateTheme(): UseMutationResult<Theme, Error, { id: string; name: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, name }) => api.duplicateTheme(id, name),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.themes.all })
+    },
+  })
+}
+
+export function useDeleteTheme(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteTheme(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.themes.all })
     },
   })
 }
