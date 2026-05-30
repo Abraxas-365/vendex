@@ -32,6 +32,11 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 	themes.Delete("/:id", h.DeleteTheme)
 }
 
+// RegisterPublicRoutes registers unauthenticated theme routes.
+func (h *Handler) RegisterPublicRoutes(router fiber.Router) {
+	router.Get("/themes/active", h.GetPublicActiveTheme)
+}
+
 // --- request/response types ---
 
 type createThemeRequest struct {
@@ -86,11 +91,26 @@ func (h *Handler) CreateTheme(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(t)
 }
 
-// GetActiveTheme handles GET /themes/active.
+// GetActiveTheme handles GET /themes/active (authenticated).
 func (h *Handler) GetActiveTheme(c *fiber.Ctx) error {
 	authCtx := c.Locals("auth").(*kernel.AuthContext)
 
 	t, err := h.svc.GetActiveTheme(c.Context(), authCtx.TenantID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(t)
+}
+
+// GetPublicActiveTheme handles GET /themes/active (public, reads tenant from X-Tenant-ID header).
+func (h *Handler) GetPublicActiveTheme(c *fiber.Ctx) error {
+	tenantID := kernel.TenantID(c.Get("X-Tenant-ID"))
+	if tenantID == "" {
+		return errx.New("tenant ID required", errx.TypeValidation)
+	}
+
+	t, err := h.svc.GetActiveTheme(c.Context(), tenantID)
 	if err != nil {
 		return err
 	}

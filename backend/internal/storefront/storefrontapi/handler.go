@@ -22,13 +22,10 @@ func NewHandler(svc *storefrontsrv.Service) *Handler {
 	return &Handler{svc: svc}
 }
 
-// RegisterRoutes registers all storefront routes on the given Fiber router.
+// RegisterRoutes registers all storefront admin routes on the given Fiber router.
 func (h *Handler) RegisterRoutes(router fiber.Router) {
-	// Public routes (no auth needed)
-	router.Get("/storefront/:slug", h.GetPublishedPage)
-
 	// Admin routes
-	pages := router.Group("/pages")
+	pages := router.Group("/storefront/pages")
 	pages.Post("/", h.CreatePage)
 	pages.Get("/", h.ListPages)
 	pages.Get("/:id", h.GetPage)
@@ -40,12 +37,17 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 	pages.Get("/:id/versions/:version", h.GetVersion)
 
 	// Block type routes (admin)
-	blockTypes := router.Group("/block-types")
+	blockTypes := router.Group("/storefront/block-types")
 	blockTypes.Get("/", h.ListBlockTypes)
 	blockTypes.Post("/", h.CreateBlockType)
 	blockTypes.Get("/:id", h.GetBlockType)
 	blockTypes.Put("/:id", h.UpdateBlockType)
 	blockTypes.Delete("/:id", h.DeleteBlockType)
+}
+
+// RegisterPublicRoutes registers unauthenticated storefront routes.
+func (h *Handler) RegisterPublicRoutes(router fiber.Router) {
+	router.Get("/storefront/pages/by-slug/:slug", h.GetPublishedPage)
 }
 
 // --- Public handler ---

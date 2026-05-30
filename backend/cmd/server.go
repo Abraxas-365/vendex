@@ -146,6 +146,12 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.IAM.PasswordlessHandlers.RegisterRoutes(app)
 	logx.Info("  > Passwordless auth routes registered")
 
+	// Public storefront routes (no auth)
+	public := app.Group("/api/v1")
+	container.Storefront.Handler.RegisterPublicRoutes(public)
+	container.Theme.Handler.RegisterPublicRoutes(public)
+	logx.Info("  > Public storefront routes registered")
+
 	// Protected routes (require auth)
 	protected := app.Group("/api/v1",
 		container.IAM.UnifiedAuthMiddleware.Authenticate(),
