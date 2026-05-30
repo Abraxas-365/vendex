@@ -1,6 +1,7 @@
 package product
 
 import (
+	"strings"
 	"time"
 
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
@@ -28,11 +29,35 @@ type Product struct {
 	Tags        []string          `json:"tags"`
 	Status      Status            `json:"status" db:"status"`
 	Stock       int               `json:"stock" db:"stock"`
-	HasVariants bool              `json:"has_variants" db:"has_variants"`
-	Options     []ProductOption   `json:"options,omitempty"`
-	Variants    []ProductVariant  `json:"variants,omitempty"`
-	CreatedAt   time.Time         `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time         `json:"updated_at" db:"updated_at"`
+	HasVariants     bool              `json:"has_variants" db:"has_variants"`
+	MetaTitle       string            `json:"meta_title,omitempty" db:"meta_title"`
+	MetaDescription string            `json:"meta_description,omitempty" db:"meta_description"`
+	Slug            string            `json:"slug" db:"slug"`
+	CanonicalURL    string            `json:"canonical_url,omitempty" db:"canonical_url"`
+	Options         []ProductOption   `json:"options,omitempty"`
+	Variants        []ProductVariant  `json:"variants,omitempty"`
+	CreatedAt       time.Time         `json:"created_at" db:"created_at"`
+	UpdatedAt       time.Time         `json:"updated_at" db:"updated_at"`
+}
+
+// GenerateSlug creates a URL-safe slug from a product name.
+// It lowercases, replaces non-alphanumeric characters with hyphens,
+// collapses consecutive hyphens, and trims leading/trailing hyphens.
+func GenerateSlug(name string) string {
+	s := strings.ToLower(strings.TrimSpace(name))
+	var b strings.Builder
+	for _, r := range s {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			b.WriteRune(r)
+		} else {
+			b.WriteByte('-')
+		}
+	}
+	result := b.String()
+	for strings.Contains(result, "--") {
+		result = strings.ReplaceAll(result, "--", "-")
+	}
+	return strings.Trim(result, "-")
 }
 
 // Activate transitions the product to active status.

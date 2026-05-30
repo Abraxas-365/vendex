@@ -15,6 +15,7 @@ type Repository interface {
 	List(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[Product], error)
 	ListByCategory(ctx context.Context, tenantID kernel.TenantID, categoryID kernel.CategoryID, pg kernel.PaginationOptions) (kernel.Paginated[Product], error)
 	GetBySKU(ctx context.Context, tenantID kernel.TenantID, sku string) (*Product, error)
+	GetBySlug(ctx context.Context, tenantID kernel.TenantID, slug string) (*Product, error)
 }
 
 // VariantRepository defines persistence operations for product options and variants.

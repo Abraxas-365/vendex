@@ -48,6 +48,7 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 func (h *Handler) RegisterPublicRoutes(router fiber.Router) {
 	g := router.Group("/products")
 	g.Get("/", h.ListProductsPublic)
+	g.Get("/slug/:slug", h.GetProductBySlugPublic)
 	g.Get("/:id", h.GetProductPublic)
 	g.Get("/:id/options", h.ListOptionsPublic)
 	g.Get("/:id/variants", h.ListVariantsPublic)
@@ -55,15 +56,19 @@ func (h *Handler) RegisterPublicRoutes(router fiber.Router) {
 
 // createRequest is the JSON body for creating a product.
 type createRequest struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	PriceAmount int64    `json:"price_amount"`
-	Currency    string   `json:"currency"`
-	SKU         string   `json:"sku"`
-	Images      []string `json:"images"`
-	CategoryID  string   `json:"category_id"`
-	Tags        []string `json:"tags"`
-	Stock       int      `json:"stock"`
+	Name            string   `json:"name"`
+	Description     string   `json:"description"`
+	PriceAmount     int64    `json:"price_amount"`
+	Currency        string   `json:"currency"`
+	SKU             string   `json:"sku"`
+	Images          []string `json:"images"`
+	CategoryID      string   `json:"category_id"`
+	Tags            []string `json:"tags"`
+	Stock           int      `json:"stock"`
+	Slug            string   `json:"slug"`
+	MetaTitle       string   `json:"meta_title"`
+	MetaDescription string   `json:"meta_description"`
+	CanonicalURL    string   `json:"canonical_url"`
 }
 
 // Create handles POST /products.
@@ -76,14 +81,18 @@ func (h *Handler) Create(c *fiber.Ctx) error {
 	}
 
 	p, err := h.svc.Create(c.Context(), authCtx.TenantID, productsrv.CreateInput{
-		Name:        req.Name,
-		Description: req.Description,
-		Price:       kernel.NewMoney(req.PriceAmount, req.Currency),
-		SKU:         req.SKU,
-		Images:      req.Images,
-		CategoryID:  kernel.CategoryID(req.CategoryID),
-		Tags:        req.Tags,
-		Stock:       req.Stock,
+		Name:            req.Name,
+		Description:     req.Description,
+		Price:           kernel.NewMoney(req.PriceAmount, req.Currency),
+		SKU:             req.SKU,
+		Images:          req.Images,
+		CategoryID:      kernel.CategoryID(req.CategoryID),
+		Tags:            req.Tags,
+		Stock:           req.Stock,
+		Slug:            req.Slug,
+		MetaTitle:       req.MetaTitle,
+		MetaDescription: req.MetaDescription,
+		CanonicalURL:    req.CanonicalURL,
 	})
 	if err != nil {
 		return err
@@ -141,6 +150,18 @@ func (h *Handler) Update(c *fiber.Ctx) error {
 	existing.CategoryID = kernel.CategoryID(req.CategoryID)
 	existing.Tags = req.Tags
 	existing.Stock = req.Stock
+	if req.MetaTitle != "" {
+		existing.MetaTitle = req.MetaTitle
+	}
+	if req.MetaDescription != "" {
+		existing.MetaDescription = req.MetaDescription
+	}
+	if req.Slug != "" {
+		existing.Slug = req.Slug
+	}
+	if req.CanonicalURL != "" {
+		existing.CanonicalURL = req.CanonicalURL
+	}
 
 	if err := h.svc.Update(c.Context(), existing); err != nil {
 		return err
@@ -370,6 +391,22 @@ func (h *Handler) GetProductPublic(c *fiber.Ctx) error {
 
 	id := kernel.ProductID(c.Params("id"))
 	p, err := h.svc.GetByID(c.Context(), tenantID, id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(p)
+}
+
+// GetProductBySlugPublic handles GET /products/slug/:slug (public, no auth).
+// Enables SEO-friendly product URLs.
+func (h *Handler) GetProductBySlugPublic(c *fiber.Ctx) error {
+	tenantID := kernel.TenantID(c.Get("X-Tenant-ID"))
+	if tenantID == "" {
+		return errx.New("X-Tenant-ID header is required", errx.TypeValidation)
+	}
+
+	slug := c.Params("slug")
+	p, err := h.svc.GetBySlug(c.Context(), tenantID, slug)
 	if err != nil {
 		return err
 	}
