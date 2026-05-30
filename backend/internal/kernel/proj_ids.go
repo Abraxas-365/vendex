@@ -91,3 +91,9 @@ type VendorID string
 func NewVendorID(id string) VendorID { return VendorID(id) }
 func (v VendorID) String() string    { return string(v) }
 func (v VendorID) IsEmpty() bool     { return string(v) == "" }
+
+type BlockTypeID string
+
+func NewBlockTypeID(id string) BlockTypeID { return BlockTypeID(id) }
+func (b BlockTypeID) String() string       { return string(b) }
+func (b BlockTypeID) IsEmpty() bool        { return string(b) == "" }

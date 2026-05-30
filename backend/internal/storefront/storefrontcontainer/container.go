@@ -19,7 +19,8 @@ type Container struct {
 func New(db *sqlx.DB) *Container {
 	pagesRepo := storefrontinfra.NewPagePostgresRepo(db)
 	versionsRepo := storefrontinfra.NewPageVersionPostgresRepo(db)
-	svc := storefrontsrv.New(pagesRepo, versionsRepo)
+	blockTypesRepo := storefrontinfra.NewBlockTypePostgresRepo(db)
+	svc := storefrontsrv.New(pagesRepo, versionsRepo, blockTypesRepo)
 	handler := storefrontapi.NewHandler(svc)
 	return &Container{
 		Service: svc,

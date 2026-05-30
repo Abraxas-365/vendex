@@ -1,6 +1,7 @@
 package storefrontapi
 
 import (
+	"encoding/json"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -37,6 +38,14 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 	pages.Post("/:id/archive", h.Archive)
 	pages.Get("/:id/versions", h.ListVersions)
 	pages.Get("/:id/versions/:version", h.GetVersion)
+
+	// Block type routes (admin)
+	blockTypes := router.Group("/block-types")
+	blockTypes.Get("/", h.ListBlockTypes)
+	blockTypes.Post("/", h.CreateBlockType)
+	blockTypes.Get("/:id", h.GetBlockType)
+	blockTypes.Put("/:id", h.UpdateBlockType)
+	blockTypes.Delete("/:id", h.DeleteBlockType)
 }
 
 // --- Public handler ---
@@ -64,6 +73,8 @@ type createPageRequest struct {
 	HTML        string              `json:"html"`
 	CSS         string              `json:"css"`
 	Meta        storefront.PageMeta `json:"meta"`
+	ContentType storefront.ContentType `json:"content_type"`
+	Sections    []storefront.Section   `json:"sections"`
 	ByAgent     bool                `json:"by_agent"`
 }
 
@@ -77,14 +88,16 @@ func (h *Handler) CreatePage(c *fiber.Ctx) error {
 	}
 
 	page, err := h.svc.CreatePage(c.Context(), storefrontsrv.CreatePageInput{
-		TenantID:  authCtx.TenantID,
-		Slug:      req.Slug,
-		Title:     req.Title,
-		HTML:      req.HTML,
-		CSS:       req.CSS,
-		Meta:      req.Meta,
-		CreatedBy: authCtx.UserID.String(),
-		ByAgent:   req.ByAgent,
+		TenantID:    authCtx.TenantID,
+		Slug:        req.Slug,
+		Title:       req.Title,
+		HTML:        req.HTML,
+		CSS:         req.CSS,
+		Meta:        req.Meta,
+		ContentType: req.ContentType,
+		Sections:    req.Sections,
+		CreatedBy:   authCtx.UserID.String(),
+		ByAgent:     req.ByAgent,
 	})
 	if err != nil {
 		return err
@@ -227,6 +240,135 @@ func (h *Handler) GetVersion(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(v)
+}
+
+// --- Block Type handlers ---
+
+// ListBlockTypes handles GET /block-types — returns all block types, optionally filtered by ?category=.
+func (h *Handler) ListBlockTypes(c *fiber.Ctx) error {
+	category := c.Query("category")
+
+	blockTypes, err := h.svc.ListBlockTypes(c.Context(), category)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(blockTypes)
+}
+
+// GetBlockType handles GET /block-types/:id.
+func (h *Handler) GetBlockType(c *fiber.Ctx) error {
+	id := kernel.BlockTypeID(c.Params("id"))
+
+	bt, err := h.svc.GetBlockType(c.Context(), id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(bt)
+}
+
+type createBlockTypeRequest struct {
+	Name            string          `json:"name"`
+	DisplayName     string          `json:"display_name"`
+	Category        string          `json:"category"`
+	Schema          json.RawMessage `json:"schema"`
+	DefaultSettings json.RawMessage `json:"default_settings"`
+	Icon            string          `json:"icon"`
+}
+
+// CreateBlockType handles POST /block-types.
+func (h *Handler) CreateBlockType(c *fiber.Ctx) error {
+	var req createBlockTypeRequest
+	if err := c.BodyParser(&req); err != nil {
+		return errx.New("invalid request body", errx.TypeValidation)
+	}
+	if req.Name == "" {
+		return errx.New("name is required", errx.TypeValidation)
+	}
+	if req.DisplayName == "" {
+		return errx.New("display_name is required", errx.TypeValidation)
+	}
+	if req.Category == "" {
+		return errx.New("category is required", errx.TypeValidation)
+	}
+
+	schema := []byte(req.Schema)
+	if len(schema) == 0 {
+		schema = []byte("{}")
+	}
+	defaultSettings := []byte(req.DefaultSettings)
+	if len(defaultSettings) == 0 {
+		defaultSettings = []byte("{}")
+	}
+
+	bt, err := h.svc.CreateBlockType(c.Context(), storefrontsrv.CreateBlockTypeInput{
+		Name:            req.Name,
+		DisplayName:     req.DisplayName,
+		Category:        req.Category,
+		Schema:          schema,
+		DefaultSettings: defaultSettings,
+		Icon:            req.Icon,
+	})
+	if err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(bt)
+}
+
+type updateBlockTypeRequest struct {
+	Name            string          `json:"name"`
+	DisplayName     string          `json:"display_name"`
+	Category        string          `json:"category"`
+	Schema          json.RawMessage `json:"schema"`
+	DefaultSettings json.RawMessage `json:"default_settings"`
+	Icon            string          `json:"icon"`
+}
+
+// UpdateBlockType handles PUT /block-types/:id.
+func (h *Handler) UpdateBlockType(c *fiber.Ctx) error {
+	id := kernel.BlockTypeID(c.Params("id"))
+
+	var req updateBlockTypeRequest
+	if err := c.BodyParser(&req); err != nil {
+		return errx.New("invalid request body", errx.TypeValidation)
+	}
+
+	schema := []byte(req.Schema)
+	if len(schema) == 0 {
+		schema = []byte("{}")
+	}
+	defaultSettings := []byte(req.DefaultSettings)
+	if len(defaultSettings) == 0 {
+		defaultSettings = []byte("{}")
+	}
+
+	bt, err := h.svc.UpdateBlockType(c.Context(), storefrontsrv.UpdateBlockTypeInput{
+		ID:              id,
+		Name:            req.Name,
+		DisplayName:     req.DisplayName,
+		Category:        req.Category,
+		Schema:          schema,
+		DefaultSettings: defaultSettings,
+		Icon:            req.Icon,
+	})
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(bt)
+}
+
+// DeleteBlockType handles DELETE /block-types/:id.
+func (h *Handler) DeleteBlockType(c *fiber.Ctx) error {
+	id := kernel.BlockTypeID(c.Params("id"))
+
+	if err := h.svc.DeleteBlockType(c.Context(), id); err != nil {
+		return err
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
 }
 
 // --- helpers ---
