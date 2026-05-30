@@ -37,6 +37,15 @@ import type {
   CustomerGroup,
   GroupRules,
   GroupMembership,
+  GiftCard,
+  GiftCardTransaction,
+  RecoveryEmail,
+  RecoveryStats,
+  CurrencyRate,
+  ConvertResult,
+  TranslationBundle,
+  Subscription,
+  BillingRecord,
 } from '../types'
 
 // ---------------------------------------------------------------------------
@@ -846,4 +855,168 @@ export function addGroupMember(groupId: string, customerId: string): Promise<Gro
 
 export function removeGroupMember(groupId: string, customerId: string): Promise<void> {
   return del(`/customer-groups/${groupId}/members/${customerId}`)
+}
+
+// ---------------------------------------------------------------------------
+// Gift Cards
+// ---------------------------------------------------------------------------
+
+export interface CreateGiftCardInput {
+  code?: string
+  initial_amount: number
+  currency: string
+  expires_at?: string
+}
+
+export function listGiftCards(params?: PaginationParams): Promise<PaginatedResult<GiftCard>> {
+  return get<PaginatedResult<GiftCard>>('/admin/gift-cards', params as Record<string, string | number | undefined>)
+}
+
+export function getGiftCard(id: string): Promise<GiftCard> {
+  return get<GiftCard>(`/admin/gift-cards/${id}`)
+}
+
+export function createGiftCard(data: CreateGiftCardInput): Promise<GiftCard> {
+  return post<GiftCard>('/admin/gift-cards', data)
+}
+
+export function updateGiftCard(id: string, data: Partial<GiftCard>): Promise<GiftCard> {
+  return put<GiftCard>(`/admin/gift-cards/${id}`, data)
+}
+
+export function deleteGiftCard(id: string): Promise<void> {
+  return del(`/admin/gift-cards/${id}`)
+}
+
+export function disableGiftCard(id: string): Promise<GiftCard> {
+  return post<GiftCard>(`/admin/gift-cards/${id}/disable`)
+}
+
+export function listGiftCardTransactions(id: string): Promise<GiftCardTransaction[]> {
+  return get<GiftCardTransaction[]>(`/admin/gift-cards/${id}/transactions`)
+}
+
+// ---------------------------------------------------------------------------
+// Cart Recovery
+// ---------------------------------------------------------------------------
+
+export function listRecoveryEmails(params?: PaginationParams): Promise<PaginatedResult<RecoveryEmail>> {
+  return get<PaginatedResult<RecoveryEmail>>('/cart-recovery', params as Record<string, string | number | undefined>)
+}
+
+export function getRecoveryStats(): Promise<RecoveryStats> {
+  return get<RecoveryStats>('/cart-recovery/stats')
+}
+
+export function updateRecoveryStatus(id: string, status: string): Promise<RecoveryEmail> {
+  return put<RecoveryEmail>(`/cart-recovery/${id}/status`, { status })
+}
+
+// ---------------------------------------------------------------------------
+// Currency Rates
+// ---------------------------------------------------------------------------
+
+export interface SetCurrencyRateInput {
+  base_currency: string
+  target_currency: string
+  rate: number
+  auto_update?: boolean
+}
+
+export function listCurrencyRates(): Promise<CurrencyRate[]> {
+  return get<CurrencyRate[]>('/currency-rates')
+}
+
+export function setCurrencyRate(data: SetCurrencyRateInput): Promise<CurrencyRate> {
+  return post<CurrencyRate>('/currency-rates', data)
+}
+
+export function deleteCurrencyRate(id: string): Promise<void> {
+  return del(`/currency-rates/${id}`)
+}
+
+export function convertCurrency(data: { amount: number; currency: string; target_currency: string }): Promise<ConvertResult> {
+  return post<ConvertResult>('/currency/convert', data)
+}
+
+export function listSupportedCurrencies(): Promise<string[]> {
+  return get<string[]>('/currencies')
+}
+
+// ---------------------------------------------------------------------------
+// Translations / I18n
+// ---------------------------------------------------------------------------
+
+export function getTranslationBundle(entityType: string, entityId: string, locale: string): Promise<TranslationBundle> {
+  return get<TranslationBundle>(`/i18n/${entityType}/${entityId}/${locale}`)
+}
+
+export function setTranslations(
+  entityType: string,
+  entityId: string,
+  locale: string,
+  fields: Record<string, string>,
+): Promise<TranslationBundle> {
+  return put<TranslationBundle>(`/i18n/${entityType}/${entityId}/${locale}`, { fields })
+}
+
+export function listEntityLocales(entityType: string, entityId: string): Promise<string[]> {
+  return get<string[]>(`/i18n/${entityType}/${entityId}/locales`)
+}
+
+export function deleteTranslationField(entityType: string, entityId: string, locale: string, field: string): Promise<void> {
+  return del(`/i18n/${entityType}/${entityId}/${locale}/${field}`)
+}
+
+export function deleteAllTranslations(entityType: string, entityId: string): Promise<void> {
+  return del(`/i18n/${entityType}/${entityId}`)
+}
+
+export function listSupportedLocales(): Promise<string[]> {
+  return get<string[]>('/i18n/supported-locales')
+}
+
+// ---------------------------------------------------------------------------
+// Subscriptions
+// ---------------------------------------------------------------------------
+
+export interface CreateSubscriptionInput {
+  customer_id: string
+  product_id: string
+  variant_id?: string
+  price: { amount: number; currency: string }
+  interval: 'weekly' | 'monthly' | 'quarterly' | 'yearly'
+  trial_ends_at?: string
+}
+
+export function listSubscriptions(params?: PaginationParams): Promise<PaginatedResult<Subscription>> {
+  return get<PaginatedResult<Subscription>>('/subscriptions/', params as Record<string, string | number | undefined>)
+}
+
+export function listDueSubscriptions(): Promise<Subscription[]> {
+  return get<Subscription[]>('/subscriptions/due')
+}
+
+export function getSubscription(id: string): Promise<Subscription> {
+  return get<Subscription>(`/subscriptions/${id}`)
+}
+
+export function createSubscription(data: CreateSubscriptionInput): Promise<Subscription> {
+  return post<Subscription>('/subscriptions/', data)
+}
+
+export function cancelSubscription(id: string): Promise<Subscription> {
+  return post<Subscription>(`/subscriptions/${id}/cancel`)
+}
+
+export function pauseSubscription(id: string): Promise<Subscription> {
+  return post<Subscription>(`/subscriptions/${id}/pause`)
+}
+
+export function resumeSubscription(id: string): Promise<Subscription> {
+  return post<Subscription>(`/subscriptions/${id}/resume`)
+}
+
+export function listBillingRecords(subscriptionId: string, params?: PaginationParams): Promise<PaginatedResult<BillingRecord>> {
+  return get<PaginatedResult<BillingRecord>>(`/subscriptions/${subscriptionId}/billing`, params as Record<string, string | number | undefined>)
 }

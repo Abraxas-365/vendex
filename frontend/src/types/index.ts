@@ -661,3 +661,130 @@ export interface GroupMembership {
   customer_id: string
   joined_at: string
 }
+
+// ---------------------------------------------------------------------------
+// Gift Cards
+// ---------------------------------------------------------------------------
+
+export interface GiftCard {
+  id: string
+  tenant_id: string
+  code: string
+  initial_amount: number
+  balance: number
+  currency: string
+  expires_at: string | null
+  active: boolean
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export interface GiftCardTransaction {
+  id: string
+  gift_card_id: string
+  tenant_id: string
+  type: 'credit' | 'debit'
+  amount: number
+  currency: string
+  order_id: string | null
+  note: string
+  created_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Cart Recovery
+// ---------------------------------------------------------------------------
+
+export interface RecoveryEmail {
+  id: string
+  tenant_id: string
+  cart_id: string
+  customer_id: string
+  email: string
+  step: number
+  status: string
+  discount_code: string | null
+  sent_at: string | null
+  clicked_at: string | null
+  converted_at: string | null
+  created_at: string
+}
+
+export interface RecoveryStats {
+  total: number
+  sent: number
+  clicked: number
+  converted: number
+  conversion_rate: number
+}
+
+// ---------------------------------------------------------------------------
+// Currency
+// ---------------------------------------------------------------------------
+
+export interface CurrencyRate {
+  id: string
+  tenant_id: string
+  base_currency: string
+  target_currency: string
+  rate: number
+  auto_update: boolean
+  updated_at: string
+  created_at: string
+}
+
+export interface ConvertResult {
+  from_amount: number
+  from_currency: string
+  to_amount: number
+  to_currency: string
+  rate: number
+}
+
+// ---------------------------------------------------------------------------
+// I18n / Translations
+// ---------------------------------------------------------------------------
+
+export interface TranslationBundle {
+  entity_type: string
+  entity_id: string
+  locale: string
+  fields: Record<string, string>
+}
+
+// ---------------------------------------------------------------------------
+// Subscriptions
+// ---------------------------------------------------------------------------
+
+export interface Subscription {
+  id: string
+  tenant_id: string
+  customer_id: string
+  product_id: string
+  variant_id: string | null
+  price: { amount: number; currency: string }
+  interval: 'weekly' | 'monthly' | 'quarterly' | 'yearly'
+  status: 'active' | 'paused' | 'cancelled' | 'expired'
+  next_billing_date: string
+  last_billed_at: string | null
+  cancelled_at: string | null
+  paused_at: string | null
+  trial_ends_at: string | null
+  metadata: Record<string, string>
+  created_at: string
+  updated_at: string
+}
+
+export interface BillingRecord {
+  id: string
+  subscription_id: string
+  tenant_id: string
+  amount: number
+  currency: string
+  status: 'success' | 'failed' | 'pending'
+  order_id: string | null
+  failure_reason: string | null
+  billed_at: string
+  created_at: string
+}
