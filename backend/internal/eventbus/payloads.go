@@ -134,6 +134,8 @@ type ReviewPayload struct {
 	CustomerID string `json:"customer_id"`
 	Rating     int    `json:"rating"`
 	Status     string `json:"status"`
+}
+
 // ReturnPayload is the payload for return.* events.
 type ReturnPayload struct {
 	ReturnID   string `json:"return_id"`
