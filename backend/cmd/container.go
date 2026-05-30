@@ -39,6 +39,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/tax/taxcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/theme/themecontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/wishlist/wishlistcontainer"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
@@ -90,6 +91,7 @@ type Container struct {
 	Checkout    *checkoutcontainer.Container
 	ImportExport *importexport.Container
 	Sitemap     *sitemap.Container
+	Wishlist    *wishlistcontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -213,6 +215,7 @@ func (c *Container) initModules() {
 		c.Payment.Service,
 		c.Promo.Service,
 	)
+	c.Wishlist = wishlistcontainer.New(c.DB)
 
 	// Import/Export — depends on Product, Order, and Customer services.
 	c.ImportExport = importexport.New(

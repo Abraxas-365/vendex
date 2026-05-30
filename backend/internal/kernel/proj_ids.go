@@ -163,3 +163,15 @@ type OptionID string
 func NewOptionID(id string) OptionID { return OptionID(id) }
 func (o OptionID) String() string    { return string(o) }
 func (o OptionID) IsEmpty() bool     { return string(o) == "" }
+
+type WishlistID string
+
+func NewWishlistID(id string) WishlistID { return WishlistID(id) }
+func (w WishlistID) String() string      { return string(w) }
+func (w WishlistID) IsEmpty() bool       { return string(w) == "" }
+
+type WishlistItemID string
+
+func NewWishlistItemID(id string) WishlistItemID { return WishlistItemID(id) }
+func (w WishlistItemID) String() string          { return string(w) }
+func (w WishlistItemID) IsEmpty() bool           { return string(w) == "" }
