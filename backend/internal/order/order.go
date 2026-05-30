@@ -58,6 +58,20 @@ type Order struct {
 	ShippingAddress Address           `json:"shipping_address"`
 	CreatedAt       time.Time         `json:"created_at" db:"created_at"`
 	UpdatedAt       time.Time         `json:"updated_at" db:"updated_at"`
+
+	// Checkout-enriched fields (populated after checkout orchestration)
+	SubtotalAmount kernel.Money `json:"subtotal_amount"`
+	ShippingAmount kernel.Money `json:"shipping_amount"`
+	TaxAmount      kernel.Money `json:"tax_amount"`
+	DiscountAmount kernel.Money `json:"discount_amount"`
+	ShippingMethod string       `json:"shipping_method,omitempty" db:"shipping_method"`
+	BillingAddress *Address     `json:"billing_address,omitempty"`
+	PaymentStatus  string       `json:"payment_status,omitempty" db:"payment_status"`
+	PaymentMethod  string       `json:"payment_method,omitempty" db:"payment_method"`
+	TrackingNumber string       `json:"tracking_number,omitempty" db:"tracking_number"`
+	Carrier        string       `json:"carrier,omitempty" db:"carrier"`
+	PromoCode      string       `json:"promo_code,omitempty" db:"promo_code"`
+	CartID         string       `json:"cart_id,omitempty" db:"cart_id"`
 }
 
 // CanTransitionTo checks if the status transition is valid.

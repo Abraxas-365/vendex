@@ -7,6 +7,7 @@ import (
 
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/cart/cartcontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/checkout/checkoutcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/config"
 	"github.com/Abraxas-365/hada-commerce/internal/customer/customercontainer"
@@ -83,6 +84,7 @@ type Container struct {
 	Search      *searchcontainer.Container
 	Shipping    *shippingcontainer.Container
 	Tax         *taxcontainer.Container
+	Checkout    *checkoutcontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -197,6 +199,15 @@ func (c *Container) initModules() {
 	c.Search = searchcontainer.New(c.DB)
 	c.Shipping = shippingcontainer.New(c.DB, bus)
 	c.Tax = taxcontainer.New(c.DB, bus)
+	c.Checkout = checkoutcontainer.New(
+		c.DB, bus,
+		c.Cart.Service,
+		c.Order.Service,
+		c.Shipping.Service,
+		c.Tax.Service,
+		c.Payment.Service,
+		c.Promo.Service,
+	)
 
 	logx.Info("All modules initialized")
 }
