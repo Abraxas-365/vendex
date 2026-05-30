@@ -190,6 +190,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.Plugin.RegisterRoutes(protected)
 	container.Shipping.RegisterRoutes(protected)
 	container.Tax.RegisterRoutes(protected)
+	container.ImportExport.RegisterRoutes(protected)
 	container.Customer.RegisterCustomerProtectedRoutes(public)
 	logx.Info("  > Commerce domain routes registered")
 

@@ -8,6 +8,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/emails"
 	"github.com/Abraxas-365/hada-commerce/internal/cart/cartcontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/importexport"
 	"github.com/Abraxas-365/hada-commerce/internal/checkout/checkoutcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/config"
@@ -86,6 +87,7 @@ type Container struct {
 	Shipping    *shippingcontainer.Container
 	Tax         *taxcontainer.Container
 	Checkout    *checkoutcontainer.Container
+	ImportExport *importexport.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -208,6 +210,14 @@ func (c *Container) initModules() {
 		c.Tax.Service,
 		c.Payment.Service,
 		c.Promo.Service,
+	)
+
+	// Import/Export — depends on Product, Order, and Customer services.
+	c.ImportExport = importexport.New(
+		c.Product.Service,
+		c.Order.Service,
+		c.Customer.Service,
+		c.Product.Service,
 	)
 
 	// Transactional email notifications — wired last so all domain containers exist.
