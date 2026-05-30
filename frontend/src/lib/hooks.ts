@@ -37,6 +37,15 @@ import type {
   ProductVariant,
   CustomerGroup,
   GroupMembership,
+  GiftCard,
+  GiftCardTransaction,
+  RecoveryEmail,
+  RecoveryStats,
+  CurrencyRate,
+  ConvertResult,
+  TranslationBundle,
+  Subscription,
+  BillingRecord,
 } from '../types'
 import * as api from './api'
 import type { PaginationParams } from './api'
@@ -119,6 +128,36 @@ export const queryKeys = {
     list: () => ['customer-groups', 'list'] as const,
     detail: (id: string) => ['customer-groups', 'detail', id] as const,
     members: (groupId: string) => ['customer-groups', groupId, 'members'] as const,
+  },
+  giftCards: {
+    all: ['gift-cards'] as const,
+    list: (params?: PaginationParams) => ['gift-cards', 'list', params] as const,
+    detail: (id: string) => ['gift-cards', 'detail', id] as const,
+    transactions: (id: string) => ['gift-cards', id, 'transactions'] as const,
+  },
+  cartRecovery: {
+    all: ['cart-recovery'] as const,
+    list: (params?: PaginationParams) => ['cart-recovery', 'list', params] as const,
+    stats: ['cart-recovery', 'stats'] as const,
+  },
+  currencyRates: {
+    all: ['currency-rates'] as const,
+    list: () => ['currency-rates', 'list'] as const,
+    currencies: ['currencies'] as const,
+  },
+  translations: {
+    bundle: (entityType: string, entityId: string, locale: string) =>
+      ['i18n', entityType, entityId, locale] as const,
+    locales: (entityType: string, entityId: string) =>
+      ['i18n', entityType, entityId, 'locales'] as const,
+    supportedLocales: ['i18n', 'supported-locales'] as const,
+  },
+  subscriptions: {
+    all: ['subscriptions'] as const,
+    list: (params?: PaginationParams) => ['subscriptions', 'list', params] as const,
+    due: ['subscriptions', 'due'] as const,
+    detail: (id: string) => ['subscriptions', 'detail', id] as const,
+    billing: (id: string, params?: PaginationParams) => ['subscriptions', id, 'billing', params] as const,
   },
 } as const
 
@@ -1107,5 +1146,295 @@ export function useRemoveGroupMember(): UseMutationResult<void, Error, { groupId
       void qc.invalidateQueries({ queryKey: queryKeys.customerGroups.members(groupId) })
       void qc.invalidateQueries({ queryKey: queryKeys.customerGroups.all })
     },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Gift Cards
+// ---------------------------------------------------------------------------
+
+export function useGiftCards(params?: PaginationParams): UseQueryResult<PaginatedResult<GiftCard>> {
+  return useQuery({
+    queryKey: queryKeys.giftCards.list(params),
+    queryFn: () => api.listGiftCards(params),
+  })
+}
+
+export function useGiftCard(id: string): UseQueryResult<GiftCard> {
+  return useQuery({
+    queryKey: queryKeys.giftCards.detail(id),
+    queryFn: () => api.getGiftCard(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useGiftCardTransactions(id: string): UseQueryResult<GiftCardTransaction[]> {
+  return useQuery({
+    queryKey: queryKeys.giftCards.transactions(id),
+    queryFn: () => api.listGiftCardTransactions(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useCreateGiftCard(): UseMutationResult<GiftCard, Error, api.CreateGiftCardInput> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createGiftCard(data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.giftCards.all })
+    },
+  })
+}
+
+export function useUpdateGiftCard(): UseMutationResult<GiftCard, Error, { id: string; data: Partial<GiftCard> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateGiftCard(id, data),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.giftCards.all })
+      qc.setQueryData(queryKeys.giftCards.detail(updated.id), updated)
+    },
+  })
+}
+
+export function useDeleteGiftCard(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteGiftCard(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.giftCards.all })
+    },
+  })
+}
+
+export function useDisableGiftCard(): UseMutationResult<GiftCard, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.disableGiftCard(id),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.giftCards.all })
+      qc.setQueryData(queryKeys.giftCards.detail(updated.id), updated)
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Cart Recovery
+// ---------------------------------------------------------------------------
+
+export function useRecoveryEmails(params?: PaginationParams): UseQueryResult<PaginatedResult<RecoveryEmail>> {
+  return useQuery({
+    queryKey: queryKeys.cartRecovery.list(params),
+    queryFn: () => api.listRecoveryEmails(params),
+  })
+}
+
+export function useRecoveryStats(): UseQueryResult<RecoveryStats> {
+  return useQuery({
+    queryKey: queryKeys.cartRecovery.stats,
+    queryFn: () => api.getRecoveryStats(),
+  })
+}
+
+export function useUpdateRecoveryStatus(): UseMutationResult<RecoveryEmail, Error, { id: string; status: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, status }) => api.updateRecoveryStatus(id, status),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.cartRecovery.all })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Currency Rates
+// ---------------------------------------------------------------------------
+
+export function useCurrencyRates(): UseQueryResult<CurrencyRate[]> {
+  return useQuery({
+    queryKey: queryKeys.currencyRates.list(),
+    queryFn: () => api.listCurrencyRates(),
+  })
+}
+
+export function useSupportedCurrencies(): UseQueryResult<string[]> {
+  return useQuery({
+    queryKey: queryKeys.currencyRates.currencies,
+    queryFn: () => api.listSupportedCurrencies(),
+  })
+}
+
+export function useSetCurrencyRate(): UseMutationResult<CurrencyRate, Error, api.SetCurrencyRateInput> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.setCurrencyRate(data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.currencyRates.all })
+    },
+  })
+}
+
+export function useDeleteCurrencyRate(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteCurrencyRate(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.currencyRates.all })
+    },
+  })
+}
+
+export function useConvertCurrency(): UseMutationResult<
+  ConvertResult,
+  Error,
+  { amount: number; currency: string; target_currency: string }
+> {
+  return useMutation({
+    mutationFn: (data) => api.convertCurrency(data),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Translations / I18n
+// ---------------------------------------------------------------------------
+
+export function useTranslationBundle(
+  entityType: string,
+  entityId: string,
+  locale: string,
+): UseQueryResult<TranslationBundle> {
+  return useQuery({
+    queryKey: queryKeys.translations.bundle(entityType, entityId, locale),
+    queryFn: () => api.getTranslationBundle(entityType, entityId, locale),
+    enabled: Boolean(entityType) && Boolean(entityId) && Boolean(locale),
+  })
+}
+
+export function useEntityLocales(entityType: string, entityId: string): UseQueryResult<string[]> {
+  return useQuery({
+    queryKey: queryKeys.translations.locales(entityType, entityId),
+    queryFn: () => api.listEntityLocales(entityType, entityId),
+    enabled: Boolean(entityType) && Boolean(entityId),
+  })
+}
+
+export function useSupportedLocales(): UseQueryResult<string[]> {
+  return useQuery({
+    queryKey: queryKeys.translations.supportedLocales,
+    queryFn: () => api.listSupportedLocales(),
+  })
+}
+
+export function useSetTranslations(): UseMutationResult<
+  TranslationBundle,
+  Error,
+  { entityType: string; entityId: string; locale: string; fields: Record<string, string> }
+> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ entityType, entityId, locale, fields }) =>
+      api.setTranslations(entityType, entityId, locale, fields),
+    onSuccess: (_data, { entityType, entityId, locale }) => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.translations.bundle(entityType, entityId, locale),
+      })
+      void qc.invalidateQueries({
+        queryKey: queryKeys.translations.locales(entityType, entityId),
+      })
+    },
+  })
+}
+
+export function useDeleteTranslationField(): UseMutationResult<
+  void,
+  Error,
+  { entityType: string; entityId: string; locale: string; field: string }
+> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ entityType, entityId, locale, field }) =>
+      api.deleteTranslationField(entityType, entityId, locale, field),
+    onSuccess: (_data, { entityType, entityId, locale }) => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.translations.bundle(entityType, entityId, locale),
+      })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Subscriptions
+// ---------------------------------------------------------------------------
+
+export function useSubscriptions(params?: PaginationParams): UseQueryResult<PaginatedResult<Subscription>> {
+  return useQuery({
+    queryKey: queryKeys.subscriptions.list(params),
+    queryFn: () => api.listSubscriptions(params),
+  })
+}
+
+export function useDueSubscriptions(): UseQueryResult<Subscription[]> {
+  return useQuery({
+    queryKey: queryKeys.subscriptions.due,
+    queryFn: () => api.listDueSubscriptions(),
+  })
+}
+
+export function useSubscription(id: string): UseQueryResult<Subscription> {
+  return useQuery({
+    queryKey: queryKeys.subscriptions.detail(id),
+    queryFn: () => api.getSubscription(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useCreateSubscription(): UseMutationResult<Subscription, Error, api.CreateSubscriptionInput> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createSubscription(data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.subscriptions.all })
+    },
+  })
+}
+
+export function useCancelSubscription(): UseMutationResult<Subscription, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.cancelSubscription(id),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.subscriptions.all })
+      qc.setQueryData(queryKeys.subscriptions.detail(updated.id), updated)
+    },
+  })
+}
+
+export function usePauseSubscription(): UseMutationResult<Subscription, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.pauseSubscription(id),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.subscriptions.all })
+      qc.setQueryData(queryKeys.subscriptions.detail(updated.id), updated)
+    },
+  })
+}
+
+export function useResumeSubscription(): UseMutationResult<Subscription, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.resumeSubscription(id),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.subscriptions.all })
+      qc.setQueryData(queryKeys.subscriptions.detail(updated.id), updated)
+    },
+  })
+}
+
+export function useBillingRecords(subscriptionId: string, params?: PaginationParams): UseQueryResult<PaginatedResult<BillingRecord>> {
+  return useQuery({
+    queryKey: queryKeys.subscriptions.billing(subscriptionId, params),
+    queryFn: () => api.listBillingRecords(subscriptionId, params),
+    enabled: Boolean(subscriptionId),
   })
 }

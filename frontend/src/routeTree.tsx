@@ -25,6 +25,11 @@ import {
   CreditCard,
   ArrowUpDown,
   UsersRound,
+  Gift,
+  MailQuestion,
+  DollarSign,
+  Languages,
+  RefreshCw,
 } from 'lucide-react'
 
 // Store pages
@@ -58,6 +63,11 @@ import Tax from './pages/admin/Tax'
 import Payments from './pages/admin/Payments'
 import ImportExport from './pages/admin/ImportExport'
 import CustomerGroups from './pages/admin/CustomerGroups'
+import GiftCards from './pages/admin/GiftCards'
+import CartRecovery from './pages/admin/CartRecovery'
+import CurrencyRates from './pages/admin/CurrencyRates'
+import Translations from './pages/admin/Translations'
+import Subscriptions from './pages/admin/Subscriptions'
 
 // Auth pages
 import Login from './pages/auth/Login'
@@ -113,6 +123,11 @@ const adminNavItems: NavItem[] = [
   { to: '/admin/payments', label: 'Payments', icon: CreditCard },
   { to: '/admin/customer-groups', label: 'Customer Groups', icon: UsersRound },
   { to: '/admin/import-export', label: 'Import / Export', icon: ArrowUpDown },
+  { to: '/admin/gift-cards', label: 'Gift Cards', icon: Gift },
+  { to: '/admin/cart-recovery', label: 'Cart Recovery', icon: MailQuestion },
+  { to: '/admin/currency-rates', label: 'Currency Rates', icon: DollarSign },
+  { to: '/admin/translations', label: 'Translations', icon: Languages },
+  { to: '/admin/subscriptions', label: 'Subscriptions', icon: RefreshCw },
   { to: '/admin/media', label: 'Media', icon: Image },
   { to: '/admin/agent', label: 'Agent Chat', icon: Bot },
   { to: '/admin/marketplace', label: 'Marketplace', icon: Puzzle },
@@ -425,6 +440,36 @@ const adminCustomerGroupsRoute = createRoute({
   component: CustomerGroups,
 })
 
+const adminGiftCardsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/gift-cards',
+  component: GiftCards,
+})
+
+const adminCartRecoveryRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/cart-recovery',
+  component: CartRecovery,
+})
+
+const adminCurrencyRatesRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/currency-rates',
+  component: CurrencyRates,
+})
+
+const adminTranslationsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/translations',
+  component: Translations,
+})
+
+const adminSubscriptionsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/subscriptions',
+  component: Subscriptions,
+})
+
 // ─── Route tree ───────────────────────────────────────────────────────────────
 
 const storeTree = storeLayoutRoute.addChildren([
@@ -453,6 +498,11 @@ const adminTree = adminLayoutRoute.addChildren([
   adminPaymentsRoute,
   adminImportExportRoute,
   adminCustomerGroupsRoute,
+  adminGiftCardsRoute,
+  adminCartRecoveryRoute,
+  adminCurrencyRatesRoute,
+  adminTranslationsRoute,
+  adminSubscriptionsRoute,
   adminMediaRoute,
   adminAgentRoute,
   adminMarketplaceRoute,
