@@ -231,3 +231,15 @@ type BillingRecordID string
 func NewBillingRecordID(id string) BillingRecordID { return BillingRecordID(id) }
 func (b BillingRecordID) String() string           { return string(b) }
 func (b BillingRecordID) IsEmpty() bool            { return string(b) == "" }
+
+type WebhookID string
+
+func NewWebhookID(id string) WebhookID { return WebhookID(id) }
+func (w WebhookID) String() string     { return string(w) }
+func (w WebhookID) IsEmpty() bool      { return string(w) == "" }
+
+type WebhookDeliveryID string
+
+func NewWebhookDeliveryID(id string) WebhookDeliveryID { return WebhookDeliveryID(id) }
+func (w WebhookDeliveryID) String() string             { return string(w) }
+func (w WebhookDeliveryID) IsEmpty() bool              { return string(w) == "" }
