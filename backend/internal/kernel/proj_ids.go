@@ -282,3 +282,9 @@ type AuditEntryID string
 func NewAuditEntryID(id string) AuditEntryID { return AuditEntryID(id) }
 func (a AuditEntryID) String() string        { return string(a) }
 func (a AuditEntryID) IsEmpty() bool         { return string(a) == "" }
+
+type NotificationID string
+
+func NewNotificationID(id string) NotificationID { return NotificationID(id) }
+func (n NotificationID) String() string          { return string(n) }
+func (n NotificationID) IsEmpty() bool           { return string(n) == "" }
