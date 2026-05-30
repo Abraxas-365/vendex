@@ -266,3 +266,14 @@ type ReturnItemID string
 func NewReturnItemID(id string) ReturnItemID { return ReturnItemID(id) }
 func (r ReturnItemID) String() string        { return string(r) }
 func (r ReturnItemID) IsEmpty() bool         { return string(r) == "" }
+type WebhookID string
+
+func NewWebhookID(id string) WebhookID { return WebhookID(id) }
+func (w WebhookID) String() string     { return string(w) }
+func (w WebhookID) IsEmpty() bool      { return string(w) == "" }
+
+type WebhookDeliveryID string
+
+func NewWebhookDeliveryID(id string) WebhookDeliveryID { return WebhookDeliveryID(id) }
+func (w WebhookDeliveryID) String() string             { return string(w) }
+func (w WebhookDeliveryID) IsEmpty() bool              { return string(w) == "" }

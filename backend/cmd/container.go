@@ -47,6 +47,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/review/reviewcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/returns/returnscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/tax/taxcontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/webhook/webhookcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/theme/themecontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/wishlist/wishlistcontainer"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
@@ -110,6 +111,7 @@ type Container struct {
 	Inventory      *inventorycontainer.Container
 	Review         *reviewcontainer.Container
 	Returns        *returnscontainer.Container
+	Webhook        *webhookcontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -243,6 +245,7 @@ func (c *Container) initModules() {
 	c.Inventory = inventorycontainer.New(c.DB, bus)
 	c.Review = reviewcontainer.New(c.DB, bus)
 	c.Returns = returnscontainer.New(c.DB, bus)
+	c.Webhook = webhookcontainer.New(c.DB, bus)
 
 	// Import/Export — depends on Product, Order, and Customer services.
 	c.ImportExport = importexport.New(
