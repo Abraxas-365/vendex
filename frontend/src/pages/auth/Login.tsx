@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { Box, Card, Flex, Heading, Text, Button } from '@radix-ui/themes'
+import { Box, Card, Flex, Heading, Text, Separator } from '@radix-ui/themes'
 import { Store } from 'lucide-react'
 import { useAuth } from '../../lib/auth'
 
-// Google and Microsoft SVG icons as inline components
+// Google SVG icon
 function GoogleIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="20" height="20" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
       <path
         d="M17.64 9.20455C17.64 8.56636 17.5827 7.95273 17.4764 7.36364H9V10.845H13.8436C13.635 11.97 13.0009 12.9232 12.0477 13.5614V15.8195H14.9564C16.6582 14.2527 17.64 11.9455 17.64 9.20455Z"
         fill="#4285F4"
@@ -27,9 +27,10 @@ function GoogleIcon() {
   )
 }
 
+// Microsoft SVG icon
 function MicrosoftIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="20" height="20" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
       <path d="M0 0H8.57143V8.57143H0V0Z" fill="#F25022" />
       <path d="M9.42857 0H18V8.57143H9.42857V0Z" fill="#7FBA00" />
       <path d="M0 9.42857H8.57143V18H0V9.42857Z" fill="#00A4EF" />
@@ -55,6 +56,8 @@ export default function Login() {
     }
   }
 
+  const isLoading = loadingProvider !== null
+
   return (
     <Box
       style={{
@@ -65,30 +68,39 @@ export default function Login() {
         background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
       }}
     >
-      <Box style={{ width: '100%', maxWidth: 400, padding: '0 16px' }}>
-        <Card size="4" style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
-          <Flex direction="column" align="center" gap="6">
-            {/* Logo area */}
-            <Flex direction="column" align="center" gap="2">
+      <Box style={{ width: '100%', maxWidth: 420, padding: '0 16px' }}>
+        <Card
+          size="4"
+          style={{
+            boxShadow: '0 8px 32px rgba(0,0,0,0.10), 0 1.5px 6px rgba(0,0,0,0.06)',
+            borderRadius: 16,
+          }}
+        >
+          <Flex direction="column" align="center" gap="6" style={{ padding: '8px 0' }}>
+            {/* Branding */}
+            <Flex direction="column" align="center" gap="3">
               <Box
                 style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 14,
+                  width: 60,
+                  height: 60,
+                  borderRadius: 16,
                   background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  boxShadow: '0 4px 14px rgba(99,102,241,0.35)',
                 }}
               >
-                <Store size={28} color="white" />
+                <Store size={30} color="white" strokeWidth={2} />
               </Box>
-              <Heading size="5" align="center" style={{ color: '#1e293b' }}>
-                Hada Commerce
-              </Heading>
-              <Text size="2" color="gray" align="center">
-                Sign in to access your admin dashboard
-              </Text>
+              <Flex direction="column" align="center" gap="1">
+                <Heading size="6" align="center" weight="bold" style={{ color: '#1e293b', letterSpacing: '-0.02em' }}>
+                  Hada Commerce
+                </Heading>
+                <Text size="2" color="gray" align="center" style={{ maxWidth: 260 }}>
+                  Sign in to access your admin dashboard
+                </Text>
+              </Flex>
             </Flex>
 
             {/* Error message */}
@@ -110,47 +122,101 @@ export default function Login() {
 
             {/* OAuth buttons */}
             <Flex direction="column" gap="3" style={{ width: '100%' }}>
-              <Button
-                size="3"
-                variant="outline"
+              {/* Google */}
+              <button
                 onClick={() => void handleLogin('GOOGLE')}
-                disabled={loadingProvider !== null}
+                disabled={isLoading}
                 style={{
                   width: '100%',
-                  cursor: loadingProvider !== null ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 10,
+                  gap: 12,
+                  padding: '12px 20px',
+                  borderRadius: 10,
+                  border: '1.5px solid #e2e8f0',
+                  background: isLoading && loadingProvider === 'GOOGLE' ? '#f8fafc' : '#ffffff',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  opacity: isLoading && loadingProvider !== 'GOOGLE' ? 0.6 : 1,
+                  fontFamily: 'inherit',
+                  fontSize: 15,
                   fontWeight: 500,
                   color: '#1e293b',
-                  borderColor: '#e2e8f0',
+                  transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                  outline: 'none',
+                }}
+                onMouseEnter={e => {
+                  if (!isLoading) {
+                    const btn = e.currentTarget
+                    btn.style.background = '#f8fafc'
+                    btn.style.borderColor = '#c7d2fe'
+                    btn.style.boxShadow = '0 2px 8px rgba(99,102,241,0.10)'
+                  }
+                }}
+                onMouseLeave={e => {
+                  const btn = e.currentTarget
+                  btn.style.background = isLoading && loadingProvider === 'GOOGLE' ? '#f8fafc' : '#ffffff'
+                  btn.style.borderColor = '#e2e8f0'
+                  btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'
                 }}
               >
                 <GoogleIcon />
-                {loadingProvider === 'GOOGLE' ? 'Redirecting…' : 'Continue with Google'}
-              </Button>
+                <span>{loadingProvider === 'GOOGLE' ? 'Redirecting…' : 'Continue with Google'}</span>
+              </button>
 
-              <Button
-                size="3"
-                variant="outline"
+              {/* Microsoft */}
+              <button
                 onClick={() => void handleLogin('MICROSOFT')}
-                disabled={loadingProvider !== null}
+                disabled={isLoading}
                 style={{
                   width: '100%',
-                  cursor: loadingProvider !== null ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 10,
+                  gap: 12,
+                  padding: '12px 20px',
+                  borderRadius: 10,
+                  border: '1.5px solid #e2e8f0',
+                  background: isLoading && loadingProvider === 'MICROSOFT' ? '#f8fafc' : '#ffffff',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  opacity: isLoading && loadingProvider !== 'MICROSOFT' ? 0.6 : 1,
+                  fontFamily: 'inherit',
+                  fontSize: 15,
                   fontWeight: 500,
                   color: '#1e293b',
-                  borderColor: '#e2e8f0',
+                  transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                  outline: 'none',
+                }}
+                onMouseEnter={e => {
+                  if (!isLoading) {
+                    const btn = e.currentTarget
+                    btn.style.background = '#f8fafc'
+                    btn.style.borderColor = '#c7d2fe'
+                    btn.style.boxShadow = '0 2px 8px rgba(99,102,241,0.10)'
+                  }
+                }}
+                onMouseLeave={e => {
+                  const btn = e.currentTarget
+                  btn.style.background = isLoading && loadingProvider === 'MICROSOFT' ? '#f8fafc' : '#ffffff'
+                  btn.style.borderColor = '#e2e8f0'
+                  btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'
                 }}
               >
                 <MicrosoftIcon />
-                {loadingProvider === 'MICROSOFT' ? 'Redirecting…' : 'Continue with Microsoft'}
-              </Button>
+                <span>{loadingProvider === 'MICROSOFT' ? 'Redirecting…' : 'Continue with Microsoft'}</span>
+              </button>
             </Flex>
 
-            <Text size="1" color="gray" align="center">
-              By signing in, you agree to our terms of service and privacy policy.
+            <Separator size="4" style={{ opacity: 0.5 }} />
+
+            {/* Disclaimer */}
+            <Text size="1" color="gray" align="center" style={{ lineHeight: 1.6, maxWidth: 300 }}>
+              By signing in, you agree to our{' '}
+              <span style={{ textDecoration: 'underline', cursor: 'pointer' }}>terms of service</span>
+              {' '}and{' '}
+              <span style={{ textDecoration: 'underline', cursor: 'pointer' }}>privacy policy</span>.
             </Text>
           </Flex>
         </Card>
