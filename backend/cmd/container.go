@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/emails"
 	"github.com/Abraxas-365/hada-commerce/internal/cart/cartcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/checkout/checkoutcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogcontainer"
@@ -208,6 +209,15 @@ func (c *Container) initModules() {
 		c.Payment.Service,
 		c.Promo.Service,
 	)
+
+	// Transactional email notifications — wired last so all domain containers exist.
+	emailHandler := emails.New(
+		c.NotifxClient,
+		c.Config.Notifx.FromAddress,
+		c.Config.Notifx.FromName,
+	)
+	emailHandler.RegisterSubscriptions(bus)
+	logx.Info("  Email notifications wired to event bus")
 
 	logx.Info("All modules initialized")
 }
