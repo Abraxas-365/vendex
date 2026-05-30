@@ -35,6 +35,8 @@ import type {
   Refund,
   ProductOption,
   ProductVariant,
+  CustomerGroup,
+  GroupMembership,
 } from '../types'
 import * as api from './api'
 import type { PaginationParams } from './api'
@@ -111,6 +113,12 @@ export const queryKeys = {
     detail: (id: string) => ['payments', 'detail', id] as const,
     byOrder: (orderId: string) => ['payments', 'order', orderId] as const,
     refunds: (paymentId: string) => ['payments', 'refunds', paymentId] as const,
+  },
+  customerGroups: {
+    all: ['customer-groups'] as const,
+    list: () => ['customer-groups', 'list'] as const,
+    detail: (id: string) => ['customer-groups', 'detail', id] as const,
+    members: (groupId: string) => ['customer-groups', groupId, 'members'] as const,
   },
 } as const
 
@@ -1018,6 +1026,86 @@ export function useDeleteProductVariant(): UseMutationResult<void, Error, { vari
     mutationFn: ({ variantId }) => api.deleteProductVariant(variantId),
     onSuccess: (_data, { productId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.products.variants(productId) })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Customer Groups
+// ---------------------------------------------------------------------------
+
+export function useCustomerGroups(): UseQueryResult<CustomerGroup[]> {
+  return useQuery({
+    queryKey: queryKeys.customerGroups.list(),
+    queryFn: () => api.listCustomerGroups(),
+  })
+}
+
+export function useCustomerGroup(id: string): UseQueryResult<CustomerGroup> {
+  return useQuery({
+    queryKey: queryKeys.customerGroups.detail(id),
+    queryFn: () => api.getCustomerGroup(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useGroupMembers(groupId: string): UseQueryResult<GroupMembership[]> {
+  return useQuery({
+    queryKey: queryKeys.customerGroups.members(groupId),
+    queryFn: () => api.listGroupMembers(groupId),
+    enabled: Boolean(groupId),
+  })
+}
+
+export function useCreateCustomerGroup(): UseMutationResult<CustomerGroup, Error, api.CustomerGroupInput> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createCustomerGroup(data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.customerGroups.all })
+    },
+  })
+}
+
+export function useUpdateCustomerGroup(): UseMutationResult<CustomerGroup, Error, { id: string } & api.CustomerGroupInput> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...data }) => api.updateCustomerGroup(id, data),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.customerGroups.all })
+      qc.setQueryData(queryKeys.customerGroups.detail(updated.id), updated)
+    },
+  })
+}
+
+export function useDeleteCustomerGroup(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteCustomerGroup(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.customerGroups.all })
+    },
+  })
+}
+
+export function useAddGroupMember(): UseMutationResult<GroupMembership, Error, { groupId: string; customerId: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ groupId, customerId }) => api.addGroupMember(groupId, customerId),
+    onSuccess: (_data, { groupId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.customerGroups.members(groupId) })
+      void qc.invalidateQueries({ queryKey: queryKeys.customerGroups.all })
+    },
+  })
+}
+
+export function useRemoveGroupMember(): UseMutationResult<void, Error, { groupId: string; customerId: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ groupId, customerId }) => api.removeGroupMember(groupId, customerId),
+    onSuccess: (_data, { groupId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.customerGroups.members(groupId) })
+      void qc.invalidateQueries({ queryKey: queryKeys.customerGroups.all })
     },
   })
 }

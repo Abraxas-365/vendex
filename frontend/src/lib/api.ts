@@ -33,6 +33,10 @@ import type {
   Refund,
   ProductOption,
   ProductVariant,
+  ImportResult,
+  CustomerGroup,
+  GroupRules,
+  GroupMembership,
 } from '../types'
 
 // ---------------------------------------------------------------------------
@@ -748,4 +752,98 @@ export function updateProductVariant(variantId: string, data: Partial<ProductVar
 
 export function deleteProductVariant(variantId: string): Promise<void> {
   return del(`/products/variants/${variantId}`)
+}
+
+// ---------------------------------------------------------------------------
+// Import / Export
+// ---------------------------------------------------------------------------
+
+export async function exportProducts(): Promise<Blob> {
+  const res = await fetch(`${BASE_URL}/import-export/products/export`, {
+    headers: buildHeaders(),
+  })
+  if (!res.ok) throw new Error('Export failed')
+  return res.blob()
+}
+
+export async function exportOrders(): Promise<Blob> {
+  const res = await fetch(`${BASE_URL}/import-export/orders/export`, {
+    headers: buildHeaders(),
+  })
+  if (!res.ok) throw new Error('Export failed')
+  return res.blob()
+}
+
+export async function exportCustomers(): Promise<Blob> {
+  const res = await fetch(`${BASE_URL}/import-export/customers/export`, {
+    headers: buildHeaders(),
+  })
+  if (!res.ok) throw new Error('Export failed')
+  return res.blob()
+}
+
+export async function importProducts(file: File): Promise<ImportResult> {
+  const formData = new FormData()
+  formData.append('file', file)
+  // Note: do NOT set Content-Type here — browser sets it with the boundary for multipart
+  const headers: Record<string, string> = {}
+  const token = getAccessToken()
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  const res = await fetch(`${BASE_URL}/import-export/products/import`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  })
+  if (!res.ok) {
+    let message = `HTTP ${res.status} ${res.statusText}`
+    try {
+      const body = await res.json()
+      if (body.error) message = body.error
+      else if (body.message) message = body.message
+    } catch { /* ignore */ }
+    throw new Error(message)
+  }
+  return res.json() as Promise<ImportResult>
+}
+
+// ---------------------------------------------------------------------------
+// Customer Groups
+// ---------------------------------------------------------------------------
+
+export interface CustomerGroupInput {
+  name: string
+  description: string
+  rules: GroupRules
+}
+
+export function listCustomerGroups(): Promise<CustomerGroup[]> {
+  return get<CustomerGroup[]>('/customer-groups/')
+}
+
+export function getCustomerGroup(id: string): Promise<CustomerGroup> {
+  return get<CustomerGroup>(`/customer-groups/${id}`)
+}
+
+export function createCustomerGroup(data: CustomerGroupInput): Promise<CustomerGroup> {
+  return post<CustomerGroup>('/customer-groups/', data)
+}
+
+export function updateCustomerGroup(id: string, data: CustomerGroupInput): Promise<CustomerGroup> {
+  return put<CustomerGroup>(`/customer-groups/${id}`, data)
+}
+
+export function deleteCustomerGroup(id: string): Promise<void> {
+  return del(`/customer-groups/${id}`)
+}
+
+export function listGroupMembers(groupId: string): Promise<GroupMembership[]> {
+  return get<GroupMembership[]>(`/customer-groups/${groupId}/members`)
+}
+
+export function addGroupMember(groupId: string, customerId: string): Promise<GroupMembership> {
+  return post<GroupMembership>(`/customer-groups/${groupId}/members`, { customer_id: customerId })
+}
+
+export function removeGroupMember(groupId: string, customerId: string): Promise<void> {
+  return del(`/customer-groups/${groupId}/members/${customerId}`)
 }

@@ -23,6 +23,8 @@ import {
   Truck,
   Receipt,
   CreditCard,
+  ArrowUpDown,
+  UsersRound,
 } from 'lucide-react'
 
 // Store pages
@@ -54,6 +56,8 @@ import ThemeEditor from './pages/admin/ThemeEditor'
 import Shipping from './pages/admin/Shipping'
 import Tax from './pages/admin/Tax'
 import Payments from './pages/admin/Payments'
+import ImportExport from './pages/admin/ImportExport'
+import CustomerGroups from './pages/admin/CustomerGroups'
 
 // Auth pages
 import Login from './pages/auth/Login'
@@ -107,6 +111,8 @@ const adminNavItems: NavItem[] = [
   { to: '/admin/shipping', label: 'Shipping', icon: Truck },
   { to: '/admin/tax', label: 'Tax', icon: Receipt },
   { to: '/admin/payments', label: 'Payments', icon: CreditCard },
+  { to: '/admin/customer-groups', label: 'Customer Groups', icon: UsersRound },
+  { to: '/admin/import-export', label: 'Import / Export', icon: ArrowUpDown },
   { to: '/admin/media', label: 'Media', icon: Image },
   { to: '/admin/agent', label: 'Agent Chat', icon: Bot },
   { to: '/admin/marketplace', label: 'Marketplace', icon: Puzzle },
@@ -407,6 +413,18 @@ const adminPaymentsRoute = createRoute({
   component: Payments,
 })
 
+const adminImportExportRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/import-export',
+  component: ImportExport,
+})
+
+const adminCustomerGroupsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/customer-groups',
+  component: CustomerGroups,
+})
+
 // ─── Route tree ───────────────────────────────────────────────────────────────
 
 const storeTree = storeLayoutRoute.addChildren([
@@ -433,6 +451,8 @@ const adminTree = adminLayoutRoute.addChildren([
   adminShippingRoute,
   adminTaxRoute,
   adminPaymentsRoute,
+  adminImportExportRoute,
+  adminCustomerGroupsRoute,
   adminMediaRoute,
   adminAgentRoute,
   adminMarketplaceRoute,

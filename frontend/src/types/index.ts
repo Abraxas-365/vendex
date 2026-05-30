@@ -623,3 +623,41 @@ export interface StoreSettings {
   checkout_config: CheckoutConfig
   updated_at: string
 }
+
+// ---------------------------------------------------------------------------
+// Import / Export
+// ---------------------------------------------------------------------------
+
+export interface ImportResult {
+  total: number
+  imported: number
+  errors: { row: number; error: string }[]
+}
+
+// ---------------------------------------------------------------------------
+// Customer Groups
+// ---------------------------------------------------------------------------
+
+export interface GroupRules {
+  min_order_count?: number
+  min_total_spent?: number
+  tags?: string[]
+}
+
+export interface CustomerGroup {
+  id: string
+  tenant_id: string
+  name: string
+  description: string
+  rules: GroupRules
+  member_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface GroupMembership {
+  id: string
+  group_id: string
+  customer_id: string
+  joined_at: string
+}
