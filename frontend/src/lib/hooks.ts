@@ -28,6 +28,13 @@ import type {
   MeResponse,
   BlockType,
   Theme,
+  ShippingZone,
+  ShippingRate,
+  TaxRate,
+  Payment,
+  Refund,
+  ProductOption,
+  ProductVariant,
 } from '../types'
 import * as api from './api'
 import type { PaginationParams } from './api'
@@ -42,6 +49,8 @@ export const queryKeys = {
     all: ['products'] as const,
     list: (params?: PaginationParams) => ['products', 'list', params] as const,
     detail: (id: string) => ['products', 'detail', id] as const,
+    options: (id: string) => ['products', 'options', id] as const,
+    variants: (id: string) => ['products', 'variants', id] as const,
   },
   orders: {
     all: ['orders'] as const,
@@ -88,6 +97,20 @@ export const queryKeys = {
     list: () => ['themes', 'list'] as const,
     detail: (id: string) => ['themes', 'detail', id] as const,
     active: () => ['themes', 'active'] as const,
+  },
+  shipping: {
+    zones: ['shipping', 'zones'] as const,
+    zone: (id: string) => ['shipping', 'zones', id] as const,
+    rates: (zoneId: string) => ['shipping', 'zones', zoneId, 'rates'] as const,
+  },
+  tax: {
+    rates: ['tax', 'rates'] as const,
+  },
+  payments: {
+    all: ['payments'] as const,
+    detail: (id: string) => ['payments', 'detail', id] as const,
+    byOrder: (orderId: string) => ['payments', 'order', orderId] as const,
+    refunds: (paymentId: string) => ['payments', 'refunds', paymentId] as const,
   },
 } as const
 
@@ -744,6 +767,257 @@ export function useDeleteTheme(): UseMutationResult<void, Error, string> {
     mutationFn: (id) => api.deleteTheme(id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.themes.all })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Shipping — Zones
+// ---------------------------------------------------------------------------
+
+export function useShippingZones(): UseQueryResult<ShippingZone[]> {
+  return useQuery({
+    queryKey: queryKeys.shipping.zones,
+    queryFn: () => api.listShippingZones(),
+  })
+}
+
+export function useShippingZone(id: string): UseQueryResult<ShippingZone> {
+  return useQuery({
+    queryKey: queryKeys.shipping.zone(id),
+    queryFn: () => api.getShippingZone(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useCreateShippingZone(): UseMutationResult<ShippingZone, Error, Partial<ShippingZone>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createShippingZone(data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.shipping.zones })
+    },
+  })
+}
+
+export function useUpdateShippingZone(): UseMutationResult<ShippingZone, Error, { id: string; data: Partial<ShippingZone> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateShippingZone(id, data),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.shipping.zones })
+      qc.setQueryData(queryKeys.shipping.zone(updated.id), updated)
+    },
+  })
+}
+
+export function useDeleteShippingZone(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteShippingZone(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.shipping.zones })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Shipping — Rates
+// ---------------------------------------------------------------------------
+
+export function useShippingRates(zoneId: string): UseQueryResult<ShippingRate[]> {
+  return useQuery({
+    queryKey: queryKeys.shipping.rates(zoneId),
+    queryFn: () => api.listShippingRates(zoneId),
+    enabled: Boolean(zoneId),
+  })
+}
+
+export function useCreateShippingRate(): UseMutationResult<ShippingRate, Error, { zoneId: string; data: Partial<ShippingRate> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ zoneId, data }) => api.createShippingRate(zoneId, data),
+    onSuccess: (created) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.shipping.rates(created.zone_id) })
+    },
+  })
+}
+
+export function useUpdateShippingRate(): UseMutationResult<ShippingRate, Error, { id: string; data: Partial<ShippingRate> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateShippingRate(id, data),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.shipping.rates(updated.zone_id) })
+    },
+  })
+}
+
+export function useDeleteShippingRate(): UseMutationResult<void, Error, { id: string; zoneId: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id }) => api.deleteShippingRate(id),
+    onSuccess: (_data, { zoneId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.shipping.rates(zoneId) })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Tax — Rates
+// ---------------------------------------------------------------------------
+
+export function useTaxRates(): UseQueryResult<TaxRate[]> {
+  return useQuery({
+    queryKey: queryKeys.tax.rates,
+    queryFn: () => api.listTaxRates(),
+  })
+}
+
+export function useCreateTaxRate(): UseMutationResult<TaxRate, Error, Partial<TaxRate>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createTaxRate(data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.tax.rates })
+    },
+  })
+}
+
+export function useUpdateTaxRate(): UseMutationResult<TaxRate, Error, { id: string; data: Partial<TaxRate> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateTaxRate(id, data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.tax.rates })
+    },
+  })
+}
+
+export function useDeleteTaxRate(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteTaxRate(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.tax.rates })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Payments
+// ---------------------------------------------------------------------------
+
+export function usePayment(id: string): UseQueryResult<Payment> {
+  return useQuery({
+    queryKey: queryKeys.payments.detail(id),
+    queryFn: () => api.getPayment(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useOrderPayments(orderId: string): UseQueryResult<Payment[]> {
+  return useQuery({
+    queryKey: queryKeys.payments.byOrder(orderId),
+    queryFn: () => api.listOrderPayments(orderId),
+    enabled: Boolean(orderId),
+  })
+}
+
+export function useCreateRefund(): UseMutationResult<Refund, Error, { paymentId: string; amount: number; reason?: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ paymentId, amount, reason }) => api.createRefund(paymentId, { amount, reason }),
+    onSuccess: (_data, { paymentId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.payments.refunds(paymentId) })
+      void qc.invalidateQueries({ queryKey: queryKeys.payments.detail(paymentId) })
+    },
+  })
+}
+
+export function useRefunds(paymentId: string): UseQueryResult<Refund[]> {
+  return useQuery({
+    queryKey: queryKeys.payments.refunds(paymentId),
+    queryFn: () => api.listRefunds(paymentId),
+    enabled: Boolean(paymentId),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Product — Options
+// ---------------------------------------------------------------------------
+
+export function useProductOptions(productId: string): UseQueryResult<ProductOption[]> {
+  return useQuery({
+    queryKey: queryKeys.products.options(productId),
+    queryFn: () => api.listProductOptions(productId),
+    enabled: Boolean(productId),
+  })
+}
+
+export function useCreateProductOption(): UseMutationResult<
+  ProductOption,
+  Error,
+  { productId: string; name: string; position: number; values: string[] }
+> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ productId, ...data }) => api.createProductOption(productId, data),
+    onSuccess: (created) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.products.options(created.product_id) })
+    },
+  })
+}
+
+export function useDeleteProductOption(): UseMutationResult<void, Error, { optionId: string; productId: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ optionId }) => api.deleteProductOption(optionId),
+    onSuccess: (_data, { productId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.products.options(productId) })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Product — Variants
+// ---------------------------------------------------------------------------
+
+export function useProductVariants(productId: string): UseQueryResult<ProductVariant[]> {
+  return useQuery({
+    queryKey: queryKeys.products.variants(productId),
+    queryFn: () => api.listProductVariants(productId),
+    enabled: Boolean(productId),
+  })
+}
+
+export function useCreateProductVariant(): UseMutationResult<
+  ProductVariant,
+  Error,
+  {
+    productId: string
+    sku: string
+    price_amount: number
+    price_currency: string
+    stock: number
+    options: Record<string, string>
+  }
+> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ productId, ...data }) => api.createProductVariant(productId, data),
+    onSuccess: (created) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.products.variants(created.product_id) })
+    },
+  })
+}
+
+export function useDeleteProductVariant(): UseMutationResult<void, Error, { variantId: string; productId: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ variantId }) => api.deleteProductVariant(variantId),
+    onSuccess: (_data, { productId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.products.variants(productId) })
     },
   })
 }

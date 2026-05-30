@@ -22,6 +22,34 @@ export interface Address {
 }
 
 // ---------------------------------------------------------------------------
+// Product Variants (defined before Product so Product can reference them)
+// ---------------------------------------------------------------------------
+
+export interface ProductOption {
+  id: string
+  product_id: string
+  tenant_id: string
+  name: string
+  position: number
+  values: string[]
+  created_at: string
+  updated_at: string
+}
+
+export interface ProductVariant {
+  id: string
+  product_id: string
+  tenant_id: string
+  sku: string
+  price: Money
+  stock: number
+  options: Record<string, string>
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+// ---------------------------------------------------------------------------
 // Product
 // ---------------------------------------------------------------------------
 
@@ -39,6 +67,9 @@ export interface Product {
   tags: string[]
   status: ProductStatus
   stock: number
+  has_variants?: boolean
+  options?: ProductOption[]
+  variants?: ProductVariant[]
   created_at: string
   updated_at: string
 }
@@ -71,7 +102,15 @@ export interface Order {
   items: OrderItem[]
   status: OrderStatus
   total_amount: Money
+  subtotal?: Money
+  shipping_amount?: Money
+  tax_amount?: Money
+  discount_amount?: Money
   shipping_address: Address
+  shipping_method?: string
+  tracking_number?: string
+  carrier?: string
+  payment_status?: PaymentStatus
   created_at: string
   updated_at: string
 }
@@ -458,6 +497,93 @@ export interface RefreshResponse {
 export interface MeResponse {
   user: AuthUser
   tenant: AuthTenant
+}
+
+// ---------------------------------------------------------------------------
+// Shipping
+// ---------------------------------------------------------------------------
+
+export interface ShippingZone {
+  id: string
+  tenant_id: string
+  name: string
+  countries: string[]
+  states: string[]
+  created_at: string
+  updated_at: string
+}
+
+export interface ShippingRate {
+  id: string
+  zone_id: string
+  tenant_id: string
+  name: string
+  type: 'flat' | 'weight_based' | 'price_based' | 'free'
+  price: Money
+  min_weight?: number
+  max_weight?: number
+  min_order_amount?: number
+  max_order_amount?: number
+  est_days_min?: number
+  est_days_max?: number
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Tax
+// ---------------------------------------------------------------------------
+
+export interface TaxRate {
+  id: string
+  tenant_id: string
+  name: string
+  rate: number
+  country: string
+  state?: string
+  city?: string
+  zip_code?: string
+  priority: number
+  compound: boolean
+  includes_shipping: boolean
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Payment
+// ---------------------------------------------------------------------------
+
+export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded'
+export type RefundStatus = 'pending' | 'completed' | 'failed'
+
+export interface Payment {
+  id: string
+  tenant_id: string
+  order_id: string
+  amount: Money
+  status: PaymentStatus
+  provider: string
+  provider_payment_id?: string
+  method?: string
+  error_message?: string
+  paid_at?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Refund {
+  id: string
+  tenant_id: string
+  payment_id: string
+  order_id: string
+  amount: Money
+  reason?: string
+  status: RefundStatus
+  created_at: string
+  updated_at: string
 }
 
 // ---------------------------------------------------------------------------

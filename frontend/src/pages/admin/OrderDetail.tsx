@@ -8,9 +8,11 @@ import {
   User,
   CheckCircle2,
   XCircle,
+  CreditCard,
+  Truck,
 } from 'lucide-react'
-import type { OrderStatus } from '../../types'
-import { useOrder, useUpdateOrderStatus, useCancelOrder } from '../../lib/hooks'
+import type { OrderStatus, PaymentStatus } from '../../types'
+import { useOrder, useUpdateOrderStatus, useCancelOrder, useOrderPayments } from '../../lib/hooks'
 
 // ---------------------------------------------------------------------------
 // Route: /admin/orders/$id
@@ -23,6 +25,14 @@ const statusColors: Record<OrderStatus, string> = {
   shipped: 'bg-purple-100 text-purple-800',
   delivered: 'bg-green-100 text-green-800',
   cancelled: 'bg-red-100 text-red-800',
+}
+
+const paymentStatusColors: Record<PaymentStatus, string> = {
+  pending: 'bg-yellow-100 text-yellow-800',
+  processing: 'bg-blue-100 text-blue-800',
+  completed: 'bg-green-100 text-green-800',
+  failed: 'bg-red-100 text-red-800',
+  refunded: 'bg-gray-100 text-gray-600',
 }
 
 /** Status transitions: key → allowed next statuses */
@@ -67,8 +77,10 @@ export default function OrderDetail() {
   const { data: order, isLoading, error } = useOrder(id)
   const updateStatus = useUpdateOrderStatus()
   const cancelOrder = useCancelOrder()
+  const { data: payments } = useOrderPayments(id)
 
   const isPending = updateStatus.isPending || cancelOrder.isPending
+  const latestPayment = payments?.[0]
 
   function handleTransition(nextStatus: OrderStatus) {
     if (!order) return
@@ -239,18 +251,35 @@ export default function OrderDetail() {
               </table>
             </div>
             {/* Summary */}
-            <div className="border-t border-gray-100 px-5 py-4">
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <span>Subtotal</span>
-                <span>{formatMoney(order.total_amount.amount, order.total_amount.currency)}</span>
-              </div>
-              <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3 text-sm font-bold text-gray-900">
+            <div className="border-t border-gray-100 px-5 py-4 space-y-2">
+              {order.subtotal && (
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <span>Subtotal</span>
+                  <span>{formatMoney(order.subtotal.amount, order.subtotal.currency)}</span>
+                </div>
+              )}
+              {order.shipping_amount && (
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <span>Shipping</span>
+                  <span>{formatMoney(order.shipping_amount.amount, order.shipping_amount.currency)}</span>
+                </div>
+              )}
+              {order.tax_amount && (
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <span>Tax</span>
+                  <span>{formatMoney(order.tax_amount.amount, order.tax_amount.currency)}</span>
+                </div>
+              )}
+              {order.discount_amount && order.discount_amount.amount > 0 && (
+                <div className="flex items-center justify-between text-sm text-green-600">
+                  <span>Discount</span>
+                  <span>−{formatMoney(order.discount_amount.amount, order.discount_amount.currency)}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between border-t border-gray-100 pt-2 text-sm font-bold text-gray-900">
                 <span>Total</span>
                 <span>{formatMoney(order.total_amount.amount, order.total_amount.currency)}</span>
               </div>
-              <p className="mt-1 text-right text-xs text-gray-400">
-                Currency: {order.total_amount.currency}
-              </p>
             </div>
           </div>
         </div>
@@ -287,6 +316,102 @@ export default function OrderDetail() {
                   {order.shipping_address.postal_code}
                 </p>
                 <p className="font-medium text-gray-800">{order.shipping_address.country}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Shipping method & tracking */}
+          {(order.shipping_method || order.tracking_number) && (
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+              <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-4">
+                <Truck size={16} className="text-slate-500" />
+                <h2 className="text-sm font-semibold text-gray-900">Shipping Info</h2>
+              </div>
+              <div className="px-5 py-4 space-y-2">
+                {order.shipping_method && (
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Method</p>
+                    <p className="mt-1 text-sm text-gray-700">{order.shipping_method}</p>
+                  </div>
+                )}
+                {order.carrier && (
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Carrier</p>
+                    <p className="mt-1 text-sm text-gray-700">{order.carrier}</p>
+                  </div>
+                )}
+                {order.tracking_number && (
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Tracking</p>
+                    <p className="mt-1 font-mono text-sm text-gray-700 break-all">{order.tracking_number}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Payment */}
+          {latestPayment && (
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+              <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-4">
+                <CreditCard size={16} className="text-slate-500" />
+                <h2 className="text-sm font-semibold text-gray-900">Payment</h2>
+              </div>
+              <div className="px-5 py-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium uppercase tracking-wider text-gray-400">Status</span>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${paymentStatusColors[latestPayment.status]}`}
+                  >
+                    {latestPayment.status}
+                  </span>
+                </div>
+                {latestPayment.provider && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium uppercase tracking-wider text-gray-400">Provider</span>
+                    <span className="text-sm text-gray-700 capitalize">{latestPayment.provider}</span>
+                  </div>
+                )}
+                {latestPayment.method && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium uppercase tracking-wider text-gray-400">Method</span>
+                    <span className="text-sm text-gray-700 capitalize">{latestPayment.method}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium uppercase tracking-wider text-gray-400">Amount</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {formatMoney(latestPayment.amount.amount, latestPayment.amount.currency)}
+                  </span>
+                </div>
+                <div className="pt-2">
+                  <Link
+                    to="/admin/payments"
+                    className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
+                  >
+                    View all payments →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Payment status from order (if no payment fetched) */}
+          {!latestPayment && order.payment_status && (
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+              <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-4">
+                <CreditCard size={16} className="text-slate-500" />
+                <h2 className="text-sm font-semibold text-gray-900">Payment</h2>
+              </div>
+              <div className="px-5 py-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium uppercase tracking-wider text-gray-400">Status</span>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${paymentStatusColors[order.payment_status]}`}
+                  >
+                    {order.payment_status}
+                  </span>
+                </div>
               </div>
             </div>
           )}

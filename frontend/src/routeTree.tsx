@@ -20,6 +20,9 @@ import {
   Settings2,
   LogOut,
   Palette,
+  Truck,
+  Receipt,
+  CreditCard,
 } from 'lucide-react'
 
 // Store pages
@@ -48,6 +51,9 @@ import Catalog from './pages/admin/Catalog'
 import Settings from './pages/admin/Settings'
 import PageEditor from './pages/admin/PageEditor'
 import ThemeEditor from './pages/admin/ThemeEditor'
+import Shipping from './pages/admin/Shipping'
+import Tax from './pages/admin/Tax'
+import Payments from './pages/admin/Payments'
 
 // Auth pages
 import Login from './pages/auth/Login'
@@ -98,6 +104,9 @@ const adminNavItems: NavItem[] = [
   { to: '/admin/customers', label: 'Customers', icon: Users },
   { to: '/admin/pages', label: 'Pages', icon: FileText },
   { to: '/admin/promos', label: 'Promos', icon: Tag },
+  { to: '/admin/shipping', label: 'Shipping', icon: Truck },
+  { to: '/admin/tax', label: 'Tax', icon: Receipt },
+  { to: '/admin/payments', label: 'Payments', icon: CreditCard },
   { to: '/admin/media', label: 'Media', icon: Image },
   { to: '/admin/agent', label: 'Agent Chat', icon: Bot },
   { to: '/admin/marketplace', label: 'Marketplace', icon: Puzzle },
@@ -380,6 +389,24 @@ const adminThemeRoute = createRoute({
   component: ThemeEditor,
 })
 
+const adminShippingRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/shipping',
+  component: Shipping,
+})
+
+const adminTaxRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/tax',
+  component: Tax,
+})
+
+const adminPaymentsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/payments',
+  component: Payments,
+})
+
 // ─── Route tree ───────────────────────────────────────────────────────────────
 
 const storeTree = storeLayoutRoute.addChildren([
@@ -403,6 +430,9 @@ const adminTree = adminLayoutRoute.addChildren([
   adminNewBlockPageRoute,
   adminPageEditorRoute,
   adminPromosRoute,
+  adminShippingRoute,
+  adminTaxRoute,
+  adminPaymentsRoute,
   adminMediaRoute,
   adminAgentRoute,
   adminMarketplaceRoute,

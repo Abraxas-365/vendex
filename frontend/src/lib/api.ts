@@ -26,6 +26,13 @@ import type {
   MeResponse,
   BlockType,
   Theme,
+  ShippingZone,
+  ShippingRate,
+  TaxRate,
+  Payment,
+  Refund,
+  ProductOption,
+  ProductVariant,
 } from '../types'
 
 // ---------------------------------------------------------------------------
@@ -591,4 +598,154 @@ export function duplicateTheme(id: string, name: string): Promise<Theme> {
 
 export function deleteTheme(id: string): Promise<void> {
   return del(`/themes/${id}`)
+}
+
+// ---------------------------------------------------------------------------
+// Shipping — Zones
+// ---------------------------------------------------------------------------
+
+export function listShippingZones(): Promise<ShippingZone[]> {
+  return get<ShippingZone[]>('/shipping/zones')
+}
+
+export function getShippingZone(id: string): Promise<ShippingZone> {
+  return get<ShippingZone>(`/shipping/zones/${id}`)
+}
+
+export function createShippingZone(data: Partial<ShippingZone>): Promise<ShippingZone> {
+  return post<ShippingZone>('/shipping/zones', data)
+}
+
+export function updateShippingZone(id: string, data: Partial<ShippingZone>): Promise<ShippingZone> {
+  return put<ShippingZone>(`/shipping/zones/${id}`, data)
+}
+
+export function deleteShippingZone(id: string): Promise<void> {
+  return del(`/shipping/zones/${id}`)
+}
+
+// ---------------------------------------------------------------------------
+// Shipping — Rates
+// ---------------------------------------------------------------------------
+
+export function listShippingRates(zoneId: string): Promise<ShippingRate[]> {
+  return get<ShippingRate[]>(`/shipping/zones/${zoneId}/rates`)
+}
+
+export function createShippingRate(zoneId: string, data: Partial<ShippingRate>): Promise<ShippingRate> {
+  return post<ShippingRate>(`/shipping/zones/${zoneId}/rates`, data)
+}
+
+export function updateShippingRate(id: string, data: Partial<ShippingRate>): Promise<ShippingRate> {
+  return put<ShippingRate>(`/shipping/rates/${id}`, data)
+}
+
+export function deleteShippingRate(id: string): Promise<void> {
+  return del(`/shipping/rates/${id}`)
+}
+
+// ---------------------------------------------------------------------------
+// Tax — Rates
+// ---------------------------------------------------------------------------
+
+export function listTaxRates(): Promise<TaxRate[]> {
+  return get<TaxRate[]>('/tax/rates')
+}
+
+export function createTaxRate(data: Partial<TaxRate>): Promise<TaxRate> {
+  return post<TaxRate>('/tax/rates', data)
+}
+
+export function updateTaxRate(id: string, data: Partial<TaxRate>): Promise<TaxRate> {
+  return put<TaxRate>(`/tax/rates/${id}`, data)
+}
+
+export function deleteTaxRate(id: string): Promise<void> {
+  return del(`/tax/rates/${id}`)
+}
+
+// ---------------------------------------------------------------------------
+// Payments
+// ---------------------------------------------------------------------------
+
+export function getPayment(id: string): Promise<Payment> {
+  return get<Payment>(`/payments/${id}`)
+}
+
+export function listOrderPayments(orderId: string): Promise<Payment[]> {
+  return get<Payment[]>(`/payments/order/${orderId}`)
+}
+
+export function createPayment(data: {
+  order_id: string
+  amount: number
+  currency: string
+  provider: string
+  method: string
+}): Promise<Payment> {
+  return post<Payment>('/payments', data)
+}
+
+export function processPayment(id: string, data?: { token?: string }): Promise<Payment> {
+  return post<Payment>(`/payments/${id}/process`, data ?? {})
+}
+
+export function createRefund(paymentId: string, data: { amount: number; reason?: string }): Promise<Refund> {
+  return post<Refund>(`/payments/${paymentId}/refund`, data)
+}
+
+export function listRefunds(paymentId: string): Promise<Refund[]> {
+  return get<Refund[]>(`/payments/${paymentId}/refunds`)
+}
+
+// ---------------------------------------------------------------------------
+// Product — Options
+// ---------------------------------------------------------------------------
+
+export function listProductOptions(productId: string): Promise<ProductOption[]> {
+  return get<ProductOption[]>(`/products/${productId}/options`)
+}
+
+export function createProductOption(
+  productId: string,
+  data: { name: string; position: number; values: string[] },
+): Promise<ProductOption> {
+  return post<ProductOption>(`/products/${productId}/options`, data)
+}
+
+export function updateProductOption(optionId: string, data: Partial<ProductOption>): Promise<ProductOption> {
+  return put<ProductOption>(`/products/options/${optionId}`, data)
+}
+
+export function deleteProductOption(optionId: string): Promise<void> {
+  return del(`/products/options/${optionId}`)
+}
+
+// ---------------------------------------------------------------------------
+// Product — Variants
+// ---------------------------------------------------------------------------
+
+export function listProductVariants(productId: string): Promise<ProductVariant[]> {
+  return get<ProductVariant[]>(`/products/${productId}/variants`)
+}
+
+export function createProductVariant(
+  productId: string,
+  data: {
+    sku: string
+    price_amount: number
+    price_currency: string
+    stock: number
+    options: Record<string, string>
+  },
+): Promise<ProductVariant> {
+  return post<ProductVariant>(`/products/${productId}/variants`, data)
+}
+
+export function updateProductVariant(variantId: string, data: Partial<ProductVariant>): Promise<ProductVariant> {
+  return put<ProductVariant>(`/products/variants/${variantId}`, data)
+}
+
+export function deleteProductVariant(variantId: string): Promise<void> {
+  return del(`/products/variants/${variantId}`)
 }
