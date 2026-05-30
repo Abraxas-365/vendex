@@ -1,0 +1,96 @@
+package eventbus
+
+import (
+	"context"
+	"encoding/json"
+	"time"
+
+	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/google/uuid"
+)
+
+// EventType identifies the kind of domain event.
+type EventType string
+
+// Standard commerce event types.
+const (
+	// Order events
+	OrderPlaced    EventType = "order.placed"
+	OrderConfirmed EventType = "order.confirmed"
+	OrderShipped   EventType = "order.shipped"
+	OrderDelivered EventType = "order.delivered"
+	OrderCancelled EventType = "order.cancelled"
+
+	// Customer events
+	CustomerRegistered EventType = "customer.registered"
+	CustomerUpdated    EventType = "customer.updated"
+
+	// Product events
+	ProductCreated EventType = "product.created"
+	ProductUpdated EventType = "product.updated"
+	ProductDeleted EventType = "product.deleted"
+
+	// Catalog events
+	CategoryCreated   EventType = "category.created"
+	CollectionUpdated EventType = "collection.updated"
+
+	// Storefront events
+	PagePublished   EventType = "page.published"
+	PageUnpublished EventType = "page.unpublished"
+
+	// Plugin events
+	PluginInstalled   EventType = "plugin.installed"
+	PluginUninstalled EventType = "plugin.uninstalled"
+
+	// Theme events
+	ThemeActivated EventType = "theme.activated"
+	ThemeUpdated   EventType = "theme.updated"
+
+	// Settings events
+	SettingsUpdated EventType = "settings.updated"
+
+	// Cart events
+	CartUpdated EventType = "cart.updated"
+)
+
+// Event is a domain event that has occurred in the system.
+type Event struct {
+	ID        string          `json:"id"`
+	Type      EventType       `json:"type"`
+	TenantID  kernel.TenantID `json:"tenant_id"`
+	Payload   json.RawMessage `json:"payload"`
+	Timestamp time.Time       `json:"timestamp"`
+}
+
+// Handler processes a domain event. Handlers should be idempotent.
+// Returning an error logs the failure but does not prevent other handlers from running.
+type Handler func(ctx context.Context, event Event) error
+
+// Bus defines the event bus interface for publishing and subscribing to domain events.
+type Bus interface {
+	// Publish dispatches an event to all registered handlers for the event type.
+	// Handlers are called synchronously in the order they were registered.
+	Publish(ctx context.Context, event Event) error
+
+	// Subscribe registers a handler for a specific event type.
+	// Multiple handlers can be registered for the same event type.
+	Subscribe(eventType EventType, handler Handler)
+
+	// SubscribeAll registers a handler for ALL event types (useful for logging/webhooks).
+	SubscribeAll(handler Handler)
+}
+
+// NewEvent is a helper to construct an Event with a generated ID and timestamp.
+func NewEvent(eventType EventType, tenantID kernel.TenantID, payload any) (Event, error) {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return Event{}, err
+	}
+	return Event{
+		ID:        uuid.NewString(),
+		Type:      eventType,
+		TenantID:  tenantID,
+		Payload:   data,
+		Timestamp: time.Now().UTC(),
+	}, nil
+}
