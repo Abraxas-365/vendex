@@ -213,3 +213,15 @@ type CurrencyRateID string
 func NewCurrencyRateID(id string) CurrencyRateID { return CurrencyRateID(id) }
 func (c CurrencyRateID) String() string          { return string(c) }
 func (c CurrencyRateID) IsEmpty() bool           { return string(c) == "" }
+
+type SubscriptionID string
+
+func NewSubscriptionID(id string) SubscriptionID { return SubscriptionID(id) }
+func (s SubscriptionID) String() string          { return string(s) }
+func (s SubscriptionID) IsEmpty() bool           { return string(s) == "" }
+
+type BillingRecordID string
+
+func NewBillingRecordID(id string) BillingRecordID { return BillingRecordID(id) }
+func (b BillingRecordID) String() string           { return string(b) }
+func (b BillingRecordID) IsEmpty() bool            { return string(b) == "" }
