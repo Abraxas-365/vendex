@@ -26,6 +26,12 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 	g.Put("/", h.Update)
 }
 
+// RegisterPublicRoutes registers unauthenticated, read-only settings routes.
+// Tenant is identified via the X-Tenant-ID header.
+func (h *Handler) RegisterPublicRoutes(router fiber.Router) {
+	router.Get("/settings", h.GetPublic)
+}
+
 // updateRequest is the JSON body for updating store settings.
 type updateRequest struct {
 	StoreName      string                  `json:"store_name"`
@@ -81,6 +87,22 @@ func (h *Handler) Update(c *fiber.Ctx) error {
 		SocialLinks:    req.SocialLinks,
 		CheckoutConfig: req.CheckoutConfig,
 	})
+	if err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(ss)
+}
+
+// GetPublic handles GET /settings (public, no auth).
+// Returns the store settings for the tenant identified by X-Tenant-ID header.
+func (h *Handler) GetPublic(c *fiber.Ctx) error {
+	tenantID := kernel.TenantID(c.Get("X-Tenant-ID"))
+	if tenantID == "" {
+		return errx.New("X-Tenant-ID header is required", errx.TypeValidation)
+	}
+
+	ss, err := h.svc.Get(c.Context(), tenantID)
 	if err != nil {
 		return err
 	}

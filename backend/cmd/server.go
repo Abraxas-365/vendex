@@ -150,6 +150,9 @@ func registerRoutes(app *fiber.App, container *Container) {
 	public := app.Group("/api/v1")
 	container.Storefront.Handler.RegisterPublicRoutes(public)
 	container.Theme.Handler.RegisterPublicRoutes(public)
+	container.Product.Handler.RegisterPublicRoutes(public)
+	container.Catalog.Handler.RegisterPublicRoutes(public)
+	container.Settings.Handler.RegisterPublicRoutes(public)
 	logx.Info("  > Public storefront routes registered")
 
 	// Protected routes (require auth)

@@ -37,6 +37,14 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 	col.Delete("/:id", h.DeleteCollection)
 }
 
+// RegisterPublicRoutes registers unauthenticated, read-only catalog routes.
+// Tenant is identified via the X-Tenant-ID header.
+func (h *Handler) RegisterPublicRoutes(router fiber.Router) {
+	router.Get("/categories", h.ListCategoriesPublic)
+	router.Get("/collections", h.ListCollectionsPublic)
+	router.Get("/collections/:id", h.GetCollectionPublic)
+}
+
 // --- Category handlers ---
 
 type createCategoryRequest struct {
@@ -188,6 +196,53 @@ func (h *Handler) DeleteCollection(c *fiber.Ctx) error {
 	}
 
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+// --- Public handlers ---
+
+// ListCategoriesPublic handles GET /categories (public, no auth).
+func (h *Handler) ListCategoriesPublic(c *fiber.Ctx) error {
+	tenantID := kernel.TenantID(c.Get("X-Tenant-ID"))
+	if tenantID == "" {
+		return errx.New("X-Tenant-ID header is required", errx.TypeValidation)
+	}
+
+	pg := paginationFromCtx(c)
+	result, err := h.svc.ListCategories(c.Context(), tenantID, pg)
+	if err != nil {
+		return err
+	}
+	return c.JSON(result)
+}
+
+// ListCollectionsPublic handles GET /collections (public, no auth).
+func (h *Handler) ListCollectionsPublic(c *fiber.Ctx) error {
+	tenantID := kernel.TenantID(c.Get("X-Tenant-ID"))
+	if tenantID == "" {
+		return errx.New("X-Tenant-ID header is required", errx.TypeValidation)
+	}
+
+	pg := paginationFromCtx(c)
+	result, err := h.svc.ListCollections(c.Context(), tenantID, pg)
+	if err != nil {
+		return err
+	}
+	return c.JSON(result)
+}
+
+// GetCollectionPublic handles GET /collections/:id (public, no auth).
+func (h *Handler) GetCollectionPublic(c *fiber.Ctx) error {
+	tenantID := kernel.TenantID(c.Get("X-Tenant-ID"))
+	if tenantID == "" {
+		return errx.New("X-Tenant-ID header is required", errx.TypeValidation)
+	}
+
+	id := kernel.CollectionID(c.Params("id"))
+	col, err := h.svc.GetCollectionByID(c.Context(), tenantID, id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(col)
 }
 
 // --- helpers ---
