@@ -26,14 +26,18 @@ func New(repo product.Repository, variantRepo product.VariantRepository, bus eve
 
 // CreateInput holds the data needed to create a product.
 type CreateInput struct {
-	Name        string
-	Description string
-	Price       kernel.Money
-	SKU         string
-	Images      []string
-	CategoryID  kernel.CategoryID
-	Tags        []string
-	Stock       int
+	Name            string
+	Description     string
+	Price           kernel.Money
+	SKU             string
+	Images          []string
+	CategoryID      kernel.CategoryID
+	Tags            []string
+	Stock           int
+	Slug            string
+	MetaTitle       string
+	MetaDescription string
+	CanonicalURL    string
 }
 
 // Create creates a new product for the given tenant.
@@ -53,21 +57,40 @@ func (s *Service) Create(ctx context.Context, tenantID kernel.TenantID, in Creat
 		}
 	}
 
+	// Auto-generate slug from name if not provided.
+	slug := in.Slug
+	if slug == "" {
+		slug = product.GenerateSlug(in.Name)
+	}
+
+	// Check for duplicate slug within tenant.
+	existingBySlug, err := s.repo.GetBySlug(ctx, tenantID, slug)
+	if err != nil && !errx.Is(err, product.ErrNotFound) {
+		return nil, errx.Wrap(err, "checking slug uniqueness", errx.TypeInternal)
+	}
+	if existingBySlug != nil {
+		return nil, product.ErrDuplicateSlug
+	}
+
 	now := time.Now()
 	p := &product.Product{
-		ID:          kernel.ProductID(uuid.NewString()),
-		TenantID:    tenantID,
-		Name:        in.Name,
-		Description: in.Description,
-		Price:       in.Price,
-		SKU:         in.SKU,
-		Images:      in.Images,
-		CategoryID:  in.CategoryID,
-		Tags:        in.Tags,
-		Status:      product.StatusDraft,
-		Stock:       in.Stock,
-		CreatedAt:   now,
-		UpdatedAt:   now,
+		ID:              kernel.ProductID(uuid.NewString()),
+		TenantID:        tenantID,
+		Name:            in.Name,
+		Description:     in.Description,
+		Price:           in.Price,
+		SKU:             in.SKU,
+		Images:          in.Images,
+		CategoryID:      in.CategoryID,
+		Tags:            in.Tags,
+		Status:          product.StatusDraft,
+		Stock:           in.Stock,
+		Slug:            slug,
+		MetaTitle:       in.MetaTitle,
+		MetaDescription: in.MetaDescription,
+		CanonicalURL:    in.CanonicalURL,
+		CreatedAt:       now,
+		UpdatedAt:       now,
 	}
 
 	if err := s.repo.Create(ctx, p); err != nil {
@@ -154,6 +177,29 @@ func (s *Service) List(ctx context.Context, tenantID kernel.TenantID, pg kernel.
 // ListByCategory returns products in a specific category.
 func (s *Service) ListByCategory(ctx context.Context, tenantID kernel.TenantID, categoryID kernel.CategoryID, pg kernel.PaginationOptions) (kernel.Paginated[product.Product], error) {
 	return s.repo.ListByCategory(ctx, tenantID, categoryID, pg)
+}
+
+// GetBySlug retrieves a product by its URL slug, scoped to tenant.
+func (s *Service) GetBySlug(ctx context.Context, tenantID kernel.TenantID, slug string) (*product.Product, error) {
+	p, err := s.repo.GetBySlug(ctx, tenantID, slug)
+	if err != nil {
+		return nil, err
+	}
+
+	// Eagerly load options and variants.
+	opts, err := s.variantRepo.ListOptions(ctx, tenantID, p.ID)
+	if err != nil {
+		return nil, errx.Wrap(err, "loading product options", errx.TypeInternal)
+	}
+	p.Options = opts
+
+	variants, err := s.variantRepo.ListVariants(ctx, tenantID, p.ID)
+	if err != nil {
+		return nil, errx.Wrap(err, "loading product variants", errx.TypeInternal)
+	}
+	p.Variants = variants
+
+	return p, nil
 }
 
 // ─── Option methods ───────────────────────────────────────────────────────────
