@@ -46,6 +46,33 @@ import type {
   TranslationBundle,
   Subscription,
   BillingRecord,
+  Warehouse,
+  StockLevel,
+  StockMovement,
+  LowStockAlert,
+  Review,
+  ReviewStatus,
+  ReturnRequest,
+  ReturnStatus,
+  Webhook,
+  WebhookDelivery,
+  AuditLog,
+  AuditStats,
+  LoyaltyReward,
+  LoyaltyAccount,
+  LoyaltyTransaction,
+  Bundle,
+  BundleItem,
+  BundlePrice,
+  SalesOverview,
+  RevenueData,
+  TopProductReport,
+  CustomerStats,
+  FunnelStep,
+  SocialAccount,
+  SocialProvider,
+  AdminNotification,
+  UnreadCount,
 } from '../types'
 
 // ---------------------------------------------------------------------------
@@ -1019,4 +1046,277 @@ export function resumeSubscription(id: string): Promise<Subscription> {
 
 export function listBillingRecords(subscriptionId: string, params?: PaginationParams): Promise<PaginatedResult<BillingRecord>> {
   return get<PaginatedResult<BillingRecord>>(`/subscriptions/${subscriptionId}/billing`, params as Record<string, string | number | undefined>)
+}
+
+// ---------------------------------------------------------------------------
+// Inventory — Warehouses (027)
+// ---------------------------------------------------------------------------
+
+export function listWarehouses(): Promise<Warehouse[]> {
+  return get<Warehouse[]>('/inventory/warehouses')
+}
+
+export function createWarehouse(data: Partial<Warehouse>): Promise<Warehouse> {
+  return post<Warehouse>('/inventory/warehouses', data)
+}
+
+export function updateWarehouse(id: string, data: Partial<Warehouse>): Promise<Warehouse> {
+  return put<Warehouse>(`/inventory/warehouses/${id}`, data)
+}
+
+export function deleteWarehouse(id: string): Promise<void> {
+  return del(`/inventory/warehouses/${id}`)
+}
+
+export function getStockLevels(productId: string): Promise<StockLevel[]> {
+  return get<StockLevel[]>(`/inventory/stock/${productId}`)
+}
+
+export function adjustStock(data: { product_id: string; warehouse_id: string; quantity: number; note?: string }): Promise<StockMovement> {
+  return post<StockMovement>('/inventory/stock/adjust', data)
+}
+
+export function getLowStockAlerts(): Promise<LowStockAlert[]> {
+  return get<LowStockAlert[]>('/inventory/stock/low')
+}
+
+export function getStockMovements(productId: string): Promise<StockMovement[]> {
+  return get<StockMovement[]>(`/inventory/movements/${productId}`)
+}
+
+// ---------------------------------------------------------------------------
+// Reviews (028)
+// ---------------------------------------------------------------------------
+
+export function listReviews(params?: PaginationParams & { status?: ReviewStatus }): Promise<PaginatedResult<Review>> {
+  return get<PaginatedResult<Review>>('/reviews', params as Record<string, string | number | undefined>)
+}
+
+export function getReview(id: string): Promise<Review> {
+  return get<Review>(`/reviews/${id}`)
+}
+
+export function approveReview(id: string): Promise<Review> {
+  return put<Review>(`/reviews/${id}/approve`)
+}
+
+export function rejectReview(id: string): Promise<Review> {
+  return put<Review>(`/reviews/${id}/reject`)
+}
+
+export function respondToReview(id: string, response: string): Promise<Review> {
+  return post<Review>(`/reviews/${id}/respond`, { response })
+}
+
+// ---------------------------------------------------------------------------
+// Returns (029)
+// ---------------------------------------------------------------------------
+
+export function listReturns(params?: PaginationParams & { status?: ReturnStatus }): Promise<PaginatedResult<ReturnRequest>> {
+  return get<PaginatedResult<ReturnRequest>>('/returns', params as Record<string, string | number | undefined>)
+}
+
+export function getReturn(id: string): Promise<ReturnRequest> {
+  return get<ReturnRequest>(`/returns/${id}`)
+}
+
+export function approveReturn(id: string): Promise<ReturnRequest> {
+  return put<ReturnRequest>(`/returns/${id}/approve`)
+}
+
+export function rejectReturn(id: string): Promise<ReturnRequest> {
+  return put<ReturnRequest>(`/returns/${id}/reject`)
+}
+
+export function markReturnReceived(id: string): Promise<ReturnRequest> {
+  return put<ReturnRequest>(`/returns/${id}/received`)
+}
+
+export function markReturnRefunded(id: string): Promise<ReturnRequest> {
+  return put<ReturnRequest>(`/returns/${id}/refunded`)
+}
+
+export function closeReturn(id: string): Promise<ReturnRequest> {
+  return put<ReturnRequest>(`/returns/${id}/close`)
+}
+
+// ---------------------------------------------------------------------------
+// Webhooks (030)
+// ---------------------------------------------------------------------------
+
+export function listWebhooks(): Promise<Webhook[]> {
+  return get<Webhook[]>('/webhooks')
+}
+
+export function createWebhook(data: Partial<Webhook>): Promise<Webhook> {
+  return post<Webhook>('/webhooks', data)
+}
+
+export function updateWebhook(id: string, data: Partial<Webhook>): Promise<Webhook> {
+  return put<Webhook>(`/webhooks/${id}`, data)
+}
+
+export function deleteWebhook(id: string): Promise<void> {
+  return del(`/webhooks/${id}`)
+}
+
+export function toggleWebhook(id: string): Promise<Webhook> {
+  return put<Webhook>(`/webhooks/${id}/toggle`)
+}
+
+export function listWebhookDeliveries(webhookId: string): Promise<WebhookDelivery[]> {
+  return get<WebhookDelivery[]>(`/webhooks/${webhookId}/deliveries`)
+}
+
+export function retryWebhookDelivery(deliveryId: string): Promise<WebhookDelivery> {
+  return post<WebhookDelivery>(`/webhooks/deliveries/${deliveryId}/retry`)
+}
+
+// ---------------------------------------------------------------------------
+// Audit Logs (031)
+// ---------------------------------------------------------------------------
+
+export function listAuditLogs(params?: PaginationParams & {
+  user_id?: string
+  action?: string
+  resource_type?: string
+  from?: string
+  to?: string
+}): Promise<PaginatedResult<AuditLog>> {
+  return get<PaginatedResult<AuditLog>>('/audit', params as Record<string, string | number | undefined>)
+}
+
+export function getAuditLog(id: string): Promise<AuditLog> {
+  return get<AuditLog>(`/audit/${id}`)
+}
+
+export function getAuditStats(): Promise<AuditStats> {
+  return get<AuditStats>('/audit/stats')
+}
+
+// ---------------------------------------------------------------------------
+// Loyalty (032)
+// ---------------------------------------------------------------------------
+
+export function listLoyaltyRewards(): Promise<LoyaltyReward[]> {
+  return get<LoyaltyReward[]>('/loyalty/rewards')
+}
+
+export function createLoyaltyReward(data: Partial<LoyaltyReward>): Promise<LoyaltyReward> {
+  return post<LoyaltyReward>('/loyalty/rewards', data)
+}
+
+export function updateLoyaltyReward(id: string, data: Partial<LoyaltyReward>): Promise<LoyaltyReward> {
+  return put<LoyaltyReward>(`/loyalty/rewards/${id}`, data)
+}
+
+export function listLoyaltyAccounts(params?: PaginationParams): Promise<PaginatedResult<LoyaltyAccount>> {
+  return get<PaginatedResult<LoyaltyAccount>>('/loyalty/accounts', params as Record<string, string | number | undefined>)
+}
+
+export function getLoyaltyAccount(id: string): Promise<LoyaltyAccount> {
+  return get<LoyaltyAccount>(`/loyalty/accounts/${id}`)
+}
+
+export function adjustLoyaltyPoints(id: string, data: { points: number; note: string }): Promise<LoyaltyAccount> {
+  return post<LoyaltyAccount>(`/loyalty/accounts/${id}/adjust`, data)
+}
+
+export function getLoyaltyTransactions(id: string): Promise<LoyaltyTransaction[]> {
+  return get<LoyaltyTransaction[]>(`/loyalty/accounts/${id}/transactions`)
+}
+
+// ---------------------------------------------------------------------------
+// Bundles (033)
+// ---------------------------------------------------------------------------
+
+export function listBundles(params?: PaginationParams): Promise<PaginatedResult<Bundle>> {
+  return get<PaginatedResult<Bundle>>('/bundles', params as Record<string, string | number | undefined>)
+}
+
+export function createBundle(data: Partial<Bundle>): Promise<Bundle> {
+  return post<Bundle>('/bundles', data)
+}
+
+export function updateBundle(id: string, data: Partial<Bundle>): Promise<Bundle> {
+  return put<Bundle>(`/bundles/${id}`, data)
+}
+
+export function deleteBundle(id: string): Promise<void> {
+  return del(`/bundles/${id}`)
+}
+
+export function addBundleItem(bundleId: string, data: { product_id: string; quantity: number; discount_percent: number }): Promise<BundleItem> {
+  return post<BundleItem>(`/bundles/${bundleId}/items`, data)
+}
+
+export function removeBundleItem(bundleId: string, itemId: string): Promise<void> {
+  return del(`/bundles/${bundleId}/items/${itemId}`)
+}
+
+export function getBundlePrice(bundleId: string): Promise<BundlePrice> {
+  return get<BundlePrice>(`/bundles/${bundleId}/price`)
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard Reporting (034)
+// ---------------------------------------------------------------------------
+
+export function getDashboardSales(params?: { from?: string; to?: string }): Promise<SalesOverview> {
+  return get<SalesOverview>('/dashboard/sales', params as Record<string, string | undefined>)
+}
+
+export function getDashboardTopProducts(params?: { from?: string; to?: string }): Promise<TopProductReport[]> {
+  return get<TopProductReport[]>('/dashboard/top-products', params as Record<string, string | undefined>)
+}
+
+export function getDashboardRevenue(params?: { from?: string; to?: string }): Promise<RevenueData[]> {
+  return get<RevenueData[]>('/dashboard/revenue', params as Record<string, string | undefined>)
+}
+
+export function getDashboardCustomers(params?: { from?: string; to?: string }): Promise<CustomerStats> {
+  return get<CustomerStats>('/dashboard/customers', params as Record<string, string | undefined>)
+}
+
+export function getDashboardFunnel(params?: { from?: string; to?: string }): Promise<FunnelStep[]> {
+  return get<FunnelStep[]>('/dashboard/funnel', params as Record<string, string | undefined>)
+}
+
+// ---------------------------------------------------------------------------
+// Social Accounts (035)
+// ---------------------------------------------------------------------------
+
+export function listSocialAccounts(params?: PaginationParams & { provider?: SocialProvider }): Promise<PaginatedResult<SocialAccount>> {
+  return get<PaginatedResult<SocialAccount>>('/social-accounts', params as Record<string, string | number | undefined>)
+}
+
+export function listCustomerSocialAccounts(customerId: string): Promise<SocialAccount[]> {
+  return get<SocialAccount[]>(`/social-accounts/customer/${customerId}`)
+}
+
+// ---------------------------------------------------------------------------
+// Notifications (036)
+// ---------------------------------------------------------------------------
+
+export function listNotifications(params?: PaginationParams & { read?: boolean }): Promise<PaginatedResult<AdminNotification>> {
+  const { read, ...rest } = params ?? {}
+  const queryParams: Record<string, string | number | undefined> = { ...rest }
+  if (read !== undefined) queryParams.read = read ? '1' : '0'
+  return get<PaginatedResult<AdminNotification>>('/notifications', queryParams)
+}
+
+export function getUnreadCount(): Promise<UnreadCount> {
+  return get<UnreadCount>('/notifications/unread-count')
+}
+
+export function markAllNotificationsRead(): Promise<void> {
+  return put<void>('/notifications/read-all')
+}
+
+export function markNotificationRead(id: string): Promise<AdminNotification> {
+  return put<AdminNotification>(`/notifications/${id}/read`)
+}
+
+export function deleteNotification(id: string): Promise<void> {
+  return del(`/notifications/${id}`)
 }

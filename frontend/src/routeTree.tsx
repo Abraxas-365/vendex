@@ -30,6 +30,16 @@ import {
   DollarSign,
   Languages,
   RefreshCw,
+  Warehouse,
+  Star,
+  RotateCcw,
+  Webhook,
+  ClipboardList,
+  Award,
+  Layers,
+  BarChart2,
+  Share2,
+  Bell,
 } from 'lucide-react'
 
 // Store pages
@@ -68,6 +78,16 @@ import CartRecovery from './pages/admin/CartRecovery'
 import CurrencyRates from './pages/admin/CurrencyRates'
 import Translations from './pages/admin/Translations'
 import Subscriptions from './pages/admin/Subscriptions'
+import Inventory from './pages/admin/Inventory'
+import Reviews from './pages/admin/Reviews'
+import Returns from './pages/admin/Returns'
+import Webhooks from './pages/admin/Webhooks'
+import AuditLogs from './pages/admin/AuditLogs'
+import Loyalty from './pages/admin/Loyalty'
+import Bundles from './pages/admin/Bundles'
+import Reporting from './pages/admin/Reporting'
+import SocialAccounts from './pages/admin/SocialAccounts'
+import Notifications from './pages/admin/Notifications'
 
 // Auth pages
 import Login from './pages/auth/Login'
@@ -128,6 +148,16 @@ const adminNavItems: NavItem[] = [
   { to: '/admin/currency-rates', label: 'Currency Rates', icon: DollarSign },
   { to: '/admin/translations', label: 'Translations', icon: Languages },
   { to: '/admin/subscriptions', label: 'Subscriptions', icon: RefreshCw },
+  { to: '/admin/inventory', label: 'Inventory', icon: Warehouse },
+  { to: '/admin/reviews', label: 'Reviews', icon: Star },
+  { to: '/admin/returns', label: 'Returns', icon: RotateCcw },
+  { to: '/admin/webhooks', label: 'Webhooks', icon: Webhook },
+  { to: '/admin/audit-logs', label: 'Audit Logs', icon: ClipboardList },
+  { to: '/admin/loyalty', label: 'Loyalty', icon: Award },
+  { to: '/admin/bundles', label: 'Bundles', icon: Layers },
+  { to: '/admin/reporting', label: 'Reporting', icon: BarChart2 },
+  { to: '/admin/social-accounts', label: 'Social Accounts', icon: Share2 },
+  { to: '/admin/notifications', label: 'Notifications', icon: Bell },
   { to: '/admin/media', label: 'Media', icon: Image },
   { to: '/admin/agent', label: 'Agent Chat', icon: Bot },
   { to: '/admin/marketplace', label: 'Marketplace', icon: Puzzle },
@@ -470,6 +500,66 @@ const adminSubscriptionsRoute = createRoute({
   component: Subscriptions,
 })
 
+const adminInventoryRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/inventory',
+  component: Inventory,
+})
+
+const adminReviewsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/reviews',
+  component: Reviews,
+})
+
+const adminReturnsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/returns',
+  component: Returns,
+})
+
+const adminWebhooksRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/webhooks',
+  component: Webhooks,
+})
+
+const adminAuditLogsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/audit-logs',
+  component: AuditLogs,
+})
+
+const adminLoyaltyRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/loyalty',
+  component: Loyalty,
+})
+
+const adminBundlesRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/bundles',
+  component: Bundles,
+})
+
+const adminReportingRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/reporting',
+  component: Reporting,
+})
+
+const adminSocialAccountsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/social-accounts',
+  component: SocialAccounts,
+})
+
+const adminNotificationsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/notifications',
+  component: Notifications,
+})
+
 // ─── Route tree ───────────────────────────────────────────────────────────────
 
 const storeTree = storeLayoutRoute.addChildren([
@@ -503,6 +593,16 @@ const adminTree = adminLayoutRoute.addChildren([
   adminCurrencyRatesRoute,
   adminTranslationsRoute,
   adminSubscriptionsRoute,
+  adminInventoryRoute,
+  adminReviewsRoute,
+  adminReturnsRoute,
+  adminWebhooksRoute,
+  adminAuditLogsRoute,
+  adminLoyaltyRoute,
+  adminBundlesRoute,
+  adminReportingRoute,
+  adminSocialAccountsRoute,
+  adminNotificationsRoute,
   adminMediaRoute,
   adminAgentRoute,
   adminMarketplaceRoute,
