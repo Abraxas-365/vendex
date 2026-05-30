@@ -37,6 +37,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/tax/taxcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/theme/themecontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/wishlist/wishlistcontainer"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
@@ -86,6 +87,7 @@ type Container struct {
 	Shipping    *shippingcontainer.Container
 	Tax         *taxcontainer.Container
 	Checkout    *checkoutcontainer.Container
+	Wishlist    *wishlistcontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -209,6 +211,7 @@ func (c *Container) initModules() {
 		c.Payment.Service,
 		c.Promo.Service,
 	)
+	c.Wishlist = wishlistcontainer.New(c.DB)
 
 	// Transactional email notifications — wired last so all domain containers exist.
 	emailHandler := emails.New(

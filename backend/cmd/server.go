@@ -191,6 +191,9 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.Shipping.RegisterRoutes(protected)
 	container.Tax.RegisterRoutes(protected)
 	container.Customer.RegisterCustomerProtectedRoutes(public)
+	// Wishlist routes — customer-authenticated (reuse customer JWT middleware)
+	wishlistProtected := public.Group("", container.Customer.AuthMiddleware.Authenticate())
+	container.Wishlist.RegisterCustomerRoutes(wishlistProtected)
 	logx.Info("  > Commerce domain routes registered")
 
 	logx.Info("All routes registered")
