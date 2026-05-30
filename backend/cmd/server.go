@@ -170,6 +170,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	// Commerce domain routes (all protected by auth middleware)
 	container.Product.RegisterRoutes(protected)
 	container.Order.RegisterRoutes(protected)
+	container.Payment.RegisterRoutes(protected)
 	container.Customer.RegisterRoutes(protected)
 	container.Catalog.RegisterRoutes(protected)
 	container.Storefront.RegisterRoutes(protected)
