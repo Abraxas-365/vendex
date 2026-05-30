@@ -144,3 +144,12 @@ type ReturnPayload struct {
 	Status     string `json:"status"`
 	Resolution string `json:"resolution,omitempty"`
 }
+
+// BundlePayload is the payload for bundle.* events.
+type BundlePayload struct {
+	BundleID      string `json:"bundle_id"`
+	Name          string `json:"name"`
+	Slug          string `json:"slug"`
+	DiscountType  string `json:"discount_type"`
+	DiscountValue int    `json:"discount_value"`
+}

@@ -99,6 +99,9 @@ const (
 	LoyaltyPointsEarned  EventType = "loyalty.points_earned"
 	LoyaltyPointsRedeemed EventType = "loyalty.points_redeemed"
 	LoyaltyRewardCreated EventType = "loyalty.reward_created"
+	// Bundle events
+	BundleCreated EventType = "bundle.created"
+	BundleUpdated EventType = "bundle.updated"
 )
 
 // Event is a domain event that has occurred in the system.

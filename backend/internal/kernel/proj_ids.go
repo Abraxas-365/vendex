@@ -300,3 +300,14 @@ type RewardID string
 func NewRewardID(id string) RewardID { return RewardID(id) }
 func (r RewardID) String() string    { return string(r) }
 func (r RewardID) IsEmpty() bool     { return string(r) == "" }
+type BundleID string
+
+func NewBundleID(id string) BundleID { return BundleID(id) }
+func (b BundleID) String() string    { return string(b) }
+func (b BundleID) IsEmpty() bool     { return string(b) == "" }
+
+type BundleItemID string
+
+func NewBundleItemID(id string) BundleItemID { return BundleItemID(id) }
+func (b BundleItemID) String() string        { return string(b) }
+func (b BundleItemID) IsEmpty() bool         { return string(b) == "" }
