@@ -173,7 +173,7 @@ func (c *Container) initModules() {
 	c.Product = productcontainer.New(c.DB, bus)
 	c.Order = ordercontainer.New(c.DB, bus)
 	c.Payment = paymentcontainer.New(c.DB, bus)
-	c.Customer = customercontainer.New(c.DB, bus)
+	c.Customer = customercontainer.New(c.DB, bus, c.Config.Auth.JWT.SecretKey, c.Order.Service)
 	c.Catalog = catalogcontainer.New(c.DB, bus)
 	c.Theme = themecontainer.New(c.DB, bus)
 	// Settings must be initialized before Storefront so the renderer can fetch store branding.
