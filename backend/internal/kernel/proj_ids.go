@@ -97,3 +97,15 @@ type BlockTypeID string
 func NewBlockTypeID(id string) BlockTypeID { return BlockTypeID(id) }
 func (b BlockTypeID) String() string       { return string(b) }
 func (b BlockTypeID) IsEmpty() bool        { return string(b) == "" }
+
+type ThemeID string
+
+func NewThemeID(id string) ThemeID { return ThemeID(id) }
+func (t ThemeID) String() string   { return string(t) }
+func (t ThemeID) IsEmpty() bool    { return string(t) == "" }
+
+type BlockID string
+
+func NewBlockID(id string) BlockID { return BlockID(id) }
+func (b BlockID) String() string   { return string(b) }
+func (b BlockID) IsEmpty() bool    { return string(b) == "" }
