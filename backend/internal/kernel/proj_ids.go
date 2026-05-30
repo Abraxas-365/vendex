@@ -201,3 +201,9 @@ type GiftCardTransactionID string
 func NewGiftCardTransactionID(id string) GiftCardTransactionID { return GiftCardTransactionID(id) }
 func (g GiftCardTransactionID) String() string                 { return string(g) }
 func (g GiftCardTransactionID) IsEmpty() bool                  { return string(g) == "" }
+
+type RecoveryID string
+
+func NewRecoveryID(id string) RecoveryID { return RecoveryID(id) }
+func (r RecoveryID) String() string      { return string(r) }
+func (r RecoveryID) IsEmpty() bool       { return string(r) == "" }
