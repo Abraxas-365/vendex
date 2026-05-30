@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/errx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/order/ordersrv"
 	"github.com/Abraxas-365/hada-commerce/internal/product/productsrv"
@@ -62,7 +63,7 @@ func (t *CreatePageTool) InputSchema() map[string]any {
 func (t *CreatePageTool) Execute(ctx context.Context, raw json.RawMessage) (string, error) {
 	var in createPageInput
 	if err := json.Unmarshal(raw, &in); err != nil {
-		return "", fmt.Errorf("create_page: unmarshal input: %w", err)
+		return "", errx.Wrap(err, "create_page: unmarshal input", errx.TypeValidation)
 	}
 
 	page, err := t.sf.CreatePage(ctx, storefrontsrv.CreatePageInput{
@@ -81,7 +82,7 @@ func (t *CreatePageTool) Execute(ctx context.Context, raw json.RawMessage) (stri
 		ByAgent:   true,
 	})
 	if err != nil {
-		return "", fmt.Errorf("create_page: %w", err)
+		return "", errx.Wrap(err, "create_page", errx.TypeInternal)
 	}
 
 	return fmt.Sprintf(
@@ -129,7 +130,7 @@ func (t *UpdatePageTool) InputSchema() map[string]any {
 func (t *UpdatePageTool) Execute(ctx context.Context, raw json.RawMessage) (string, error) {
 	var in updatePageInput
 	if err := json.Unmarshal(raw, &in); err != nil {
-		return "", fmt.Errorf("update_page: unmarshal input: %w", err)
+		return "", errx.Wrap(err, "update_page: unmarshal input", errx.TypeValidation)
 	}
 
 	page, err := t.sf.UpdatePage(ctx, storefrontsrv.UpdatePageInput{
@@ -142,7 +143,7 @@ func (t *UpdatePageTool) Execute(ctx context.Context, raw json.RawMessage) (stri
 		Comment:  in.Comment,
 	})
 	if err != nil {
-		return "", fmt.Errorf("update_page: %w", err)
+		return "", errx.Wrap(err, "update_page", errx.TypeInternal)
 	}
 
 	return fmt.Sprintf(
@@ -185,7 +186,7 @@ func (t *ListPagesTool) InputSchema() map[string]any {
 func (t *ListPagesTool) Execute(ctx context.Context, raw json.RawMessage) (string, error) {
 	var in listPagesInput
 	if err := json.Unmarshal(raw, &in); err != nil {
-		return "", fmt.Errorf("list_pages: unmarshal input: %w", err)
+		return "", errx.Wrap(err, "list_pages: unmarshal input", errx.TypeValidation)
 	}
 
 	pg := kernel.NewPaginationOptions(in.Page, in.PageSize)
@@ -198,7 +199,7 @@ func (t *ListPagesTool) Execute(ctx context.Context, raw json.RawMessage) (strin
 
 	result, err := t.sf.ListPages(ctx, t.tenantID, statusFilter, pg)
 	if err != nil {
-		return "", fmt.Errorf("list_pages: %w", err)
+		return "", errx.Wrap(err, "list_pages", errx.TypeInternal)
 	}
 
 	if len(result.Items) == 0 {
@@ -258,7 +259,7 @@ func (t *CreateProductTool) InputSchema() map[string]any {
 func (t *CreateProductTool) Execute(ctx context.Context, raw json.RawMessage) (string, error) {
 	var in createProductInput
 	if err := json.Unmarshal(raw, &in); err != nil {
-		return "", fmt.Errorf("create_product: unmarshal input: %w", err)
+		return "", errx.Wrap(err, "create_product: unmarshal input", errx.TypeValidation)
 	}
 
 	p, err := t.products.Create(ctx, t.tenantID, productsrv.CreateInput{
@@ -271,7 +272,7 @@ func (t *CreateProductTool) Execute(ctx context.Context, raw json.RawMessage) (s
 		Stock:       in.Stock,
 	})
 	if err != nil {
-		return "", fmt.Errorf("create_product: %w", err)
+		return "", errx.Wrap(err, "create_product", errx.TypeInternal)
 	}
 
 	return fmt.Sprintf(
@@ -312,13 +313,13 @@ func (t *ListProductsTool) InputSchema() map[string]any {
 func (t *ListProductsTool) Execute(ctx context.Context, raw json.RawMessage) (string, error) {
 	var in listProductsInput
 	if err := json.Unmarshal(raw, &in); err != nil {
-		return "", fmt.Errorf("list_products: unmarshal input: %w", err)
+		return "", errx.Wrap(err, "list_products: unmarshal input", errx.TypeValidation)
 	}
 
 	pg := kernel.NewPaginationOptions(in.Page, in.PageSize)
 	result, err := t.products.List(ctx, t.tenantID, pg)
 	if err != nil {
-		return "", fmt.Errorf("list_products: %w", err)
+		return "", errx.Wrap(err, "list_products", errx.TypeInternal)
 	}
 
 	if len(result.Items) == 0 {
@@ -376,7 +377,7 @@ func (t *CreatePromoTool) InputSchema() map[string]any {
 func (t *CreatePromoTool) Execute(ctx context.Context, raw json.RawMessage) (string, error) {
 	var in createPromoInput
 	if err := json.Unmarshal(raw, &in); err != nil {
-		return "", fmt.Errorf("create_promo: unmarshal input: %w", err)
+		return "", errx.Wrap(err, "create_promo: unmarshal input", errx.TypeValidation)
 	}
 
 	ci := promosrv.CreateInput{
@@ -399,7 +400,7 @@ func (t *CreatePromoTool) Execute(ctx context.Context, raw json.RawMessage) (str
 
 	p, err := t.promos.Create(ctx, ci)
 	if err != nil {
-		return "", fmt.Errorf("create_promo: %w", err)
+		return "", errx.Wrap(err, "create_promo", errx.TypeInternal)
 	}
 
 	return fmt.Sprintf(
@@ -440,13 +441,13 @@ func (t *QueryOrdersTool) InputSchema() map[string]any {
 func (t *QueryOrdersTool) Execute(ctx context.Context, raw json.RawMessage) (string, error) {
 	var in queryOrdersInput
 	if err := json.Unmarshal(raw, &in); err != nil {
-		return "", fmt.Errorf("query_orders: unmarshal input: %w", err)
+		return "", errx.Wrap(err, "query_orders: unmarshal input", errx.TypeValidation)
 	}
 
 	pg := kernel.NewPaginationOptions(in.Page, in.PageSize)
 	result, err := t.orders.List(ctx, t.tenantID, pg)
 	if err != nil {
-		return "", fmt.Errorf("query_orders: %w", err)
+		return "", errx.Wrap(err, "query_orders", errx.TypeInternal)
 	}
 
 	if len(result.Items) == 0 {
@@ -496,7 +497,7 @@ func (t *SearchCatalogTool) InputSchema() map[string]any {
 func (t *SearchCatalogTool) Execute(ctx context.Context, raw json.RawMessage) (string, error) {
 	var in searchCatalogInput
 	if err := json.Unmarshal(raw, &in); err != nil {
-		return "", fmt.Errorf("search_catalog: unmarshal input: %w", err)
+		return "", errx.Wrap(err, "search_catalog: unmarshal input", errx.TypeValidation)
 	}
 
 	pg := kernel.NewPaginationOptions(in.Page, in.PageSize)
@@ -507,14 +508,14 @@ func (t *SearchCatalogTool) Execute(ctx context.Context, raw json.RawMessage) (s
 	case "collections":
 		return t.listCollections(ctx, pg)
 	default:
-		return "", fmt.Errorf("search_catalog: unknown target %q; use 'categories' or 'collections'", in.Target)
+		return "", errx.Validation(fmt.Sprintf("search_catalog: unknown target %q; use 'categories' or 'collections'", in.Target))
 	}
 }
 
 func (t *SearchCatalogTool) listCategories(ctx context.Context, pg kernel.PaginationOptions) (string, error) {
 	result, err := t.catalog.ListCategories(ctx, t.tenantID, pg)
 	if err != nil {
-		return "", fmt.Errorf("list categories: %w", err)
+		return "", errx.Wrap(err, "list categories", errx.TypeInternal)
 	}
 	if len(result.Items) == 0 {
 		return "No categories found.", nil
@@ -533,7 +534,7 @@ func (t *SearchCatalogTool) listCategories(ctx context.Context, pg kernel.Pagina
 func (t *SearchCatalogTool) listCollections(ctx context.Context, pg kernel.PaginationOptions) (string, error) {
 	result, err := t.catalog.ListCollections(ctx, t.tenantID, pg)
 	if err != nil {
-		return "", fmt.Errorf("list collections: %w", err)
+		return "", errx.Wrap(err, "list collections", errx.TypeInternal)
 	}
 	if len(result.Items) == 0 {
 		return "No collections found.", nil
