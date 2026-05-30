@@ -311,3 +311,8 @@ type BundleItemID string
 func NewBundleItemID(id string) BundleItemID { return BundleItemID(id) }
 func (b BundleItemID) String() string        { return string(b) }
 func (b BundleItemID) IsEmpty() bool         { return string(b) == "" }
+type SocialAccountID string
+
+func NewSocialAccountID(id string) SocialAccountID { return SocialAccountID(id) }
+func (s SocialAccountID) String() string           { return string(s) }
+func (s SocialAccountID) IsEmpty() bool            { return string(s) == "" }

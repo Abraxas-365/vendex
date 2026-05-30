@@ -51,6 +51,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/tax/taxcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/webhook/webhookcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/theme/themecontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/socialauth/socialauthcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/wishlist/wishlistcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/loyalty/loyaltycontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/bundle/bundlecontainer"
@@ -122,6 +123,7 @@ type Container struct {
 	Webhook        *webhookcontainer.Container
 	Loyalty        *loyaltycontainer.Container
 	Bundle         *bundlecontainer.Container
+	SocialAuth     *socialauthcontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -262,6 +264,7 @@ func (c *Container) initModules() {
 	c.Webhook = webhookcontainer.New(c.DB, bus)
 	c.Loyalty = loyaltycontainer.New(c.DB, bus)
 	c.Bundle = bundlecontainer.New(c.DB, bus)
+	c.SocialAuth = socialauthcontainer.New(c.DB)
 
 	// Import/Export — depends on Product, Order, and Customer services.
 	c.ImportExport = importexport.New(
