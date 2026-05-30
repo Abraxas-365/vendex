@@ -192,6 +192,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.Media.RegisterRoutes(protected)
 	container.Marketplace.RegisterRoutes(protected)
 	container.Analytics.RegisterRoutes(protected)
+	container.Dashboard.RegisterRoutes(protected)
 	container.Settings.RegisterRoutes(protected)
 	container.Theme.RegisterRoutes(protected)
 	container.Plugin.RegisterRoutes(protected)
