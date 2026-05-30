@@ -22,13 +22,14 @@ func NewHandler(svc *pluginsrv.Service) *Handler {
 }
 
 // RegisterRoutes registers all plugin routes on the given router.
-// NOTE: /plugins/installed must be registered BEFORE /plugins/:id to avoid
-// the path collision where "installed" is matched as an ID parameter.
+// NOTE: /plugins/installed and /plugins/js-manifest must be registered BEFORE
+// /plugins/:id to avoid the path collision where those names are matched as IDs.
 func (h *Handler) RegisterRoutes(router fiber.Router) {
 	g := router.Group("/plugins")
 
 	// Static sub-paths MUST come before the parametric /:id route.
 	g.Get("/installed", h.ListInstalled)
+	g.Get("/js-manifest", h.JSManifest)
 	g.Get("/", h.ListPlugins)
 	g.Post("/", h.CreatePlugin)
 	g.Post("/install", h.Install)
@@ -41,6 +42,13 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 	g.Post("/:id/enable", h.Enable)
 	g.Post("/:id/disable", h.Disable)
 	g.Post("/:id/versions", h.CreateVersion)
+}
+
+// RegisterPublicRoutes registers unauthenticated plugin routes.
+// These routes read the tenant from the X-Tenant-ID header directly.
+func (h *Handler) RegisterPublicRoutes(router fiber.Router) {
+	g := router.Group("/plugins")
+	g.Get("/js-manifest", h.JSManifest)
 }
 
 // ListPlugins handles GET /plugins — returns the global plugin catalogue.
@@ -111,6 +119,39 @@ func (h *Handler) ListInstalled(c *fiber.Ctx) error {
 		return err
 	}
 	return c.JSON(result)
+}
+
+// jsManifestResponse is the response body for the JS manifest endpoint.
+type jsManifestResponse struct {
+	Scripts []plugin.PluginScript `json:"scripts"`
+}
+
+// JSManifest handles GET /plugins/js-manifest.
+// It returns an aggregated list of JS bundle URLs for all active plugin
+// installations belonging to the tenant. The tenant is resolved from the
+// authenticated context when available; otherwise it falls back to the
+// X-Tenant-ID header so that public storefront renderers can call this endpoint
+// without authentication.
+func (h *Handler) JSManifest(c *fiber.Ctx) error {
+	var tenantID kernel.TenantID
+
+	// Prefer the auth context (authenticated routes), fall back to header (public routes).
+	if auth, ok := c.Locals("auth").(*kernel.AuthContext); ok && auth != nil {
+		tenantID = auth.TenantID
+	} else {
+		raw := c.Get("X-Tenant-ID")
+		if raw == "" {
+			return errx.New("X-Tenant-ID header is required", errx.TypeValidation)
+		}
+		tenantID = kernel.TenantID(raw)
+	}
+
+	scripts, err := h.svc.GetJSManifest(c.Context(), tenantID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(jsManifestResponse{Scripts: scripts})
 }
 
 // installRequest is the JSON body for installing a plugin.

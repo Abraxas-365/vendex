@@ -29,6 +29,10 @@ type InstallationRepository interface {
 	GetByTenantAndPlugin(ctx context.Context, tenantID kernel.TenantID, pluginID kernel.PluginID) (*PluginInstallation, error)
 	ListByTenant(ctx context.Context, tenantID kernel.TenantID, pg kernel.PaginationOptions) (kernel.Paginated[PluginInstallation], error)
 	ListActiveByTenant(ctx context.Context, tenantID kernel.TenantID) ([]PluginInstallation, error)
+	// GetJSManifestData returns script entries for all active installations that have
+	// a non-empty frontend_url. It joins plugin_installations with plugins and
+	// plugin_versions in a single query for efficiency.
+	GetJSManifestData(ctx context.Context, tenantID kernel.TenantID) ([]PluginScript, error)
 	Update(ctx context.Context, i *PluginInstallation) error
 	Delete(ctx context.Context, tenantID kernel.TenantID, pluginID kernel.PluginID) error
 }

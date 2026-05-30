@@ -332,6 +332,51 @@ func (r *InstallationRepo) ListActiveByTenant(ctx context.Context, tenantID kern
 	return installations, nil
 }
 
+func (r *InstallationRepo) GetJSManifestData(ctx context.Context, tenantID kernel.TenantID) ([]plugin.PluginScript, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT
+			pi.plugin_id,
+			p.name,
+			pv.version,
+			pv.frontend_url,
+			pi.settings
+		FROM plugin_installations pi
+		JOIN plugins p ON p.id = pi.plugin_id
+		JOIN plugin_versions pv ON pv.id = pi.version_id
+		WHERE pi.tenant_id = $1
+		  AND pi.status = 'active'
+		  AND pv.frontend_url <> ''
+		ORDER BY pi.installed_at DESC`,
+		string(tenantID),
+	)
+	if err != nil {
+		return nil, errx.Wrap(err, "querying js manifest data", errx.TypeInternal)
+	}
+	defer rows.Close()
+
+	var scripts []plugin.PluginScript
+	for rows.Next() {
+		var pluginID, name, version, frontendURL, settings string
+		if err := rows.Scan(&pluginID, &name, &version, &frontendURL, &settings); err != nil {
+			return nil, errx.Wrap(err, "scanning js manifest row", errx.TypeInternal)
+		}
+		scripts = append(scripts, plugin.PluginScript{
+			PluginID:   pluginID,
+			PluginName: name,
+			Version:    version,
+			Src:        frontendURL,
+			Config:     []byte(settings),
+		})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, errx.Wrap(err, "iterating js manifest rows", errx.TypeInternal)
+	}
+	if scripts == nil {
+		scripts = []plugin.PluginScript{}
+	}
+	return scripts, nil
+}
+
 func (r *InstallationRepo) Update(ctx context.Context, i *plugin.PluginInstallation) error {
 	_, err := r.db.ExecContext(ctx, `
 		UPDATE plugin_installations

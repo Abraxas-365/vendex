@@ -55,3 +55,13 @@ type PluginInstallation struct {
 	InstalledAt time.Time              `json:"installed_at" db:"installed_at"`
 	UpdatedAt   time.Time              `json:"updated_at" db:"updated_at"`
 }
+
+// PluginScript is the JS manifest entry returned by the JS manifest endpoint.
+// It contains the information needed for a storefront to inject a plugin's frontend bundle.
+type PluginScript struct {
+	PluginID   string          `json:"plugin_id"`
+	PluginName string          `json:"plugin_name"`
+	Version    string          `json:"version"`
+	Src        string          `json:"src"`
+	Config     json.RawMessage `json:"config"`
+}
