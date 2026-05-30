@@ -126,3 +126,12 @@ type CheckoutPayload struct {
 	Total      int64  `json:"total"`
 	Currency   string `json:"currency"`
 }
+
+// ReturnPayload is the payload for return.* events.
+type ReturnPayload struct {
+	ReturnID   string `json:"return_id"`
+	OrderID    string `json:"order_id"`
+	CustomerID string `json:"customer_id"`
+	Status     string `json:"status"`
+	Resolution string `json:"resolution,omitempty"`
+}

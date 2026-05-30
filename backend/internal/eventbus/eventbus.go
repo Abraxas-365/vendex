@@ -81,6 +81,11 @@ const (
 	SubscriptionCreated   EventType = "subscription.created"
 	SubscriptionCancelled EventType = "subscription.cancelled"
 	SubscriptionBilled    EventType = "subscription.billed"
+
+	// Return events
+	ReturnRequested EventType = "return.requested"
+	ReturnApproved  EventType = "return.approved"
+	ReturnCompleted EventType = "return.completed"
 )
 
 // Event is a domain event that has occurred in the system.
