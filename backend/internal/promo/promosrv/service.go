@@ -30,6 +30,18 @@ type CreateInput struct {
 	MaxUses        *int
 	StartsAt       *time.Time
 	EndsAt         *time.Time
+
+	// Targeting — all optional
+	TargetProductIDs  []string
+	TargetCategoryIDs []string
+	CustomerGroupID   string
+	Stackable         bool
+
+	// Buy X Get Y — only used when Type == PromoTypeBuyXGetY
+	BuyQuantity  *int
+	GetQuantity  *int
+	GetProductID string
+	GetDiscount  *int64
 }
 
 // Create persists a new promo code.
@@ -46,6 +58,16 @@ func (s *Service) Create(ctx context.Context, input CreateInput) (*promo.Promo, 
 		EndsAt:         input.EndsAt,
 		Active:         true,
 		CreatedAt:      time.Now().UTC(),
+
+		TargetProductIDs:  input.TargetProductIDs,
+		TargetCategoryIDs: input.TargetCategoryIDs,
+		CustomerGroupID:   input.CustomerGroupID,
+		Stackable:         input.Stackable,
+
+		BuyQuantity:  input.BuyQuantity,
+		GetQuantity:  input.GetQuantity,
+		GetProductID: input.GetProductID,
+		GetDiscount:  input.GetDiscount,
 	}
 
 	if err := s.repo.Create(ctx, p); err != nil {
@@ -59,6 +81,11 @@ type ValidationResult struct {
 	Valid          bool   `json:"valid"`
 	DiscountCents  int64  `json:"discount_cents"`
 	IsFreeShipping bool   `json:"is_free_shipping"`
+	IsBuyXGetY     bool   `json:"is_buy_x_get_y"`
+	BuyQuantity    *int   `json:"buy_quantity,omitempty"`
+	GetQuantity    *int   `json:"get_quantity,omitempty"`
+	GetProductID   string `json:"get_product_id,omitempty"`
+	GetDiscount    *int64 `json:"get_discount,omitempty"`
 	Reason         string `json:"reason,omitempty"`
 }
 
@@ -88,11 +115,22 @@ func (s *Service) Validate(ctx context.Context, tenantID kernel.TenantID, code s
 		return ValidationResult{Valid: false, Reason: promo.ErrPromoMinOrder.Error()}, nil
 	}
 
-	return ValidationResult{
+	result := ValidationResult{
 		Valid:          true,
 		DiscountCents:  p.Discount(orderTotalCents),
 		IsFreeShipping: p.Type == promo.PromoTypeFreeShipping,
-	}, nil
+		IsBuyXGetY:     p.Type == promo.PromoTypeBuyXGetY,
+	}
+
+	// Expose buy-X-get-Y metadata so callers can compute item-level discounts.
+	if p.Type == promo.PromoTypeBuyXGetY {
+		result.BuyQuantity = p.BuyQuantity
+		result.GetQuantity = p.GetQuantity
+		result.GetProductID = p.GetProductID
+		result.GetDiscount = p.GetDiscount
+	}
+
+	return result, nil
 }
 
 // Apply validates a promo and increments its usage counter atomically.
