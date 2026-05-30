@@ -28,6 +28,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/payment/paymentcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/product/productcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/promo/promocontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/search/searchcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/settings/settingscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/plugin/plugincontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/shipping/shippingcontainer"
@@ -79,6 +80,7 @@ type Container struct {
 	Settings    *settingscontainer.Container
 	Theme       *themecontainer.Container
 	Plugin      *plugincontainer.Container
+	Search      *searchcontainer.Container
 	Shipping    *shippingcontainer.Container
 	Tax         *taxcontainer.Container
 }
@@ -192,6 +194,7 @@ func (c *Container) initModules() {
 	c.Marketplace = marketplacecontainer.New(c.DB)
 	c.Analytics = analyticscontainer.New(c.DB)
 	c.Plugin = plugincontainer.New(c.DB, bus)
+	c.Search = searchcontainer.New(c.DB)
 	c.Shipping = shippingcontainer.New(c.DB, bus)
 	c.Tax = taxcontainer.New(c.DB, bus)
 
