@@ -24,11 +24,11 @@ func New(svc *promosrv.Service) *Handler {
 
 // RegisterRoutes wires all promo routes onto the provided Fiber router.
 //
-//	POST   /admin/promos               — create promo
-//	GET    /admin/promos               — list promos
-//	GET    /admin/promos/:id           — get promo
+//	POST   /admin/promos                — create promo
+//	GET    /admin/promos                — list promos
+//	GET    /admin/promos/:id            — get promo
 //	POST   /admin/promos/:id/deactivate — deactivate
-//	POST   /promos/validate            — validate a code for an order total (public)
+//	POST   /promos/validate             — validate a code for an order total (public)
 func (h *Handler) RegisterRoutes(router fiber.Router) {
 	admin := router.Group("/admin/promos")
 	admin.Post("/", h.create)
@@ -41,6 +41,7 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 
 // --- handlers ---
 
+// createPromoRequest is the JSON body for the create promo endpoint.
 type createPromoRequest struct {
 	Code           string     `json:"code"`
 	Type           string     `json:"type"`
@@ -49,6 +50,18 @@ type createPromoRequest struct {
 	MaxUses        *int       `json:"max_uses,omitempty"`
 	StartsAt       *time.Time `json:"starts_at,omitempty"`
 	EndsAt         *time.Time `json:"ends_at,omitempty"`
+
+	// Targeting (all optional)
+	TargetProductIDs  []string `json:"target_product_ids,omitempty"`
+	TargetCategoryIDs []string `json:"target_category_ids,omitempty"`
+	CustomerGroupID   string   `json:"customer_group_id,omitempty"`
+	Stackable         bool     `json:"stackable"`
+
+	// Buy X Get Y fields (required when type == "buy_x_get_y")
+	BuyQuantity  *int   `json:"buy_quantity,omitempty"`
+	GetQuantity  *int   `json:"get_quantity,omitempty"`
+	GetProductID string `json:"get_product_id,omitempty"`
+	GetDiscount  *int64 `json:"get_discount,omitempty"`
 }
 
 func (h *Handler) create(c *fiber.Ctx) error {
@@ -57,6 +70,13 @@ func (h *Handler) create(c *fiber.Ctx) error {
 	var req createPromoRequest
 	if err := c.BodyParser(&req); err != nil {
 		return errx.New("invalid request body", errx.TypeValidation)
+	}
+
+	// Validate buy_x_get_y specific fields
+	if promo.PromoType(req.Type) == promo.PromoTypeBuyXGetY {
+		if req.BuyQuantity == nil || req.GetQuantity == nil || req.GetDiscount == nil {
+			return errx.New("buy_quantity, get_quantity and get_discount are required for buy_x_get_y promos", errx.TypeValidation)
+		}
 	}
 
 	p, err := h.svc.Create(c.Context(), promosrv.CreateInput{
@@ -68,6 +88,16 @@ func (h *Handler) create(c *fiber.Ctx) error {
 		MaxUses:        req.MaxUses,
 		StartsAt:       req.StartsAt,
 		EndsAt:         req.EndsAt,
+
+		TargetProductIDs:  req.TargetProductIDs,
+		TargetCategoryIDs: req.TargetCategoryIDs,
+		CustomerGroupID:   req.CustomerGroupID,
+		Stackable:         req.Stackable,
+
+		BuyQuantity:  req.BuyQuantity,
+		GetQuantity:  req.GetQuantity,
+		GetProductID: req.GetProductID,
+		GetDiscount:  req.GetDiscount,
 	})
 	if err != nil {
 		return err
