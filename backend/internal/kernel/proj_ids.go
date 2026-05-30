@@ -189,3 +189,9 @@ func NewCustomerGroupMembershipID(id string) CustomerGroupMembershipID {
 }
 func (c CustomerGroupMembershipID) String() string { return string(c) }
 func (c CustomerGroupMembershipID) IsEmpty() bool  { return string(c) == "" }
+
+type RecoveryID string
+
+func NewRecoveryID(id string) RecoveryID { return RecoveryID(id) }
+func (r RecoveryID) String() string      { return string(r) }
+func (r RecoveryID) IsEmpty() bool       { return string(r) == "" }

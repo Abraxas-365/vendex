@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/cartrecovery/cartrecoverycontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/sitemap"
 	"github.com/Abraxas-365/hada-commerce/internal/emails"
 	"github.com/Abraxas-365/hada-commerce/internal/cart/cartcontainer"
@@ -94,6 +95,7 @@ type Container struct {
 	ImportExport   *importexport.Container
 	Sitemap        *sitemap.Container
 	Wishlist       *wishlistcontainer.Container
+	CartRecovery   *cartrecoverycontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -219,6 +221,7 @@ func (c *Container) initModules() {
 		c.Promo.Service,
 	)
 	c.Wishlist = wishlistcontainer.New(c.DB)
+	c.CartRecovery = cartrecoverycontainer.New(c.DB)
 
 	// Import/Export — depends on Product, Order, and Customer services.
 	c.ImportExport = importexport.New(
