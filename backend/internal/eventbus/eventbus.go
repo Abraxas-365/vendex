@@ -50,7 +50,28 @@ const (
 	SettingsUpdated EventType = "settings.updated"
 
 	// Cart events
-	CartUpdated EventType = "cart.updated"
+	CartCreated   EventType = "cart.created"
+	CartUpdated   EventType = "cart.updated"
+	CartAbandoned EventType = "cart.abandoned"
+
+	// Checkout events
+	CheckoutStarted   EventType = "checkout.started"
+	CheckoutCompleted EventType = "checkout.completed"
+	CheckoutFailed    EventType = "checkout.failed"
+
+	// Payment events
+	PaymentCreated   EventType = "payment.created"
+	PaymentCompleted EventType = "payment.completed"
+	PaymentFailed    EventType = "payment.failed"
+	RefundCreated    EventType = "refund.created"
+	RefundCompleted  EventType = "refund.completed"
+
+	// Shipping events
+	ShippingZoneCreated EventType = "shipping_zone.created"
+	ShippingRateCreated EventType = "shipping_rate.created"
+
+	// Tax events
+	TaxRateCreated EventType = "tax_rate.created"
 )
 
 // Event is a domain event that has occurred in the system.

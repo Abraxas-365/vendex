@@ -73,3 +73,56 @@ type CollectionPayload struct {
 	Name         string `json:"name"`
 	Slug         string `json:"slug"`
 }
+
+// ShippingZonePayload is the payload for shipping_zone.* events.
+type ShippingZonePayload struct {
+	ZoneID    string   `json:"zone_id"`
+	Name      string   `json:"name"`
+	Countries []string `json:"countries"`
+}
+
+// ShippingRatePayload is the payload for shipping_rate.* events.
+type ShippingRatePayload struct {
+	RateID string `json:"rate_id"`
+	ZoneID string `json:"zone_id"`
+	Name   string `json:"name"`
+	Type   string `json:"type"`
+	Price  int64  `json:"price"`
+}
+
+// TaxRatePayload is the payload for tax_rate.* events.
+type TaxRatePayload struct {
+	RateID  string  `json:"rate_id"`
+	Name    string  `json:"name"`
+	Rate    float64 `json:"rate"`
+	Country string  `json:"country"`
+}
+
+// PaymentPayload is the payload for payment.* events.
+type PaymentPayload struct {
+	PaymentID string `json:"payment_id"`
+	OrderID   string `json:"order_id"`
+	Amount    int64  `json:"amount"`
+	Currency  string `json:"currency"`
+	Provider  string `json:"provider"`
+	Status    string `json:"status"`
+}
+
+// RefundPayload is the payload for refund.* events.
+type RefundPayload struct {
+	RefundID  string `json:"refund_id"`
+	PaymentID string `json:"payment_id"`
+	OrderID   string `json:"order_id"`
+	Amount    int64  `json:"amount"`
+	Currency  string `json:"currency"`
+	Status    string `json:"status"`
+}
+
+// CheckoutPayload is the payload for checkout.* events.
+type CheckoutPayload struct {
+	CartID     string `json:"cart_id"`
+	OrderID    string `json:"order_id"`
+	CustomerID string `json:"customer_id"`
+	Total      int64  `json:"total"`
+	Currency   string `json:"currency"`
+}

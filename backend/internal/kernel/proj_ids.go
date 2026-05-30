@@ -109,3 +109,45 @@ type BlockID string
 func NewBlockID(id string) BlockID { return BlockID(id) }
 func (b BlockID) String() string   { return string(b) }
 func (b BlockID) IsEmpty() bool    { return string(b) == "" }
+
+type CartID string
+
+func NewCartID(id string) CartID { return CartID(id) }
+func (c CartID) String() string  { return string(c) }
+func (c CartID) IsEmpty() bool   { return string(c) == "" }
+
+type CartItemID string
+
+func NewCartItemID(id string) CartItemID { return CartItemID(id) }
+func (c CartItemID) String() string      { return string(c) }
+func (c CartItemID) IsEmpty() bool       { return string(c) == "" }
+
+type ShippingZoneID string
+
+func NewShippingZoneID(id string) ShippingZoneID { return ShippingZoneID(id) }
+func (s ShippingZoneID) String() string          { return string(s) }
+func (s ShippingZoneID) IsEmpty() bool           { return string(s) == "" }
+
+type ShippingRateID string
+
+func NewShippingRateID(id string) ShippingRateID { return ShippingRateID(id) }
+func (s ShippingRateID) String() string          { return string(s) }
+func (s ShippingRateID) IsEmpty() bool           { return string(s) == "" }
+
+type TaxRateID string
+
+func NewTaxRateID(id string) TaxRateID { return TaxRateID(id) }
+func (t TaxRateID) String() string     { return string(t) }
+func (t TaxRateID) IsEmpty() bool      { return string(t) == "" }
+
+type PaymentID string
+
+func NewPaymentID(id string) PaymentID { return PaymentID(id) }
+func (p PaymentID) String() string     { return string(p) }
+func (p PaymentID) IsEmpty() bool      { return string(p) == "" }
+
+type RefundID string
+
+func NewRefundID(id string) RefundID { return RefundID(id) }
+func (r RefundID) String() string    { return string(r) }
+func (r RefundID) IsEmpty() bool     { return string(r) == "" }
