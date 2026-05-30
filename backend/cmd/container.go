@@ -41,6 +41,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/shipping/shippingcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/currency/currencycontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/i18n/i18ncontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/tax/taxcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/theme/themecontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/wishlist/wishlistcontainer"
@@ -95,6 +96,7 @@ type Container struct {
 	Shipping       *shippingcontainer.Container
 	Tax            *taxcontainer.Container
 	Currency       *currencycontainer.Container
+	I18n           *i18ncontainer.Container
 	Checkout       *checkoutcontainer.Container
 	ImportExport   *importexport.Container
 	Sitemap        *sitemap.Container
@@ -217,6 +219,7 @@ func (c *Container) initModules() {
 	c.Shipping = shippingcontainer.New(c.DB, bus)
 	c.Tax = taxcontainer.New(c.DB, bus)
 	c.Currency = currencycontainer.New(c.DB)
+	c.I18n = i18ncontainer.New(c.DB)
 	c.Checkout = checkoutcontainer.New(
 		c.DB, bus,
 		c.Cart.Service,

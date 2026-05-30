@@ -213,3 +213,9 @@ type CurrencyRateID string
 func NewCurrencyRateID(id string) CurrencyRateID { return CurrencyRateID(id) }
 func (c CurrencyRateID) String() string          { return string(c) }
 func (c CurrencyRateID) IsEmpty() bool           { return string(c) == "" }
+
+type TranslationID string
+
+func NewTranslationID(id string) TranslationID { return TranslationID(id) }
+func (t TranslationID) String() string         { return string(t) }
+func (t TranslationID) IsEmpty() bool          { return string(t) == "" }
