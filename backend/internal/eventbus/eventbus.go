@@ -90,6 +90,10 @@ const (
 	ReviewCreated  EventType = "review.created"
 	ReviewApproved EventType = "review.approved"
 	ReviewRejected EventType = "review.rejected"
+	// Return events
+	ReturnRequested EventType = "return.requested"
+	ReturnApproved  EventType = "return.approved"
+	ReturnCompleted EventType = "return.completed"
 )
 
 // Event is a domain event that has occurred in the system.

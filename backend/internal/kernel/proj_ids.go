@@ -255,3 +255,14 @@ type ReviewID string
 func NewReviewID(id string) ReviewID { return ReviewID(id) }
 func (r ReviewID) String() string    { return string(r) }
 func (r ReviewID) IsEmpty() bool     { return string(r) == "" }
+type ReturnID string
+
+func NewReturnID(id string) ReturnID { return ReturnID(id) }
+func (r ReturnID) String() string    { return string(r) }
+func (r ReturnID) IsEmpty() bool     { return string(r) == "" }
+
+type ReturnItemID string
+
+func NewReturnItemID(id string) ReturnItemID { return ReturnItemID(id) }
+func (r ReturnItemID) String() string        { return string(r) }
+func (r ReturnItemID) IsEmpty() bool         { return string(r) == "" }
