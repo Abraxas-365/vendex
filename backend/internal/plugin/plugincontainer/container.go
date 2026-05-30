@@ -1,7 +1,10 @@
 package plugincontainer
 
 import (
+	"net/http"
+
 	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
+	"github.com/Abraxas-365/hada-commerce/internal/plugin"
 	"github.com/Abraxas-365/hada-commerce/internal/plugin/pluginapi"
 	"github.com/Abraxas-365/hada-commerce/internal/plugin/plugininfra"
 	"github.com/Abraxas-365/hada-commerce/internal/plugin/pluginsrv"
@@ -22,6 +25,11 @@ func New(db *sqlx.DB, bus eventbus.Bus) *Container {
 	installRepo := plugininfra.NewInstallationRepo(db)
 	svc := pluginsrv.New(pluginRepo, versionRepo, installRepo, bus)
 	handler := pluginapi.NewHandler(svc)
+
+	// Wire webhook dispatcher — delivers domain events to installed plugin endpoints
+	dispatcher := plugin.NewWebhookDispatcher(installRepo, versionRepo, &http.Client{})
+	bus.SubscribeAll(dispatcher.HandleEvent)
+
 	return &Container{
 		Service: svc,
 		Handler: handler,
