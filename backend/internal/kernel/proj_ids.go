@@ -231,3 +231,21 @@ type BillingRecordID string
 func NewBillingRecordID(id string) BillingRecordID { return BillingRecordID(id) }
 func (b BillingRecordID) String() string           { return string(b) }
 func (b BillingRecordID) IsEmpty() bool            { return string(b) == "" }
+
+type WarehouseID string
+
+func NewWarehouseID(id string) WarehouseID { return WarehouseID(id) }
+func (w WarehouseID) String() string       { return string(w) }
+func (w WarehouseID) IsEmpty() bool        { return string(w) == "" }
+
+type StockLevelID string
+
+func NewStockLevelID(id string) StockLevelID { return StockLevelID(id) }
+func (s StockLevelID) String() string        { return string(s) }
+func (s StockLevelID) IsEmpty() bool         { return string(s) == "" }
+
+type StockMovementID string
+
+func NewStockMovementID(id string) StockMovementID { return StockMovementID(id) }
+func (s StockMovementID) String() string           { return string(s) }
+func (s StockMovementID) IsEmpty() bool            { return string(s) == "" }

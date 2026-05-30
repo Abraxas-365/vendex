@@ -81,6 +81,10 @@ const (
 	SubscriptionCreated   EventType = "subscription.created"
 	SubscriptionCancelled EventType = "subscription.cancelled"
 	SubscriptionBilled    EventType = "subscription.billed"
+
+	// Inventory events
+	StockUpdated  EventType = "stock.updated"
+	StockLowAlert EventType = "stock.low_alert"
 )
 
 // Event is a domain event that has occurred in the system.
