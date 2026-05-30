@@ -6,8 +6,12 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/Abraxas-365/hada-commerce/internal/cartrecovery/cartrecoverysrv"
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/currency/currencysrv"
 	"github.com/Abraxas-365/hada-commerce/internal/customergroup/customergroupsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/giftcard/giftcardsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/i18n/i18nsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/order/ordersrv"
 	"github.com/Abraxas-365/hada-commerce/internal/payment/paymentsrv"
@@ -16,6 +20,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/search/searchsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/shipping/shippingsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/subscription/subscriptionsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/tax/taxsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/theme/themesrv"
 )
@@ -48,6 +53,11 @@ type Services struct {
 	Payment        *paymentsrv.Service
 	Search         *searchsrv.Service
 	CustomerGroups *customergroupsrv.Service
+	GiftCards      *giftcardsrv.Service
+	CartRecovery   *cartrecoverysrv.Service
+	Currency       *currencysrv.Service
+	I18n           *i18nsrv.Service
+	Subscriptions  *subscriptionsrv.Service
 }
 
 // Setup constructs and returns all agent tools wired to the given services.
@@ -115,5 +125,30 @@ func Setup(tenantID kernel.TenantID, svc Services) []Tool {
 		&ListCustomerGroupsTool{groups: svc.CustomerGroups, tenantID: tenantID},
 		&CreateCustomerGroupTool{groups: svc.CustomerGroups, tenantID: tenantID},
 		&AddGroupMemberTool{groups: svc.CustomerGroups, tenantID: tenantID},
+
+		// Gift cards
+		&ListGiftCardsTool{giftcards: svc.GiftCards, tenantID: tenantID},
+		&CreateGiftCardTool{giftcards: svc.GiftCards, tenantID: tenantID},
+		&CheckGiftCardBalanceTool{giftcards: svc.GiftCards, tenantID: tenantID},
+		&RedeemGiftCardTool{giftcards: svc.GiftCards, tenantID: tenantID},
+
+		// Cart recovery
+		&ListRecoveryEmailsTool{recovery: svc.CartRecovery, tenantID: tenantID},
+		&GetRecoveryStatsTool{recovery: svc.CartRecovery, tenantID: tenantID},
+
+		// Currency
+		&ListCurrencyRatesTool{currency: svc.Currency, tenantID: tenantID},
+		&SetCurrencyRateTool{currency: svc.Currency, tenantID: tenantID},
+		&ConvertCurrencyTool{currency: svc.Currency, tenantID: tenantID},
+
+		// I18n
+		&SetTranslationsTool{i18n: svc.I18n, tenantID: tenantID},
+		&GetTranslationsTool{i18n: svc.I18n, tenantID: tenantID},
+		&ListSupportedLocalesTool{i18n: svc.I18n},
+
+		// Subscriptions
+		&ListSubscriptionsTool{subscriptions: svc.Subscriptions, tenantID: tenantID},
+		&CreateSubscriptionTool{subscriptions: svc.Subscriptions, tenantID: tenantID},
+		&CancelSubscriptionTool{subscriptions: svc.Subscriptions, tenantID: tenantID},
 	}
 }

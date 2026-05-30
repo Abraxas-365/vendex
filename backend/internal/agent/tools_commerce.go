@@ -5,15 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/Abraxas-365/hada-commerce/internal/cartrecovery/cartrecoverysrv"
+	"github.com/Abraxas-365/hada-commerce/internal/currency/currencysrv"
 	"github.com/Abraxas-365/hada-commerce/internal/customergroup"
 	"github.com/Abraxas-365/hada-commerce/internal/customergroup/customergroupsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/errx"
+	"github.com/Abraxas-365/hada-commerce/internal/giftcard"
+	"github.com/Abraxas-365/hada-commerce/internal/giftcard/giftcardsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/i18n/i18nsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/payment/paymentsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/product/productsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/search"
 	"github.com/Abraxas-365/hada-commerce/internal/search/searchsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/shipping/shippingsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/subscription"
+	"github.com/Abraxas-365/hada-commerce/internal/subscription/subscriptionsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/tax/taxsrv"
 )
 
@@ -883,4 +890,587 @@ var (
 	_ Tool = (*ListCustomerGroupsTool)(nil)
 	_ Tool = (*CreateCustomerGroupTool)(nil)
 	_ Tool = (*AddGroupMemberTool)(nil)
+
+	// P3 tools
+	_ Tool = (*ListGiftCardsTool)(nil)
+	_ Tool = (*CreateGiftCardTool)(nil)
+	_ Tool = (*CheckGiftCardBalanceTool)(nil)
+	_ Tool = (*RedeemGiftCardTool)(nil)
+	_ Tool = (*ListRecoveryEmailsTool)(nil)
+	_ Tool = (*GetRecoveryStatsTool)(nil)
+	_ Tool = (*ListCurrencyRatesTool)(nil)
+	_ Tool = (*SetCurrencyRateTool)(nil)
+	_ Tool = (*ConvertCurrencyTool)(nil)
+	_ Tool = (*SetTranslationsTool)(nil)
+	_ Tool = (*GetTranslationsTool)(nil)
+	_ Tool = (*ListSupportedLocalesTool)(nil)
+	_ Tool = (*ListSubscriptionsTool)(nil)
+	_ Tool = (*CreateSubscriptionTool)(nil)
+	_ Tool = (*CancelSubscriptionTool)(nil)
 )
+
+// ─── ListGiftCardsTool ──────────────────────────────────────────────────────
+
+type ListGiftCardsTool struct {
+	giftcards *giftcardsrv.Service
+	tenantID  kernel.TenantID
+}
+
+func (t *ListGiftCardsTool) Name() string        { return "list_gift_cards" }
+func (t *ListGiftCardsTool) Description() string  { return "List all gift cards for the store" }
+func (t *ListGiftCardsTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"page":      map[string]any{"type": "integer", "description": "Page number (default 1)"},
+			"page_size": map[string]any{"type": "integer", "description": "Items per page (default 20)"},
+		},
+	}
+}
+
+func (t *ListGiftCardsTool) Execute(ctx context.Context, input json.RawMessage) (string, error) {
+	var in struct {
+		Page     int `json:"page"`
+		PageSize int `json:"page_size"`
+	}
+	if err := json.Unmarshal(input, &in); err != nil {
+		return "", errx.Wrap(err, "list_gift_cards: unmarshal input", errx.TypeValidation)
+	}
+	if in.Page <= 0 {
+		in.Page = 1
+	}
+	if in.PageSize <= 0 {
+		in.PageSize = 20
+	}
+	result, err := t.giftcards.List(ctx, t.tenantID, kernel.PaginationOptions{Page: in.Page, PageSize: in.PageSize})
+	if err != nil {
+		return "", errx.Wrap(err, "list_gift_cards", errx.TypeInternal)
+	}
+	out := fmt.Sprintf("Found %d gift cards (page %d/%d):\n", result.Total, result.Page, result.TotalPages)
+	for _, gc := range result.Items {
+		out += fmt.Sprintf("- [%s] Code: %s, Balance: %d %s / %d %s, Active: %v\n",
+			gc.ID, gc.Code, gc.Balance.Amount, gc.Balance.Currency,
+			gc.InitialAmount.Amount, gc.InitialAmount.Currency, gc.Active)
+	}
+	return out, nil
+}
+
+// ─── CreateGiftCardTool ─────────────────────────────────────────────────────
+
+type CreateGiftCardTool struct {
+	giftcards *giftcardsrv.Service
+	tenantID  kernel.TenantID
+}
+
+func (t *CreateGiftCardTool) Name() string        { return "create_gift_card" }
+func (t *CreateGiftCardTool) Description() string  { return "Create a new gift card with an initial balance" }
+func (t *CreateGiftCardTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"code":        map[string]any{"type": "string", "description": "Unique gift card code"},
+			"amount":      map[string]any{"type": "integer", "description": "Initial amount in cents"},
+			"currency":    map[string]any{"type": "string", "description": "Currency code (e.g. USD)"},
+			"created_by":  map[string]any{"type": "string", "description": "Who created this card"},
+		},
+		"required": []string{"code", "amount", "currency"},
+	}
+}
+
+func (t *CreateGiftCardTool) Execute(ctx context.Context, input json.RawMessage) (string, error) {
+	var in struct {
+		Code      string `json:"code"`
+		Amount    int64  `json:"amount"`
+		Currency  string `json:"currency"`
+		CreatedBy string `json:"created_by"`
+	}
+	if err := json.Unmarshal(input, &in); err != nil {
+		return "", errx.Wrap(err, "create_gift_card: unmarshal input", errx.TypeValidation)
+	}
+	gc, err := t.giftcards.Create(ctx, t.tenantID, giftcard.CreateInput{
+		Code:          in.Code,
+		InitialAmount: kernel.Money{Amount: in.Amount, Currency: in.Currency},
+		CreatedBy:     in.CreatedBy,
+	})
+	if err != nil {
+		return "", errx.Wrap(err, "create_gift_card", errx.TypeInternal)
+	}
+	return fmt.Sprintf("Gift card created: ID=%s, Code=%s, Balance=%d %s", gc.ID, gc.Code, gc.Balance.Amount, gc.Balance.Currency), nil
+}
+
+// ─── CheckGiftCardBalanceTool ───────────────────────────────────────────────
+
+type CheckGiftCardBalanceTool struct {
+	giftcards *giftcardsrv.Service
+	tenantID  kernel.TenantID
+}
+
+func (t *CheckGiftCardBalanceTool) Name() string        { return "check_gift_card_balance" }
+func (t *CheckGiftCardBalanceTool) Description() string  { return "Check the balance of a gift card by its code" }
+func (t *CheckGiftCardBalanceTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"code": map[string]any{"type": "string", "description": "Gift card code"},
+		},
+		"required": []string{"code"},
+	}
+}
+
+func (t *CheckGiftCardBalanceTool) Execute(ctx context.Context, input json.RawMessage) (string, error) {
+	var in struct {
+		Code string `json:"code"`
+	}
+	if err := json.Unmarshal(input, &in); err != nil {
+		return "", errx.Wrap(err, "check_gift_card_balance: unmarshal input", errx.TypeValidation)
+	}
+	gc, err := t.giftcards.CheckBalance(ctx, t.tenantID, in.Code)
+	if err != nil {
+		return "", errx.Wrap(err, "check_gift_card_balance", errx.TypeInternal)
+	}
+	return fmt.Sprintf("Gift card %s: Balance=%d %s, Active=%v", gc.Code, gc.Balance.Amount, gc.Balance.Currency, gc.Active), nil
+}
+
+// ─── RedeemGiftCardTool ─────────────────────────────────────────────────────
+
+type RedeemGiftCardTool struct {
+	giftcards *giftcardsrv.Service
+	tenantID  kernel.TenantID
+}
+
+func (t *RedeemGiftCardTool) Name() string        { return "redeem_gift_card" }
+func (t *RedeemGiftCardTool) Description() string  { return "Redeem (deduct) an amount from a gift card" }
+func (t *RedeemGiftCardTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"code":     map[string]any{"type": "string", "description": "Gift card code"},
+			"amount":   map[string]any{"type": "integer", "description": "Amount to redeem in cents"},
+			"currency": map[string]any{"type": "string", "description": "Currency code"},
+			"note":     map[string]any{"type": "string", "description": "Optional note for the transaction"},
+		},
+		"required": []string{"code", "amount", "currency"},
+	}
+}
+
+func (t *RedeemGiftCardTool) Execute(ctx context.Context, input json.RawMessage) (string, error) {
+	var in struct {
+		Code     string `json:"code"`
+		Amount   int64  `json:"amount"`
+		Currency string `json:"currency"`
+		Note     string `json:"note"`
+	}
+	if err := json.Unmarshal(input, &in); err != nil {
+		return "", errx.Wrap(err, "redeem_gift_card: unmarshal input", errx.TypeValidation)
+	}
+	gc, err := t.giftcards.Redeem(ctx, t.tenantID, giftcardsrv.RedeemInput{
+		Code:   in.Code,
+		Amount: kernel.Money{Amount: in.Amount, Currency: in.Currency},
+		Note:   in.Note,
+	})
+	if err != nil {
+		return "", errx.Wrap(err, "redeem_gift_card", errx.TypeInternal)
+	}
+	return fmt.Sprintf("Redeemed %d %s from gift card %s. Remaining balance: %d %s",
+		in.Amount, in.Currency, gc.Code, gc.Balance.Amount, gc.Balance.Currency), nil
+}
+
+// ─── ListRecoveryEmailsTool ─────────────────────────────────────────────────
+
+type ListRecoveryEmailsTool struct {
+	recovery *cartrecoverysrv.Service
+	tenantID kernel.TenantID
+}
+
+func (t *ListRecoveryEmailsTool) Name() string        { return "list_recovery_emails" }
+func (t *ListRecoveryEmailsTool) Description() string  { return "List abandoned cart recovery emails" }
+func (t *ListRecoveryEmailsTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"page":      map[string]any{"type": "integer", "description": "Page number (default 1)"},
+			"page_size": map[string]any{"type": "integer", "description": "Items per page (default 20)"},
+		},
+	}
+}
+
+func (t *ListRecoveryEmailsTool) Execute(ctx context.Context, input json.RawMessage) (string, error) {
+	var in struct {
+		Page     int `json:"page"`
+		PageSize int `json:"page_size"`
+	}
+	if err := json.Unmarshal(input, &in); err != nil {
+		return "", errx.Wrap(err, "list_recovery_emails: unmarshal input", errx.TypeValidation)
+	}
+	if in.Page <= 0 {
+		in.Page = 1
+	}
+	if in.PageSize <= 0 {
+		in.PageSize = 20
+	}
+	result, err := t.recovery.List(ctx, t.tenantID, in.Page, in.PageSize)
+	if err != nil {
+		return "", errx.Wrap(err, "list_recovery_emails", errx.TypeInternal)
+	}
+	out := fmt.Sprintf("Found %d recovery emails (page %d/%d):\n", result.Total, result.Page, result.TotalPages)
+	for _, r := range result.Items {
+		out += fmt.Sprintf("- [%s] Cart: %s, Email: %s, Step: %d, Status: %s\n",
+			r.ID, r.CartID, r.Email, r.Step, r.Status)
+	}
+	return out, nil
+}
+
+// ─── GetRecoveryStatsTool ───────────────────────────────────────────────────
+
+type GetRecoveryStatsTool struct {
+	recovery *cartrecoverysrv.Service
+	tenantID kernel.TenantID
+}
+
+func (t *GetRecoveryStatsTool) Name() string        { return "get_recovery_stats" }
+func (t *GetRecoveryStatsTool) Description() string  { return "Get abandoned cart recovery statistics" }
+func (t *GetRecoveryStatsTool) InputSchema() map[string]any {
+	return map[string]any{"type": "object", "properties": map[string]any{}}
+}
+
+func (t *GetRecoveryStatsTool) Execute(ctx context.Context, input json.RawMessage) (string, error) {
+	stats, err := t.recovery.GetStats(ctx, t.tenantID)
+	if err != nil {
+		return "", errx.Wrap(err, "get_recovery_stats", errx.TypeInternal)
+	}
+	return fmt.Sprintf("Recovery Stats: Total=%d, Sent=%d, Clicked=%d, Converted=%d, Rate=%.1f%%",
+		stats.Total, stats.Sent, stats.Clicked, stats.Converted, stats.ConversionRate), nil
+}
+
+// ─── ListCurrencyRatesTool ──────────────────────────────────────────────────
+
+type ListCurrencyRatesTool struct {
+	currency *currencysrv.Service
+	tenantID kernel.TenantID
+}
+
+func (t *ListCurrencyRatesTool) Name() string        { return "list_currency_rates" }
+func (t *ListCurrencyRatesTool) Description() string  { return "List all configured currency exchange rates" }
+func (t *ListCurrencyRatesTool) InputSchema() map[string]any {
+	return map[string]any{"type": "object", "properties": map[string]any{}}
+}
+
+func (t *ListCurrencyRatesTool) Execute(ctx context.Context, input json.RawMessage) (string, error) {
+	rates, err := t.currency.ListRates(ctx, t.tenantID)
+	if err != nil {
+		return "", errx.Wrap(err, "list_currency_rates", errx.TypeInternal)
+	}
+	out := fmt.Sprintf("Found %d currency rates:\n", len(rates))
+	for _, r := range rates {
+		out += fmt.Sprintf("- %s → %s: %.6f\n", r.BaseCurrency, r.TargetCurrency, r.Rate)
+	}
+	return out, nil
+}
+
+// ─── SetCurrencyRateTool ────────────────────────────────────────────────────
+
+type SetCurrencyRateTool struct {
+	currency *currencysrv.Service
+	tenantID kernel.TenantID
+}
+
+func (t *SetCurrencyRateTool) Name() string        { return "set_currency_rate" }
+func (t *SetCurrencyRateTool) Description() string  { return "Set or update a currency exchange rate" }
+func (t *SetCurrencyRateTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"base_currency":   map[string]any{"type": "string", "description": "Base currency code (e.g. USD)"},
+			"target_currency": map[string]any{"type": "string", "description": "Target currency code (e.g. EUR)"},
+			"rate":            map[string]any{"type": "number", "description": "Exchange rate"},
+			"auto_update":     map[string]any{"type": "boolean", "description": "Enable auto-update"},
+		},
+		"required": []string{"base_currency", "target_currency", "rate"},
+	}
+}
+
+func (t *SetCurrencyRateTool) Execute(ctx context.Context, input json.RawMessage) (string, error) {
+	var in struct {
+		BaseCurrency   string  `json:"base_currency"`
+		TargetCurrency string  `json:"target_currency"`
+		Rate           float64 `json:"rate"`
+		AutoUpdate     bool    `json:"auto_update"`
+	}
+	if err := json.Unmarshal(input, &in); err != nil {
+		return "", errx.Wrap(err, "set_currency_rate: unmarshal input", errx.TypeValidation)
+	}
+	r, err := t.currency.SetRate(ctx, t.tenantID, currencysrv.SetRateInput{
+		BaseCurrency:   in.BaseCurrency,
+		TargetCurrency: in.TargetCurrency,
+		Rate:           in.Rate,
+		AutoUpdate:     in.AutoUpdate,
+	})
+	if err != nil {
+		return "", errx.Wrap(err, "set_currency_rate", errx.TypeInternal)
+	}
+	return fmt.Sprintf("Rate set: %s → %s = %.6f (ID: %s)", r.BaseCurrency, r.TargetCurrency, r.Rate, r.ID), nil
+}
+
+// ─── ConvertCurrencyTool ────────────────────────────────────────────────────
+
+type ConvertCurrencyTool struct {
+	currency *currencysrv.Service
+	tenantID kernel.TenantID
+}
+
+func (t *ConvertCurrencyTool) Name() string        { return "convert_currency" }
+func (t *ConvertCurrencyTool) Description() string  { return "Convert an amount from one currency to another" }
+func (t *ConvertCurrencyTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"amount":          map[string]any{"type": "integer", "description": "Amount in cents"},
+			"from_currency":   map[string]any{"type": "string", "description": "Source currency code"},
+			"target_currency": map[string]any{"type": "string", "description": "Target currency code"},
+		},
+		"required": []string{"amount", "from_currency", "target_currency"},
+	}
+}
+
+func (t *ConvertCurrencyTool) Execute(ctx context.Context, input json.RawMessage) (string, error) {
+	var in struct {
+		Amount         int64  `json:"amount"`
+		FromCurrency   string `json:"from_currency"`
+		TargetCurrency string `json:"target_currency"`
+	}
+	if err := json.Unmarshal(input, &in); err != nil {
+		return "", errx.Wrap(err, "convert_currency: unmarshal input", errx.TypeValidation)
+	}
+	result, err := t.currency.Convert(ctx, t.tenantID, kernel.Money{Amount: in.Amount, Currency: in.FromCurrency}, in.TargetCurrency)
+	if err != nil {
+		return "", errx.Wrap(err, "convert_currency", errx.TypeInternal)
+	}
+	return fmt.Sprintf("Converted %d %s → %d %s (rate: %.6f)",
+		result.OriginalAmount.Amount, result.OriginalAmount.Currency,
+		result.ConvertedAmount.Amount, result.ConvertedAmount.Currency, result.Rate), nil
+}
+
+// ─── SetTranslationsTool ────────────────────────────────────────────────────
+
+type SetTranslationsTool struct {
+	i18n     *i18nsrv.Service
+	tenantID kernel.TenantID
+}
+
+func (t *SetTranslationsTool) Name() string        { return "set_translations" }
+func (t *SetTranslationsTool) Description() string  { return "Set translations for an entity in a specific locale" }
+func (t *SetTranslationsTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"entity_type": map[string]any{"type": "string", "description": "Entity type (product, category, collection, page)"},
+			"entity_id":   map[string]any{"type": "string", "description": "Entity ID"},
+			"locale":      map[string]any{"type": "string", "description": "Locale code (e.g. es, fr, de)"},
+			"fields":      map[string]any{"type": "object", "description": "Map of field name to translated value"},
+		},
+		"required": []string{"entity_type", "entity_id", "locale", "fields"},
+	}
+}
+
+func (t *SetTranslationsTool) Execute(ctx context.Context, input json.RawMessage) (string, error) {
+	var in struct {
+		EntityType string            `json:"entity_type"`
+		EntityID   string            `json:"entity_id"`
+		Locale     string            `json:"locale"`
+		Fields     map[string]string `json:"fields"`
+	}
+	if err := json.Unmarshal(input, &in); err != nil {
+		return "", errx.Wrap(err, "set_translations: unmarshal input", errx.TypeValidation)
+	}
+	if err := t.i18n.SetTranslations(ctx, t.tenantID, in.EntityType, in.EntityID, in.Locale, in.Fields); err != nil {
+		return "", errx.Wrap(err, "set_translations", errx.TypeInternal)
+	}
+	return fmt.Sprintf("Set %d translations for %s/%s in locale %s", len(in.Fields), in.EntityType, in.EntityID, in.Locale), nil
+}
+
+// ─── GetTranslationsTool ────────────────────────────────────────────────────
+
+type GetTranslationsTool struct {
+	i18n     *i18nsrv.Service
+	tenantID kernel.TenantID
+}
+
+func (t *GetTranslationsTool) Name() string        { return "get_translations" }
+func (t *GetTranslationsTool) Description() string  { return "Get translations for an entity in a specific locale" }
+func (t *GetTranslationsTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"entity_type": map[string]any{"type": "string", "description": "Entity type (product, category, collection, page)"},
+			"entity_id":   map[string]any{"type": "string", "description": "Entity ID"},
+			"locale":      map[string]any{"type": "string", "description": "Locale code (e.g. es, fr, de)"},
+		},
+		"required": []string{"entity_type", "entity_id", "locale"},
+	}
+}
+
+func (t *GetTranslationsTool) Execute(ctx context.Context, input json.RawMessage) (string, error) {
+	var in struct {
+		EntityType string `json:"entity_type"`
+		EntityID   string `json:"entity_id"`
+		Locale     string `json:"locale"`
+	}
+	if err := json.Unmarshal(input, &in); err != nil {
+		return "", errx.Wrap(err, "get_translations: unmarshal input", errx.TypeValidation)
+	}
+	bundle, err := t.i18n.GetTranslations(ctx, t.tenantID, in.EntityType, in.EntityID, in.Locale)
+	if err != nil {
+		return "", errx.Wrap(err, "get_translations", errx.TypeInternal)
+	}
+	out := fmt.Sprintf("Translations for %s/%s [%s]:\n", bundle.EntityType, bundle.EntityID, bundle.Locale)
+	for field, value := range bundle.Fields {
+		out += fmt.Sprintf("- %s: %s\n", field, value)
+	}
+	return out, nil
+}
+
+// ─── ListSupportedLocalesTool ───────────────────────────────────────────────
+
+type ListSupportedLocalesTool struct {
+	i18n *i18nsrv.Service
+}
+
+func (t *ListSupportedLocalesTool) Name() string        { return "list_supported_locales" }
+func (t *ListSupportedLocalesTool) Description() string  { return "List all supported locales for translations" }
+func (t *ListSupportedLocalesTool) InputSchema() map[string]any {
+	return map[string]any{"type": "object", "properties": map[string]any{}}
+}
+
+func (t *ListSupportedLocalesTool) Execute(ctx context.Context, input json.RawMessage) (string, error) {
+	locales := t.i18n.ListSupportedLocales()
+	out := fmt.Sprintf("Supported locales (%d):\n", len(locales))
+	for code, info := range locales {
+		out += fmt.Sprintf("- %s: %s (%s)\n", code, info.Name, info.Name)
+	}
+	return out, nil
+}
+
+// ─── ListSubscriptionsTool ──────────────────────────────────────────────────
+
+type ListSubscriptionsTool struct {
+	subscriptions *subscriptionsrv.Service
+	tenantID      kernel.TenantID
+}
+
+func (t *ListSubscriptionsTool) Name() string        { return "list_subscriptions" }
+func (t *ListSubscriptionsTool) Description() string  { return "List all subscriptions" }
+func (t *ListSubscriptionsTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"page":      map[string]any{"type": "integer", "description": "Page number (default 1)"},
+			"page_size": map[string]any{"type": "integer", "description": "Items per page (default 20)"},
+		},
+	}
+}
+
+func (t *ListSubscriptionsTool) Execute(ctx context.Context, input json.RawMessage) (string, error) {
+	var in struct {
+		Page     int `json:"page"`
+		PageSize int `json:"page_size"`
+	}
+	if err := json.Unmarshal(input, &in); err != nil {
+		return "", errx.Wrap(err, "list_subscriptions: unmarshal input", errx.TypeValidation)
+	}
+	if in.Page <= 0 {
+		in.Page = 1
+	}
+	if in.PageSize <= 0 {
+		in.PageSize = 20
+	}
+	result, err := t.subscriptions.List(ctx, t.tenantID, in.Page, in.PageSize)
+	if err != nil {
+		return "", errx.Wrap(err, "list_subscriptions", errx.TypeInternal)
+	}
+	out := fmt.Sprintf("Found %d subscriptions (page %d/%d):\n", result.Total, result.Page, result.TotalPages)
+	for _, s := range result.Items {
+		out += fmt.Sprintf("- [%s] Customer: %s, Product: %s, Status: %s, Interval: %s, Price: %d %s\n",
+			s.ID, s.CustomerID, s.ProductID, s.Status, s.Interval, s.Price.Amount, s.Price.Currency)
+	}
+	return out, nil
+}
+
+// ─── CreateSubscriptionTool ─────────────────────────────────────────────────
+
+type CreateSubscriptionTool struct {
+	subscriptions *subscriptionsrv.Service
+	tenantID      kernel.TenantID
+}
+
+func (t *CreateSubscriptionTool) Name() string        { return "create_subscription" }
+func (t *CreateSubscriptionTool) Description() string  { return "Create a new subscription for a customer" }
+func (t *CreateSubscriptionTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"customer_id": map[string]any{"type": "string", "description": "Customer ID"},
+			"product_id":  map[string]any{"type": "string", "description": "Product ID"},
+			"amount":      map[string]any{"type": "integer", "description": "Price in cents"},
+			"currency":    map[string]any{"type": "string", "description": "Currency code"},
+			"interval":    map[string]any{"type": "string", "description": "Billing interval (weekly, monthly, quarterly, yearly)"},
+		},
+		"required": []string{"customer_id", "product_id", "amount", "currency", "interval"},
+	}
+}
+
+func (t *CreateSubscriptionTool) Execute(ctx context.Context, input json.RawMessage) (string, error) {
+	var in struct {
+		CustomerID string `json:"customer_id"`
+		ProductID  string `json:"product_id"`
+		Amount     int64  `json:"amount"`
+		Currency   string `json:"currency"`
+		Interval   string `json:"interval"`
+	}
+	if err := json.Unmarshal(input, &in); err != nil {
+		return "", errx.Wrap(err, "create_subscription: unmarshal input", errx.TypeValidation)
+	}
+	sub, err := t.subscriptions.Create(ctx, t.tenantID, subscriptionsrv.CreateInput{
+		CustomerID: kernel.CustomerID(in.CustomerID),
+		ProductID:  kernel.ProductID(in.ProductID),
+		Price:      kernel.Money{Amount: in.Amount, Currency: in.Currency},
+		Interval:   subscription.BillingInterval(in.Interval),
+	})
+	if err != nil {
+		return "", errx.Wrap(err, "create_subscription", errx.TypeInternal)
+	}
+	return fmt.Sprintf("Subscription created: ID=%s, Customer=%s, Product=%s, Interval=%s, NextBilling=%s",
+		sub.ID, sub.CustomerID, sub.ProductID, sub.Interval, sub.NextBillingDate.Format("2006-01-02")), nil
+}
+
+// ─── CancelSubscriptionTool ─────────────────────────────────────────────────
+
+type CancelSubscriptionTool struct {
+	subscriptions *subscriptionsrv.Service
+	tenantID      kernel.TenantID
+}
+
+func (t *CancelSubscriptionTool) Name() string        { return "cancel_subscription" }
+func (t *CancelSubscriptionTool) Description() string  { return "Cancel an active subscription" }
+func (t *CancelSubscriptionTool) InputSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"subscription_id": map[string]any{"type": "string", "description": "Subscription ID to cancel"},
+		},
+		"required": []string{"subscription_id"},
+	}
+}
+
+func (t *CancelSubscriptionTool) Execute(ctx context.Context, input json.RawMessage) (string, error) {
+	var in struct {
+		SubscriptionID string `json:"subscription_id"`
+	}
+	if err := json.Unmarshal(input, &in); err != nil {
+		return "", errx.Wrap(err, "cancel_subscription: unmarshal input", errx.TypeValidation)
+	}
+	sub, err := t.subscriptions.Cancel(ctx, t.tenantID, kernel.SubscriptionID(in.SubscriptionID))
+	if err != nil {
+		return "", errx.Wrap(err, "cancel_subscription", errx.TypeInternal)
+	}
+	return fmt.Sprintf("Subscription %s cancelled. Status: %s", sub.ID, sub.Status), nil
+}
