@@ -282,3 +282,9 @@ type AuditEntryID string
 func NewAuditEntryID(id string) AuditEntryID { return AuditEntryID(id) }
 func (a AuditEntryID) String() string        { return string(a) }
 func (a AuditEntryID) IsEmpty() bool         { return string(a) == "" }
+
+type SocialAccountID string
+
+func NewSocialAccountID(id string) SocialAccountID { return SocialAccountID(id) }
+func (s SocialAccountID) String() string           { return string(s) }
+func (s SocialAccountID) IsEmpty() bool            { return string(s) == "" }

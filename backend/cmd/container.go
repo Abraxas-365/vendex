@@ -50,6 +50,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/tax/taxcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/webhook/webhookcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/theme/themecontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/socialauth/socialauthcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/wishlist/wishlistcontainer"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -116,6 +117,7 @@ type Container struct {
 	Review         *reviewcontainer.Container
 	Returns        *returnscontainer.Container
 	Webhook        *webhookcontainer.Container
+	SocialAuth     *socialauthcontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -253,6 +255,7 @@ func (c *Container) initModules() {
 	c.Review = reviewcontainer.New(c.DB, bus)
 	c.Returns = returnscontainer.New(c.DB, bus)
 	c.Webhook = webhookcontainer.New(c.DB, bus)
+	c.SocialAuth = socialauthcontainer.New(c.DB)
 
 	// Import/Export — depends on Product, Order, and Customer services.
 	c.ImportExport = importexport.New(
