@@ -231,3 +231,9 @@ type BillingRecordID string
 func NewBillingRecordID(id string) BillingRecordID { return BillingRecordID(id) }
 func (b BillingRecordID) String() string           { return string(b) }
 func (b BillingRecordID) IsEmpty() bool            { return string(b) == "" }
+
+type AuditEntryID string
+
+func NewAuditEntryID(id string) AuditEntryID { return AuditEntryID(id) }
+func (a AuditEntryID) String() string        { return string(a) }
+func (a AuditEntryID) IsEmpty() bool         { return string(a) == "" }
