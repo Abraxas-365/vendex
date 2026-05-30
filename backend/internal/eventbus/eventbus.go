@@ -94,6 +94,11 @@ const (
 	ReturnRequested EventType = "return.requested"
 	ReturnApproved  EventType = "return.approved"
 	ReturnCompleted EventType = "return.completed"
+
+	// Loyalty events
+	LoyaltyPointsEarned  EventType = "loyalty.points_earned"
+	LoyaltyPointsRedeemed EventType = "loyalty.points_redeemed"
+	LoyaltyRewardCreated EventType = "loyalty.reward_created"
 )
 
 // Event is a domain event that has occurred in the system.

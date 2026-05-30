@@ -282,3 +282,21 @@ type AuditEntryID string
 func NewAuditEntryID(id string) AuditEntryID { return AuditEntryID(id) }
 func (a AuditEntryID) String() string        { return string(a) }
 func (a AuditEntryID) IsEmpty() bool         { return string(a) == "" }
+
+type LoyaltyAccountID string
+
+func NewLoyaltyAccountID(id string) LoyaltyAccountID { return LoyaltyAccountID(id) }
+func (l LoyaltyAccountID) String() string            { return string(l) }
+func (l LoyaltyAccountID) IsEmpty() bool             { return string(l) == "" }
+
+type LoyaltyTransactionID string
+
+func NewLoyaltyTransactionID(id string) LoyaltyTransactionID { return LoyaltyTransactionID(id) }
+func (l LoyaltyTransactionID) String() string                { return string(l) }
+func (l LoyaltyTransactionID) IsEmpty() bool                 { return string(l) == "" }
+
+type RewardID string
+
+func NewRewardID(id string) RewardID { return RewardID(id) }
+func (r RewardID) String() string    { return string(r) }
+func (r RewardID) IsEmpty() bool     { return string(r) == "" }
