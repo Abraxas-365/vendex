@@ -175,3 +175,17 @@ type WishlistItemID string
 func NewWishlistItemID(id string) WishlistItemID { return WishlistItemID(id) }
 func (w WishlistItemID) String() string          { return string(w) }
 func (w WishlistItemID) IsEmpty() bool           { return string(w) == "" }
+
+type CustomerGroupID string
+
+func NewCustomerGroupID(id string) CustomerGroupID { return CustomerGroupID(id) }
+func (c CustomerGroupID) String() string           { return string(c) }
+func (c CustomerGroupID) IsEmpty() bool            { return string(c) == "" }
+
+type CustomerGroupMembershipID string
+
+func NewCustomerGroupMembershipID(id string) CustomerGroupMembershipID {
+	return CustomerGroupMembershipID(id)
+}
+func (c CustomerGroupMembershipID) String() string { return string(c) }
+func (c CustomerGroupMembershipID) IsEmpty() bool  { return string(c) == "" }
