@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Abraxas-365/hada-commerce/internal/agent"
 	"github.com/Abraxas-365/hada-commerce/internal/abtest/abtestcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/bulkops/bulkopscontainer"
@@ -510,4 +511,46 @@ func (r *orderCustomerResolver) ResolveOrderCustomerID(ctx context.Context, tena
 		return "", err
 	}
 	return string(o.CustomerID), nil
+}
+
+// ---------------------------------------------------------------------------
+// Agent tools wiring
+// ---------------------------------------------------------------------------
+
+// BuildAgentServices returns a fully populated agent.Services struct
+// that maps every domain container's Service to the agent tool layer.
+func (c *Container) BuildAgentServices() agent.Services {
+	return agent.Services{
+		Storefront:      c.Storefront.Service,
+		Products:        c.Product.Service,
+		Orders:          c.Order.Service,
+		Promos:          c.Promo.Service,
+		Catalog:         c.Catalog.Service,
+		Themes:          c.Theme.Service,
+		Shipping:        c.Shipping.Service,
+		Tax:             c.Tax.Service,
+		Payment:         c.Payment.Service,
+		Search:          c.Search.Service,
+		CustomerGroups:  c.CustomerGroup.Service,
+		GiftCards:       c.GiftCard.Service,
+		CartRecovery:    c.CartRecovery.Service,
+		Currency:        c.Currency.Service,
+		I18n:            c.I18n.Service,
+		Subscriptions:   c.Subscription.Service,
+		Inventory:       c.Inventory.Service,
+		Reviews:         c.Review.Service,
+		Returns:         c.Returns.Service,
+		Webhooks:        c.Webhook.Service,
+		Audit:           c.Audit.Service,
+		Loyalty:         c.Loyalty.Service,
+		Bundles:         c.Bundle.Service,
+		Dashboard:       c.Dashboard.Service,
+		Notifications:   c.Notification.Service,
+		MultiStore:      c.MultiStore.Service,
+		BulkOps:         c.BulkOps.Service,
+		Blog:            c.Blog.Service,
+		Collections:     c.Collection.Service,
+		ABTest:          c.ABTest.Service,
+		Recommendations: c.Recommendation.Service,
+	}
 }
