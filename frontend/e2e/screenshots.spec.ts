@@ -73,6 +73,10 @@ const pages = [
   { name: 'admin-multistores', path: '/admin/storefronts', title: 'Storefronts' },
   { name: 'admin-social-accounts', path: '/admin/social-accounts', title: 'Social Accounts' },
   { name: 'admin-notifications', path: '/admin/notifications', title: 'Notifications' },
+
+  // AI Agent & Workspaces
+  { name: 'admin-presets', path: '/admin/presets', title: 'Preset Marketplace' },
+  { name: 'admin-workspaces', path: '/admin/workspaces', title: 'Agent Workspaces' },
 ]
 
 // ── Mock Data ────────────────────────────────────────────────────────────────
@@ -212,6 +216,28 @@ const mockSettings = {
   checkout_config: { require_phone: false, require_shipping: true, allow_notes: true },
   updated_at: now,
 }
+
+const mockPresets = [
+  { id: 'preset1', name: 'Web Designer', slug: 'web-designer', description: 'Design and edit storefront pages with live HTML/CSS preview. Build landing pages, product pages, and custom layouts.', category: 'webdev', icon_url: '', image: 'hada-preset-webdev:latest', frontend_port: 8080, system_prompt: 'You are a web designer...', tools_manifest: ['write_file', 'read_file', 'list_files', 'preview_url', 'publish_page'], version: '1.2.0', author: 'Hada Labs', status: 'published', visibility: 'public', created_at: daysAgo(90) },
+  { id: 'preset2', name: 'Competitor Research', slug: 'competitor-research', description: 'Analyze competitor pricing, design patterns, and SEO strategies. Get actionable insights to improve your store.', category: 'research', icon_url: '', image: 'hada-preset-researcher:latest', frontend_port: 8080, system_prompt: 'You are a market researcher...', tools_manifest: ['web_search', 'web_fetch', 'screenshot', 'analyze_pricing', 'generate_report'], version: '1.0.3', author: 'DataFlow Inc', status: 'published', visibility: 'public', created_at: daysAgo(60) },
+  { id: 'preset3', name: 'Content Writer', slug: 'content-writer', description: 'Create SEO-optimized product descriptions, blog posts, and marketing copy. Supports multiple languages.', category: 'content', icon_url: '', image: 'hada-preset-content:latest', frontend_port: 8080, system_prompt: 'You are a content writer...', tools_manifest: ['write_blog', 'seo_analyze', 'translate', 'publish_post'], version: '2.0.1', author: 'Hada Labs', status: 'published', visibility: 'public', created_at: daysAgo(120) },
+  { id: 'preset4', name: 'Store Manager', slug: 'store-manager', description: 'Full admin assistant with access to all 89 domain tools. Manage products, orders, customers, and more via natural language.', category: 'store-manager', icon_url: '', image: '', frontend_port: 0, system_prompt: 'You are a store manager...', tools_manifest: ['create_product', 'update_product', 'list_orders', 'manage_inventory'], version: '3.1.0', author: 'Hada Labs', status: 'published', visibility: 'public', created_at: daysAgo(180) },
+  { id: 'preset5', name: 'SEO Auditor', slug: 'seo-auditor', description: 'Run comprehensive SEO audits on your storefront. Check meta tags, page speed, sitemap, and structured data.', category: 'research', icon_url: '', image: 'hada-preset-seo:latest', frontend_port: 8080, system_prompt: 'You are an SEO specialist...', tools_manifest: ['web_fetch', 'lighthouse_audit', 'check_sitemap', 'analyze_meta'], version: '1.1.0', author: 'DataFlow Inc', status: 'published', visibility: 'public', created_at: daysAgo(45) },
+  { id: 'preset6', name: 'Data Analyst', slug: 'data-analyst', description: 'Generate revenue reports, analyze customer segments, and forecast trends with AI-powered analytics.', category: 'analytics', icon_url: '', image: 'hada-preset-analyst:latest', frontend_port: 8080, system_prompt: 'You are a data analyst...', tools_manifest: ['query_analytics', 'export_csv', 'generate_chart', 'forecast'], version: '1.0.0', author: 'DataFlow Inc', status: 'published', visibility: 'public', created_at: daysAgo(30) },
+]
+
+const mockPresetInstalls = [
+  { id: 'inst-p1', tenant_id: 'tnt_mock', preset_id: 'preset1', installed_at: daysAgo(30) },
+  { id: 'inst-p3', tenant_id: 'tnt_mock', preset_id: 'preset3', installed_at: daysAgo(20) },
+  { id: 'inst-p4', tenant_id: 'tnt_mock', preset_id: 'preset4', installed_at: daysAgo(60) },
+]
+
+const mockAgentSessions = [
+  { id: 'sess1', tenant_id: 'tnt_mock', preset_id: 'preset1', name: 'Landing Page Redesign', status: 'running', container_id: 'ctr_abc123', frontend_url: 'http://localhost:9001', metadata: {}, created_at: daysAgo(0), updated_at: daysAgo(0) },
+  { id: 'sess2', tenant_id: 'tnt_mock', preset_id: 'preset3', name: 'Summer Blog Posts', status: 'running', container_id: 'ctr_def456', frontend_url: 'http://localhost:9002', metadata: {}, created_at: daysAgo(1), updated_at: daysAgo(0) },
+  { id: 'sess3', tenant_id: 'tnt_mock', preset_id: 'preset4', name: 'Inventory Check', status: 'stopped', container_id: '', frontend_url: '', metadata: {}, created_at: daysAgo(3), updated_at: daysAgo(2), stopped_at: daysAgo(2) },
+  { id: 'sess4', tenant_id: 'tnt_mock', preset_id: 'preset1', name: 'Product Page A/B Test', status: 'stopped', container_id: '', frontend_url: '', metadata: {}, created_at: daysAgo(7), updated_at: daysAgo(5), stopped_at: daysAgo(5) },
+]
 
 // ── Test Setup ───────────────────────────────────────────────────────────────
 
@@ -622,6 +648,36 @@ test.beforeEach(async ({ page }) => {
     }
     if (url.match(/\/bulk-operations\/?(\?.*)?$/)) {
       return paginated(mockBulkOperations)
+    }
+
+    // Presets - Marketplace
+    if (url.match(/\/presets\/marketplace\/?(\?.*)?$/)) {
+      return paginated(mockPresets)
+    }
+    if (url.match(/\/presets\/installed\/?(\?.*)?$/)) {
+      return paginated(mockPresetInstalls.map(inst => ({
+        ...inst,
+        preset: mockPresets.find(p => p.id === inst.preset_id),
+      })))
+    }
+    if (url.match(/\/presets\/[\w-]+\/?(\?.*)?$/)) {
+      return json(mockPresets[0])
+    }
+
+    // Agent Sessions
+    if (url.match(/\/agent-sessions\/[\w-]+\/history\/?(\?.*)?$/)) {
+      return json([
+        { id: 'msg1', session_id: 'sess1', role: 'user', content: 'Create a modern landing page for our summer collection', created_at: daysAgo(0) },
+        { id: 'msg2', session_id: 'sess1', role: 'assistant', content: 'I\'ll create a beautiful summer collection landing page. Let me start with the HTML structure and styling.\n\nI\'ve written the initial HTML with a hero section, product grid, and call-to-action. The design uses warm summer colors with a clean, modern layout.\n\nYou can preview it at the live preview panel.', created_at: daysAgo(0) },
+        { id: 'msg3', session_id: 'sess1', role: 'user', content: 'Add a testimonials section below the products', created_at: daysAgo(0) },
+        { id: 'msg4', session_id: 'sess1', role: 'assistant', content: 'Done! I\'ve added a testimonials carousel section with customer reviews, star ratings, and profile photos. The section uses a soft background to differentiate it from the product grid.', created_at: daysAgo(0) },
+      ])
+    }
+    if (url.match(/\/agent-sessions\/[\w-]+\/?(\?.*)?$/)) {
+      return json(mockAgentSessions[0])
+    }
+    if (url.match(/\/agent-sessions\/?(\?.*)?$/)) {
+      return paginated(mockAgentSessions)
     }
 
     // Default fallback
