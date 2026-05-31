@@ -321,3 +321,15 @@ type NotificationID string
 func NewNotificationID(id string) NotificationID { return NotificationID(id) }
 func (n NotificationID) String() string          { return string(n) }
 func (n NotificationID) IsEmpty() bool           { return string(n) == "" }
+
+type StorefrontEntryID string
+
+func NewStorefrontEntryID(id string) StorefrontEntryID { return StorefrontEntryID(id) }
+func (s StorefrontEntryID) String() string             { return string(s) }
+func (s StorefrontEntryID) IsEmpty() bool              { return string(s) == "" }
+
+type StorefrontCatalogID string
+
+func NewStorefrontCatalogID(id string) StorefrontCatalogID { return StorefrontCatalogID(id) }
+func (s StorefrontCatalogID) String() string               { return string(s) }
+func (s StorefrontCatalogID) IsEmpty() bool                { return string(s) == "" }
