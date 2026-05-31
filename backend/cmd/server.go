@@ -146,8 +146,8 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.IAM.PasswordlessHandlers.RegisterRoutes(app)
 	logx.Info("  > Passwordless auth routes registered")
 
-	// Public storefront routes (no auth)
-	public := app.Group("/api/v1")
+	// Public storefront routes (no auth — tenant resolved from Host header or X-Tenant-ID)
+	public := app.Group("/store", container.MultiStore.TenantMiddleware.Resolve())
 	container.Storefront.Handler.RegisterPublicRoutes(public)
 	container.Theme.Handler.RegisterPublicRoutes(public)
 	container.Product.Handler.RegisterPublicRoutes(public)
@@ -429,7 +429,8 @@ func printRouteSummary() {
 	logx.Info("Route Summary:")
 	logx.Info("   |- Health: /health")
 	logx.Info("   |- Info: /")
-	logx.Info("   |- API: /api/v1/*")
+	logx.Info("   |- Admin API: /api/v1/* (auth required)")
+	logx.Info("   |- Storefront: /store/* (public, tenant from domain)")
 }
 
 func randomString(n int) string {

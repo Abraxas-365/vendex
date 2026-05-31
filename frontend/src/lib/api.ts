@@ -117,6 +117,7 @@ export interface PaginationParams {
 
 const TOKEN_KEY = 'hada_access_token'
 const REFRESH_TOKEN_KEY = 'hada_refresh_token'
+const TENANT_ID_KEY = 'hada_tenant_id'
 
 export function getAccessToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
@@ -124,6 +125,14 @@ export function getAccessToken(): string | null {
 
 export function getRefreshToken(): string | null {
   return localStorage.getItem(REFRESH_TOKEN_KEY)
+}
+
+export function getTenantId(): string | null {
+  return localStorage.getItem(TENANT_ID_KEY)
+}
+
+export function setTenantId(tenantId: string): void {
+  localStorage.setItem(TENANT_ID_KEY, tenantId)
 }
 
 export function setTokens(accessToken: string, refreshToken?: string): void {
@@ -136,6 +145,7 @@ export function setTokens(accessToken: string, refreshToken?: string): void {
 export function clearTokens(): void {
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(REFRESH_TOKEN_KEY)
+  localStorage.removeItem(TENANT_ID_KEY)
 }
 
 // ---------------------------------------------------------------------------
@@ -150,6 +160,10 @@ function buildHeaders(extra?: Record<string, string>): HeadersInit {
   const token = getAccessToken()
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
+  }
+  const tenantId = getTenantId()
+  if (tenantId) {
+    headers['X-Tenant-ID'] = tenantId
   }
   return headers
 }

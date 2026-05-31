@@ -195,7 +195,8 @@ func scanProductRow(rows interface{ Scan(dest ...any) error }) (*product.Product
 
 func scanFields(s scanner) (*product.Product, error) {
 	var p product.Product
-	var id, tenantID, categoryID, status string
+	var id, tenantID, status string
+	var categoryID sql.NullString
 	var imagesJSON, tagsJSON string
 
 	err := s.Scan(
@@ -212,7 +213,7 @@ func scanFields(s scanner) (*product.Product, error) {
 
 	p.ID = kernel.ProductID(id)
 	p.TenantID = kernel.TenantID(tenantID)
-	p.CategoryID = kernel.CategoryID(categoryID)
+	p.CategoryID = kernel.CategoryID(categoryID.String)
 	p.Status = product.Status(status)
 
 	_ = json.Unmarshal([]byte(imagesJSON), &p.Images)

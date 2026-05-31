@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Box, Flex, Heading, Text, Spinner } from '@radix-ui/themes'
-import { handleAuthCallback, setTokens } from '../../lib/api'
+import { handleAuthCallback, setTokens, setTenantId } from '../../lib/api'
 
 // This page handles the OAuth callback redirect.
 // The backend redirects here after OAuth completes.
@@ -36,6 +36,7 @@ export default function Callback({ provider }: CallbackProps) {
         try {
           const tokenResponse = await handleAuthCallback(provider, code, state)
           setTokens(tokenResponse.access_token, tokenResponse.refresh_token)
+          if (tokenResponse.tenant?.id) setTenantId(tokenResponse.tenant.id)
           window.location.replace('/admin')
           return
         } catch (err) {

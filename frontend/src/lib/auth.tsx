@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import type { AuthUser, AuthTenant } from '../types'
-import { getMe, logout as apiLogout, clearTokens, getAccessToken, setTokens, initiateLogin as apiInitiateLogin } from './api'
+import { getMe, logout as apiLogout, clearTokens, getAccessToken, setTokens, setTenantId, initiateLogin as apiInitiateLogin } from './api'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then(({ user: u, tenant: t }) => {
         setUser(u)
         setTenant(t)
+        if (t?.id) setTenantId(t.id)
       })
       .catch(() => {
         // Token invalid or expired and refresh failed — clear everything

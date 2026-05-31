@@ -304,7 +304,7 @@ func (c *Container) initModules() {
 	c.Bundle = bundlecontainer.New(c.DB, bus)
 	c.SocialAuth = socialauthcontainer.New(c.DB)
 	c.Notification = notificationcontainer.New(c.DB, bus)
-	c.MultiStore = multistorecontainer.New(c.DB, bus)
+	c.MultiStore = multistorecontainer.New(c.DB, c.DB.DB, bus, c.Config.Server.BaseDomain)
 	c.BulkOps = bulkopscontainer.New(c.DB, bus)
 	c.Blog = blogcontainer.New(c.DB, bus)
 	c.Collection = collectioncontainer.New(c.DB, bus)
