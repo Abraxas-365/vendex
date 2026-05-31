@@ -1,26 +1,55 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Send, Bot, User, Loader2, Wrench } from 'lucide-react'
-import type { AgentMessage } from '../../types'
+import * as api from '../../lib/api'
+import type { AgentEvent } from '../../types'
 
-// Placeholder messages for demo
-const initialMessages: AgentMessage[] = [
-  {
-    role: 'assistant',
-    content:
-      'Hello! I\'m the Hada Commerce assistant. I can help you create product pages, write descriptions, generate promo campaigns, and more. What would you like to do?',
-    timestamp: new Date(Date.now() - 60000).toISOString(),
-  },
-]
+// ---------------------------------------------------------------------------
+// Local types
+// ---------------------------------------------------------------------------
+
+interface ChatMsg {
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: string
+}
 
 type AgentStatus = 'idle' | 'thinking' | 'tool_use'
 
-export default function AgentChat() {
-  const [messages, setMessages] = useState<AgentMessage[]>(initialMessages)
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const welcomeMessage: ChatMsg = {
+  role: 'assistant',
+  content:
+    "Hello! I'm the Hada Commerce assistant. I can help you create product pages, write descriptions, generate promo campaigns, and more. What would you like to do?",
+  timestamp: new Date(Date.now() - 60000).toISOString(),
+}
+
+function formatTime(dateStr: string): string {
+  return new Date(dateStr).toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+interface AgentChatProps {
+  sessionId?: string
+  presetId?: string
+}
+
+export default function AgentChat({ sessionId, presetId }: AgentChatProps = {}) {
+  const [messages, setMessages] = useState<ChatMsg[]>([welcomeMessage])
   const [input, setInput] = useState('')
   const [status, setStatus] = useState<AgentStatus>('idle')
   const [toolName, setToolName] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -35,18 +64,11 @@ export default function AgentChat() {
     }
   }, [input])
 
-  function formatTime(dateStr: string): string {
-    return new Date(dateStr).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-
-  async function handleSend() {
+  const handleSend = useCallback(async () => {
     const trimmed = input.trim()
     if (!trimmed || status !== 'idle') return
 
-    const userMsg: AgentMessage = {
+    const userMsg: ChatMsg = {
       role: 'user',
       content: trimmed,
       timestamp: new Date().toISOString(),
@@ -54,33 +76,136 @@ export default function AgentChat() {
 
     setMessages((prev) => [...prev, userMsg])
     setInput('')
-
-    // Simulate agent response
     setStatus('thinking')
 
-    // Simulate tool use after a brief delay
-    setTimeout(() => {
-      setStatus('tool_use')
-      setToolName('search_products')
-    }, 1500)
+    // Abort any in-flight stream
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
 
-    // Simulate final response
-    setTimeout(() => {
-      const assistantMsg: AgentMessage = {
+    let assistantText = ''
+
+    try {
+      const token = api.getAccessToken()
+      const baseUrl = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
+
+      const res = await fetch(`${baseUrl}/agent/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          message: trimmed,
+          ...(sessionId ? { session_id: sessionId } : {}),
+          ...(presetId ? { preset_id: presetId } : {}),
+        }),
+        signal: controller.signal,
+      })
+
+      if (!res.ok || !res.body) {
+        const errBody = await res.json().catch(() => ({ message: `HTTP ${res.status}` }))
+        throw new Error((errBody as { message?: string }).message ?? `HTTP ${res.status}`)
+      }
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      // Insert placeholder assistant message
+      const placeholder: ChatMsg = {
         role: 'assistant',
-        content: `I've processed your request: "${trimmed}". This is a placeholder response — the actual WebSocket connection to the agent backend is a TODO. Once connected, I'll be able to create pages, manage products, and run campaigns for you.`,
+        content: '',
         timestamp: new Date().toISOString(),
       }
-      setMessages((prev) => [...prev, assistantMsg])
+      setMessages((prev) => [...prev, placeholder])
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const raw = line.slice(6).trim()
+          if (raw === '' || raw === '[DONE]') continue
+
+          let event: AgentEvent
+          try {
+            event = JSON.parse(raw) as AgentEvent
+          } catch {
+            continue
+          }
+
+          switch (event.kind) {
+            case 'text_delta':
+              assistantText += event.text ?? ''
+              setMessages((prev) => {
+                const updated = [...prev]
+                const last = updated[updated.length - 1]
+                if (last && last.role === 'assistant') {
+                  updated[updated.length - 1] = { ...last, content: assistantText }
+                }
+                return updated
+              })
+              setStatus('thinking')
+              break
+
+            case 'tool_start':
+              setStatus('tool_use')
+              setToolName(event.tool_name ?? '')
+              break
+
+            case 'tool_end':
+              setStatus('thinking')
+              setToolName('')
+              break
+
+            case 'turn_end':
+              setStatus('idle')
+              setToolName('')
+              break
+
+            case 'error':
+              setStatus('idle')
+              setToolName('')
+              setMessages((prev) => [
+                ...prev,
+                {
+                  role: 'assistant',
+                  content: `Error: ${event.error ?? 'Unknown error'}`,
+                  timestamp: new Date().toISOString(),
+                },
+              ])
+              break
+          }
+        }
+      }
+
       setStatus('idle')
       setToolName('')
-    }, 3000)
-  }
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') return
+      setStatus('idle')
+      setToolName('')
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: err instanceof Error ? err.message : 'An unexpected error occurred.',
+          timestamp: new Date().toISOString(),
+        },
+      ])
+    }
+  }, [input, status, sessionId, presetId])
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      handleSend()
+      void handleSend()
     }
   }
 
@@ -191,7 +316,7 @@ export default function AgentChat() {
               className="max-h-40 min-h-[2.5rem] flex-1 resize-none text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
             />
             <button
-              onClick={handleSend}
+              onClick={() => void handleSend()}
               disabled={!input.trim() || status !== 'idle'}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-900 text-white transition-colors hover:bg-gray-800 disabled:bg-gray-200 disabled:text-gray-400"
             >
@@ -199,7 +324,7 @@ export default function AgentChat() {
             </button>
           </div>
           <p className="mt-2 text-center text-[10px] text-gray-400">
-            Press Enter to send, Shift+Enter for new line. WebSocket connection is a TODO.
+            Press Enter to send, Shift+Enter for new line
           </p>
         </div>
       </div>

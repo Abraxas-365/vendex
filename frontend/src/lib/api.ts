@@ -86,6 +86,10 @@ import type {
   ExperimentResults,
   RecommendationRule,
   RecommendedProduct,
+  Preset,
+  PresetInstall,
+  AgentSession,
+  ChatMessage,
 } from '../types'
 
 // ---------------------------------------------------------------------------
@@ -1556,4 +1560,56 @@ export function deleteRecommendationRule(id: string): Promise<void> {
 
 export function getRecommendations(productId: string): Promise<RecommendedProduct[]> {
   return get<RecommendedProduct[]>(`/recommendations/products/${productId}`)
+}
+
+// ---------------------------------------------------------------------------
+// Preset Marketplace (050)
+// ---------------------------------------------------------------------------
+
+export function listMarketplacePresets(params?: { category?: string; search?: string }): Promise<PaginatedResult<Preset>> {
+  return get<PaginatedResult<Preset>>('/presets/marketplace', params as Record<string, string | undefined>)
+}
+
+export function getMarketplacePreset(id: string): Promise<Preset> {
+  return get<Preset>(`/presets/marketplace/${id}`)
+}
+
+export function fetchInstalledPresets(): Promise<PaginatedResult<PresetInstall>> {
+  return get<PaginatedResult<PresetInstall>>('/presets/installed')
+}
+
+export function installPreset(id: string): Promise<PresetInstall> {
+  return post<PresetInstall>(`/presets/install/${id}`)
+}
+
+export function uninstallPreset(id: string): Promise<void> {
+  return del(`/presets/uninstall/${id}`)
+}
+
+// ---------------------------------------------------------------------------
+// Agent Sessions / Workspaces (050)
+// ---------------------------------------------------------------------------
+
+export function listAgentSessions(): Promise<PaginatedResult<AgentSession>> {
+  return get<PaginatedResult<AgentSession>>('/agent/sessions')
+}
+
+export function getAgentSession(id: string): Promise<AgentSession> {
+  return get<AgentSession>(`/agent/sessions/${id}`)
+}
+
+export function createAgentSession(data: { preset_id: string; name?: string }): Promise<AgentSession> {
+  return post<AgentSession>('/agent/sessions', data)
+}
+
+export function stopAgentSession(id: string): Promise<void> {
+  return del(`/agent/sessions/${id}`)
+}
+
+export function fetchSessionHistory(id: string): Promise<ChatMessage[]> {
+  return get<ChatMessage[]>(`/agent/sessions/${id}/history`)
+}
+
+export function sendSessionMessage(id: string, message: string): Promise<ChatMessage> {
+  return post<ChatMessage>(`/agent/sessions/${id}/message`, { message })
 }
