@@ -77,6 +77,9 @@ const pages = [
   // AI Agent & Workspaces
   { name: 'admin-presets', path: '/admin/presets', title: 'Preset Marketplace' },
   { name: 'admin-workspaces', path: '/admin/workspaces', title: 'Agent Workspaces' },
+  { name: 'admin-approvals', path: '/admin/approvals', title: 'Approvals' },
+  { name: 'admin-agent-memory', path: '/admin/agent-memory', title: 'Agent Memory' },
+  { name: 'admin-agent-triggers', path: '/admin/agent-triggers', title: 'Agent Triggers' },
 ]
 
 // ── Mock Data ────────────────────────────────────────────────────────────────
@@ -662,6 +665,56 @@ test.beforeEach(async ({ page }) => {
     }
     if (url.match(/\/presets\/[\w-]+\/?(\?.*)?$/)) {
       return json(mockPresets[0])
+    }
+
+    // Approvals
+    if (url.match(/\/approvals\/count\/?(\?.*)?$/)) {
+      return json({ count: 3 })
+    }
+    if (url.match(/\/approvals\/?(\?.*)?$/)) {
+      return paginated([
+        { id: 'apr1', tenant_id: 'tnt_mock', session_id: 'sess1', tool_name: 'publish_page_version', tool_input: { page_id: 'page1', version_id: 'v3' }, status: 'pending', reason: '', requested_by: 'agent', reviewed_by: '', created_at: daysAgo(0), reviewed_at: null },
+        { id: 'apr2', tenant_id: 'tnt_mock', session_id: 'sess1', tool_name: 'create_promo_code', tool_input: { code: 'SUMMER25', discount_percent: 25, min_order: 5000 }, status: 'pending', reason: '', requested_by: 'agent', reviewed_by: '', created_at: daysAgo(0), reviewed_at: null },
+        { id: 'apr3', tenant_id: 'tnt_mock', session_id: 'sess2', tool_name: 'update_product_price', tool_input: { product_id: 'p1', new_price: { amount: 3999, currency: 'USD' } }, status: 'pending', reason: '', requested_by: 'agent', reviewed_by: '', created_at: daysAgo(1), reviewed_at: null },
+        { id: 'apr4', tenant_id: 'tnt_mock', session_id: 'sess1', tool_name: 'publish_page_version', tool_input: { page_id: 'page2', version_id: 'v1' }, status: 'approved', reason: 'Looks good', requested_by: 'agent', reviewed_by: 'admin@store.com', created_at: daysAgo(3), reviewed_at: daysAgo(2) },
+        { id: 'apr5', tenant_id: 'tnt_mock', session_id: 'sess2', tool_name: 'delete_product', tool_input: { product_id: 'p7' }, status: 'rejected', reason: 'Product still has orders', requested_by: 'agent', reviewed_by: 'admin@store.com', created_at: daysAgo(5), reviewed_at: daysAgo(4) },
+      ])
+    }
+
+    // Agent Memory
+    if (url.match(/\/agent\/memories\/search\/?(\?.*)?$/)) {
+      return paginated([
+        { id: 'mem1', tenant_id: 'tnt_mock', category: 'brand', title: 'Brand Voice Guidelines', content: 'Our brand voice is warm, approachable, and expert. We speak like a knowledgeable friend — never clinical or salesy. Use active voice. Address customers as "you".', tags: ['voice', 'copywriting'], source: 'human', created_at: daysAgo(30), updated_at: daysAgo(5) },
+        { id: 'mem2', tenant_id: 'tnt_mock', category: 'product', title: 'Hero Product: Vitamin C Serum', content: 'Our #1 bestseller. Key selling points: 20% L-ascorbic acid, ferulic acid stabilization, brightening results in 2 weeks. Target audience: 25-45, concerned about dullness and hyperpigmentation.', tags: ['vitamin-c', 'hero-product', 'bestseller'], source: 'agent', created_at: daysAgo(20), updated_at: daysAgo(3) },
+      ])
+    }
+    if (url.match(/\/agent\/memories\/?(\?.*)?$/)) {
+      return paginated([
+        { id: 'mem1', tenant_id: 'tnt_mock', category: 'brand', title: 'Brand Voice Guidelines', content: 'Our brand voice is warm, approachable, and expert. We speak like a knowledgeable friend.', tags: ['voice', 'copywriting'], source: 'human', created_at: daysAgo(30), updated_at: daysAgo(5) },
+        { id: 'mem2', tenant_id: 'tnt_mock', category: 'product', title: 'Hero Product: Vitamin C Serum', content: 'Our #1 bestseller. 20% L-ascorbic acid with ferulic acid stabilization.', tags: ['vitamin-c', 'hero-product'], source: 'agent', created_at: daysAgo(20), updated_at: daysAgo(3) },
+        { id: 'mem3', tenant_id: 'tnt_mock', category: 'seo', title: 'SEO Keywords Strategy', content: 'Primary: natural skincare, vitamin c serum, organic beauty. Secondary: anti-aging serum, hydrating moisturizer, SPF daily.', tags: ['seo', 'keywords'], source: 'human', created_at: daysAgo(15), updated_at: daysAgo(10) },
+        { id: 'mem4', tenant_id: 'tnt_mock', category: 'decision', title: 'Pricing Strategy Decision', content: 'Decided to position in premium-affordable range ($24-$58). Avoid discounts > 20% to protect brand perception. Exception: Black Friday up to 30%.', tags: ['pricing', 'strategy'], source: 'agent', created_at: daysAgo(10), updated_at: daysAgo(10) },
+        { id: 'mem5', tenant_id: 'tnt_mock', category: 'general', title: 'Shipping Policy', content: 'Free shipping over $50. Standard: 3-5 days ($5.99). Express: 1-2 days ($12.99). No international shipping yet.', tags: ['shipping', 'policy'], source: 'human', created_at: daysAgo(45), updated_at: daysAgo(8) },
+      ])
+    }
+
+    // Agent Triggers
+    if (url.match(/\/agent\/triggers\/event-types\/?(\?.*)?$/)) {
+      return json({ event_types: ['order.placed', 'order.cancelled', 'stock.low_alert', 'cart.abandoned', 'review.created', 'customer.registered', 'payment.failed', 'return.requested'] })
+    }
+    if (url.match(/\/agent\/triggers\/[\w-]+\/logs\/?(\?.*)?$/)) {
+      return paginated([
+        { id: 'log1', trigger_id: 'trg1', tenant_id: 'tnt_mock', event_type: 'stock.low_alert', event_payload: { product_id: 'p3', current_stock: 5 }, agent_response: 'Low stock alert for Retinol Night Oil. Recommended reorder quantity: 50 units.', status: 'success', created_at: daysAgo(1) },
+        { id: 'log2', trigger_id: 'trg1', tenant_id: 'tnt_mock', event_type: 'stock.low_alert', event_payload: { product_id: 'p6', current_stock: 8 }, agent_response: 'Niacinamide Pore Serum stock low. Suggested action: reorder 30 units from supplier.', status: 'success', created_at: daysAgo(3) },
+      ])
+    }
+    if (url.match(/\/agent\/triggers\/?(\?.*)?$/)) {
+      return paginated([
+        { id: 'trg1', tenant_id: 'tnt_mock', name: 'Low Stock Reorder Alert', event_type: 'stock.low_alert', prompt: 'A product has low stock: {{.EventPayload}}. Analyze sales velocity and recommend reorder quantity.', preset_id: '', enabled: true, cooldown: 3600, last_fired_at: daysAgo(1), created_at: daysAgo(30), updated_at: daysAgo(1) },
+        { id: 'trg2', tenant_id: 'tnt_mock', name: 'Welcome Email Draft', event_type: 'customer.registered', prompt: 'New customer registered: {{.EventPayload}}. Draft a personalized welcome email using our brand voice.', preset_id: '', enabled: true, cooldown: 0, last_fired_at: daysAgo(0), created_at: daysAgo(20), updated_at: daysAgo(5) },
+        { id: 'trg3', tenant_id: 'tnt_mock', name: 'Cart Recovery Copy', event_type: 'cart.abandoned', prompt: 'Cart abandoned: {{.EventPayload}}. Write a recovery email with product highlights and urgency.', preset_id: '', enabled: true, cooldown: 1800, last_fired_at: daysAgo(2), created_at: daysAgo(15), updated_at: daysAgo(2) },
+        { id: 'trg4', tenant_id: 'tnt_mock', name: 'Negative Review Response', event_type: 'review.created', prompt: 'New review: {{.EventPayload}}. If rating < 3, draft a compassionate response acknowledging the issue.', preset_id: '', enabled: false, cooldown: 300, last_fired_at: null, created_at: daysAgo(10), updated_at: daysAgo(10) },
+      ])
     }
 
     // Agent Sessions
