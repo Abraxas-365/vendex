@@ -102,6 +102,10 @@ const (
 	// Bundle events
 	BundleCreated EventType = "bundle.created"
 	BundleUpdated EventType = "bundle.updated"
+
+	// A/B testing events
+	ExperimentStarted   EventType = "experiment.started"
+	ExperimentCompleted EventType = "experiment.completed"
 )
 
 // Event is a domain event that has occurred in the system.
