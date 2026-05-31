@@ -46,6 +46,7 @@ import {
   FlaskConical,
   Sparkles,
   Zap,
+  MonitorPlay,
 } from 'lucide-react'
 
 // Store pages
@@ -100,6 +101,9 @@ import Collections from './pages/admin/Collections'
 import ABTesting from './pages/admin/ABTesting'
 import Recommendations from './pages/admin/Recommendations'
 import BulkOperations from './pages/admin/BulkOperations'
+import Presets from './pages/admin/Presets'
+import Workspaces from './pages/admin/Workspaces'
+import WorkspaceViewPage from './pages/admin/WorkspaceView'
 
 // Auth pages
 import Login from './pages/auth/Login'
@@ -178,6 +182,8 @@ const adminNavItems: NavItem[] = [
   { to: '/admin/bulk-operations', label: 'Bulk Ops', icon: Zap },
   { to: '/admin/media', label: 'Media', icon: Image },
   { to: '/admin/agent', label: 'Agent Chat', icon: Bot },
+  { to: '/admin/presets', label: 'Preset Marketplace', icon: Sparkles },
+  { to: '/admin/workspaces', label: 'Workspaces', icon: MonitorPlay },
   { to: '/admin/marketplace', label: 'Marketplace', icon: Puzzle },
   { to: '/admin/theme', label: 'Theme', icon: Palette },
   { to: '/admin/settings', label: 'Settings', icon: Settings2 },
@@ -614,6 +620,27 @@ const adminBulkOperationsRoute = createRoute({
   component: BulkOperations,
 })
 
+const adminPresetsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/presets',
+  component: Presets,
+})
+
+const adminWorkspacesRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/workspaces',
+  component: Workspaces,
+})
+
+const adminWorkspaceViewRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/workspaces/$id',
+  component: function WorkspaceViewWrapper() {
+    const { id } = adminWorkspaceViewRoute.useParams()
+    return <WorkspaceViewPage sessionId={id} />
+  },
+})
+
 // ─── Route tree ───────────────────────────────────────────────────────────────
 
 const storeTree = storeLayoutRoute.addChildren([
@@ -665,6 +692,9 @@ const adminTree = adminLayoutRoute.addChildren([
   adminBulkOperationsRoute,
   adminMediaRoute,
   adminAgentRoute,
+  adminPresetsRoute,
+  adminWorkspacesRoute,
+  adminWorkspaceViewRoute,
   adminMarketplaceRoute,
   adminPluginViewRoute,
   adminThemeRoute,

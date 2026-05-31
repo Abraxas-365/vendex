@@ -86,6 +86,10 @@ import type {
   ExperimentResults,
   RecommendationRule,
   RecommendedProduct,
+  Preset,
+  PresetInstall,
+  AgentSession,
+  ChatMessage,
 } from '../types'
 import * as api from './api'
 import type { PaginationParams } from './api'
@@ -2490,5 +2494,97 @@ export function useRecommendations(productId: string): UseQueryResult<Recommende
     queryKey: queryKeys.recommendations.forProduct(productId),
     queryFn: () => api.getRecommendations(productId),
     enabled: Boolean(productId),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Preset Marketplace (050)
+// ---------------------------------------------------------------------------
+
+export function useMarketplacePresets(params?: { category?: string; search?: string }): UseQueryResult<PaginatedResult<Preset>> {
+  return useQuery({
+    queryKey: ['presets', 'marketplace', params],
+    queryFn: () => api.listMarketplacePresets(params),
+  })
+}
+
+export function useInstalledPresets(): UseQueryResult<PaginatedResult<PresetInstall>> {
+  return useQuery({
+    queryKey: ['presets', 'installed'],
+    queryFn: () => api.fetchInstalledPresets(),
+  })
+}
+
+export function useInstallPreset(): UseMutationResult<PresetInstall, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.installPreset(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['presets'] })
+    },
+  })
+}
+
+export function useUninstallPreset(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.uninstallPreset(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['presets'] })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Agent Sessions / Workspaces (050)
+// ---------------------------------------------------------------------------
+
+export function useAgentSessions(): UseQueryResult<PaginatedResult<AgentSession>> {
+  return useQuery({
+    queryKey: ['agent-sessions'],
+    queryFn: () => api.listAgentSessions(),
+  })
+}
+
+export function useAgentSession(id: string): UseQueryResult<AgentSession> {
+  return useQuery({
+    queryKey: ['agent-sessions', id],
+    queryFn: () => api.getAgentSession(id),
+    enabled: Boolean(id),
+    refetchInterval: (query) => {
+      const session = query.state.data
+      if (session && (session.status === 'creating' || session.status === 'running')) {
+        return 5000
+      }
+      return false
+    },
+  })
+}
+
+export function useCreateAgentSession(): UseMutationResult<AgentSession, Error, { preset_id: string; name?: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createAgentSession(data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['agent-sessions'] })
+    },
+  })
+}
+
+export function useStopAgentSession(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.stopAgentSession(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['agent-sessions'] })
+    },
+  })
+}
+
+export function useSessionHistory(id: string): UseQueryResult<ChatMessage[]> {
+  return useQuery({
+    queryKey: ['agent-sessions', id, 'history'],
+    queryFn: () => api.fetchSessionHistory(id),
+    enabled: Boolean(id),
   })
 }

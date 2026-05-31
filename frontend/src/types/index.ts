@@ -1304,3 +1304,74 @@ export interface RecommendedProduct {
   score: number
   reason: string
 }
+
+// ---------------------------------------------------------------------------
+// Agent Presets (050)
+// ---------------------------------------------------------------------------
+
+export type PresetStatus = 'draft' | 'published' | 'archived'
+export type PresetVisibility = 'public' | 'private' | 'tenant_only'
+export type PresetCategory = 'webdev' | 'research' | 'content' | 'analytics' | 'store-manager'
+
+export interface Preset {
+  id: string
+  name: string
+  slug: string
+  description: string
+  version: string
+  image: string
+  frontend_port: number
+  system_prompt: string
+  tools_manifest: unknown[]
+  status: PresetStatus
+  visibility: PresetVisibility
+  category: PresetCategory
+  author: string
+  icon_url?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface PresetInstall {
+  id: string
+  tenant_id: string
+  preset_id: string
+  installed_at: string
+}
+
+// Agent Sessions (Workspaces)
+export type SessionStatus = 'creating' | 'running' | 'stopped' | 'failed'
+
+export interface AgentSession {
+  id: string
+  tenant_id: string
+  preset_id: string
+  name: string
+  container_id: string
+  status: SessionStatus
+  frontend_url: string
+  metadata: Record<string, unknown>
+  created_at: string
+  updated_at: string
+  stopped_at?: string
+}
+
+export interface ChatMessage {
+  id: string
+  session_id: string
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  tool_calls?: unknown[]
+  created_at: string
+}
+
+// Agent SSE Events
+export interface AgentEvent {
+  kind: 'text_delta' | 'tool_start' | 'tool_end' | 'turn_end' | 'error'
+  text?: string
+  tool_name?: string
+  tool_input?: string
+  result?: string
+  error?: string
+  timestamp: string
+}
