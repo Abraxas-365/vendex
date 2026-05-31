@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 
 	"github.com/Abraxas-365/hada-commerce/internal/abtest/abtestsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/agentmemory/agentmemorysrv"
+	"github.com/Abraxas-365/hada-commerce/internal/approval/approvalsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/audit/auditsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/blog/blogsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/bulkops/bulkopssrv"
@@ -88,6 +90,8 @@ type Services struct {
 	Collections     *collectionsrv.Service
 	ABTest          *abtestsrv.Service
 	Recommendations *recommendationsrv.Service
+	Memory          *agentmemorysrv.Service
+	Approval        *approvalsrv.Service
 }
 
 // Setup constructs and returns all agent tools wired to the given services.
@@ -249,5 +253,10 @@ func Setup(tenantID kernel.TenantID, svc Services) []Tool {
 		// Recommendations
 		&ListRecommendationRulesTool{recs: svc.Recommendations, tenantID: tenantID},
 		&GetTrendingProductsTool{recs: svc.Recommendations, tenantID: tenantID},
+
+		// Agent Memory
+		&searchMemoryTool{tenantID: tenantID, svc: svc.Memory},
+		&saveMemoryTool{tenantID: tenantID, svc: svc.Memory},
+		&getMemoryContextTool{tenantID: tenantID, svc: svc.Memory},
 	}
 }

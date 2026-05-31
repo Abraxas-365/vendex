@@ -675,5 +675,7 @@ func (c *Container) BuildAgentServices() agent.Services {
 		Collections:     c.Collection.Service,
 		ABTest:          c.ABTest.Service,
 		Recommendations: c.Recommendation.Service,
+		Memory:          c.AgentMemory.Service,
+		Approval:        c.Approval.Service,
 	}
 }
