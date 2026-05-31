@@ -24,10 +24,12 @@ frontend:
 frontend-build:
 	cd frontend && bun run build
 
-# Run everything
+# Run everything in a tmux split
 dev:
-	@echo "Run 'make up' first for Postgres+Redis"
-	@echo "Then in separate terminals: 'make backend' and 'make frontend'"
+	@tmux new-session -d -s vendex -n dev 'cd backend && go run ./cmd/...' \; \
+		split-window -h 'cd frontend && bun run dev' \; \
+		select-pane -t 0 \; \
+		attach
 
 # Migrate
 migrate:
