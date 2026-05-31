@@ -321,3 +321,15 @@ type NotificationID string
 func NewNotificationID(id string) NotificationID { return NotificationID(id) }
 func (n NotificationID) String() string          { return string(n) }
 func (n NotificationID) IsEmpty() bool           { return string(n) == "" }
+
+type BulkOperationID string
+
+func NewBulkOperationID(id string) BulkOperationID { return BulkOperationID(id) }
+func (b BulkOperationID) String() string           { return string(b) }
+func (b BulkOperationID) IsEmpty() bool            { return string(b) == "" }
+
+type BulkOperationItemID string
+
+func NewBulkOperationItemID(id string) BulkOperationItemID { return BulkOperationItemID(id) }
+func (b BulkOperationItemID) String() string               { return string(b) }
+func (b BulkOperationItemID) IsEmpty() bool                { return string(b) == "" }

@@ -102,6 +102,10 @@ const (
 	// Bundle events
 	BundleCreated EventType = "bundle.created"
 	BundleUpdated EventType = "bundle.updated"
+
+	// Bulk operation events
+	BulkOperationStarted   EventType = "bulk_operation.started"
+	BulkOperationCompleted EventType = "bulk_operation.completed"
 )
 
 // Event is a domain event that has occurred in the system.

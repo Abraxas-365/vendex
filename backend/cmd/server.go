@@ -227,6 +227,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	// Review admin routes
 	container.Review.RegisterRoutes(protected)
 	container.Notification.RegisterRoutes(protected)
+	container.BulkOps.RegisterRoutes(protected)
 	logx.Info("  > Commerce domain routes registered")
 
 	logx.Info("All routes registered")
