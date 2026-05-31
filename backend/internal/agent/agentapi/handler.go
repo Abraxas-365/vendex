@@ -18,18 +18,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-const defaultSystemPrompt = `You are an AI store assistant for an e-commerce platform. You help merchants manage their store by using the available tools.
-
-You can:
-- Create and manage products, collections, and bundles
-- Query and manage orders, payments, and returns
-- Manage shipping zones, tax rates, and currencies
-- Handle customer groups, loyalty programs, and gift cards
-- Manage blog posts, promotions, and A/B tests
-- View dashboard analytics and audit logs
-- Manage inventory, reviews, and recommendations
-
-Always be concise and helpful. When asked to perform an action, use the appropriate tool. When displaying results, format them clearly.`
+// defaultSystemPrompt is kept as a static fallback for the NewHandler override
+// path (when callers pass a non-empty systemPrompt override). In normal usage
+// the prompt is built dynamically via agent.BuildSystemPrompt inside
+// getOrCreateSession, so this constant is rarely used.
+const defaultSystemPrompt = `You are an AI store assistant for Hada Commerce. Use the available tools to help merchants manage their store. Be concise, helpful, and confirm before destructive actions.`
 
 // PresetProvider retrieves preset configuration for the agent.
 // This decouples agentapi from the marketplace package.
@@ -312,12 +305,20 @@ func (h *Handler) getOrCreateSession(key string, presetID string) (*harness.Sess
 		tenantID = key[:idx]
 	}
 
-	// Determine the system prompt: use preset's if available, else default.
+	// Determine the system prompt.
+	// Priority: (1) preset prompt, (2) dynamic store-context prompt, (3) static override/default.
 	sysPrompt := h.systemPrompt
 	if presetID != "" && h.presetProvider != nil {
 		if presetPrompt, err := h.presetProvider.GetPresetSystemPrompt(context.Background(), presetID); err == nil && presetPrompt != "" {
 			sysPrompt = presetPrompt
 		}
+	}
+	// When no preset overrides the prompt, build a rich dynamic prompt that
+	// includes live store stats (product count, order count, revenue, etc.).
+	// This is best-effort: failures inside BuildStoreContext are silently ignored.
+	if sysPrompt == h.systemPrompt {
+		storeCtx := agent.BuildStoreContext(context.Background(), kernel.TenantID(tenantID), h.services)
+		sysPrompt = agent.BuildSystemPrompt(storeCtx)
 	}
 
 	// Create tenant-scoped domain tools.
