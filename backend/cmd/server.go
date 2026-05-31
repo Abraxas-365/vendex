@@ -169,6 +169,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.Loyalty.RegisterPublicRoutes(public)
 	container.Bundle.RegisterPublicRoutes(public)
 	container.SocialAuth.RegisterPublicRoutes(public)
+	container.Recommendation.RegisterPublicRoutes(public)
 	logx.Info("  > Public storefront routes registered")
 
 	// Protected routes (require auth)
@@ -227,6 +228,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	// Review admin routes
 	container.Review.RegisterRoutes(protected)
 	container.Notification.RegisterRoutes(protected)
+	container.Recommendation.RegisterRoutes(protected)
 	logx.Info("  > Commerce domain routes registered")
 
 	logx.Info("All routes registered")
