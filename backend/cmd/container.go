@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Abraxas-365/hada-commerce/internal/agent"
+	"github.com/Abraxas-365/hada-commerce/internal/agent/agentapi"
 	"github.com/Abraxas-365/hada-commerce/internal/abtest/abtestcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/bulkops/bulkopscontainer"
@@ -141,6 +142,9 @@ type Container struct {
 	Collection     *collectioncontainer.Container
 	ABTest         *abtestcontainer.Container
 	Recommendation  *recommendationcontainer.Container
+
+	// AI Agent
+	Agent *agentapi.Handler
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -311,6 +315,18 @@ func (c *Container) initModules() {
 	)
 	emailHandler.RegisterSubscriptions(bus)
 	logx.Info("  Email notifications wired to event bus")
+
+	// AI Agent — optional, only initialized when API key is configured.
+	if c.Config.Agent.APIKey != "" {
+		agentSvc := c.BuildAgentServices()
+		c.Agent = agentapi.NewHandler(
+			c.Config.Agent.APIKey,
+			c.Config.Agent.Model,
+			"", // use default system prompt
+			agentSvc,
+		)
+		logx.Info("  AI Agent chat handler initialized")
+	}
 
 	logx.Info("All modules initialized")
 }

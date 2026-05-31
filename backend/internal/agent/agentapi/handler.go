@@ -10,10 +10,11 @@ import (
 	"log"
 	"sync"
 
+	"strings"
+
 	"github.com/Abraxas-365/hada-commerce/internal/agent"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/harness"
-	harnesstools "github.com/Abraxas-365/harness/tools"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -38,12 +39,14 @@ type ChatRequest struct {
 
 // Handler manages the agent chat HTTP endpoint.
 // It maintains a per-tenant session cache so conversation history
-// persists across multiple HTTP requests.
+// persists across multiple HTTP requests. Domain tools are created
+// per-tenant dynamically using agent.Services, ensuring proper
+// tenant scoping for multi-tenant deployments.
 type Handler struct {
 	apiKey       string
 	model        string
 	systemPrompt string
-	domainTools  []harnesstools.Tool
+	services     agent.Services
 
 	mu       sync.RWMutex
 	sessions map[string]*sessionEntry // key = tenantID + ":" + sessionID
@@ -59,8 +62,8 @@ type sessionEntry struct {
 //   - apiKey: Anthropic API key
 //   - model: model identifier, e.g. "claude-sonnet-4-20250514"
 //   - systemPrompt: override the default store-assistant system prompt (pass "" for default)
-//   - domainTools: pre-adapted harness tools (use agent.AdaptTools(agent.Setup(...)) to create these)
-func NewHandler(apiKey, model, systemPrompt string, domainTools []harnesstools.Tool) *Handler {
+//   - services: domain services used to create tenant-scoped tools per session
+func NewHandler(apiKey, model, systemPrompt string, services agent.Services) *Handler {
 	if systemPrompt == "" {
 		systemPrompt = defaultSystemPrompt
 	}
@@ -68,7 +71,7 @@ func NewHandler(apiKey, model, systemPrompt string, domainTools []harnesstools.T
 		apiKey:       apiKey,
 		model:        model,
 		systemPrompt: systemPrompt,
-		domainTools:  domainTools,
+		services:     services,
 		sessions:     make(map[string]*sessionEntry),
 	}
 }
@@ -220,6 +223,7 @@ func (h *Handler) Chat(c *fiber.Ctx) error {
 
 // getOrCreateSession returns an existing harness session or creates a new one.
 // Sessions are keyed by tenantID:sessionID and reuse conversation history.
+// Tools are created per-tenant to ensure proper multi-tenant scoping.
 func (h *Handler) getOrCreateSession(key string) (*harness.Session, error) {
 	h.mu.RLock()
 	entry, ok := h.sessions[key]
@@ -236,14 +240,23 @@ func (h *Handler) getOrCreateSession(key string) (*harness.Session, error) {
 		return entry.session, nil
 	}
 
+	// Extract tenantID from the session key (format: "tenantID:sessionID").
+	tenantID := key
+	if idx := strings.IndexByte(key, ':'); idx >= 0 {
+		tenantID = key[:idx]
+	}
+
+	// Create tenant-scoped domain tools.
+	domainTools := agent.AdaptTools(agent.Setup(kernel.TenantID(tenantID), h.services))
+
 	opts := []harness.Option{
 		harness.WithAPIKey(h.apiKey),
 		harness.WithModel(h.model),
 		harness.WithSystemPrompt(h.systemPrompt),
 		harness.WithPermissionMode("headless"),
 	}
-	if len(h.domainTools) > 0 {
-		opts = append(opts, harness.WithTools(h.domainTools...))
+	if len(domainTools) > 0 {
+		opts = append(opts, harness.WithTools(domainTools...))
 	}
 
 	harn, err := harness.New(opts...)

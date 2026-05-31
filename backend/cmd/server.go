@@ -240,6 +240,12 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.Recommendation.RegisterRoutes(protected)
 	logx.Info("  > Commerce domain routes registered")
 
+	// AI Agent chat endpoint (optional)
+	if container.Agent != nil {
+		container.Agent.RegisterRoutes(protected)
+		logx.Info("  > Agent chat routes registered")
+	}
+
 	logx.Info("All routes registered")
 }
 
