@@ -321,3 +321,9 @@ type NotificationID string
 func NewNotificationID(id string) NotificationID { return NotificationID(id) }
 func (n NotificationID) String() string          { return string(n) }
 func (n NotificationID) IsEmpty() bool           { return string(n) == "" }
+
+type CollectionProductID string
+
+func NewCollectionProductID(id string) CollectionProductID { return CollectionProductID(id) }
+func (c CollectionProductID) String() string               { return string(c) }
+func (c CollectionProductID) IsEmpty() bool                { return string(c) == "" }

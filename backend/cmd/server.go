@@ -163,6 +163,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.Checkout.RegisterPublicRoutes(public)
 	container.Customer.RegisterPublicRoutes(public)
 	container.Sitemap.RegisterPublicRoutes(public)
+	container.Collection.RegisterPublicRoutes(public)
 	container.GiftCard.RegisterPublicRoutes(public)
 	container.Review.RegisterPublicRoutes(public)
 	container.Returns.RegisterPublicRoutes(public)
@@ -227,6 +228,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	// Review admin routes
 	container.Review.RegisterRoutes(protected)
 	container.Notification.RegisterRoutes(protected)
+	container.Collection.RegisterRoutes(protected)
 	logx.Info("  > Commerce domain routes registered")
 
 	logx.Info("All routes registered")
