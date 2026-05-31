@@ -18,6 +18,18 @@ export default defineConfig({
     {
       name: 'screenshots',
       use: { browserName: 'chromium' },
+      testMatch: 'screenshots.spec.ts',
+    },
+    {
+      name: 'multitenancy',
+      use: { browserName: 'chromium' },
+      testMatch: 'multitenancy.spec.ts',
+    },
+    {
+      name: 'agent',
+      use: { browserName: 'chromium' },
+      testMatch: 'agent-edit.spec.ts',
+      timeout: 120_000,
     },
   ],
 })
