@@ -56,7 +56,8 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 
 // RegisterPublicRoutes registers unauthenticated storefront routes.
 func (h *Handler) RegisterPublicRoutes(router fiber.Router) {
-	router.Get("/storefront/pages/by-slug/:slug", h.GetPublishedPage)
+	router.Get("/pages/slug/:slug", h.GetPublishedPage)
+	router.Get("/pages", h.ListPublishedPages)
 }
 
 // --- Public handler ---
@@ -88,6 +89,33 @@ func (h *Handler) GetPublishedPage(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(page)
+}
+
+// pageNavItem is the minimal page data returned by the public list endpoint.
+type pageNavItem struct {
+	Slug  string `json:"slug"`
+	Title string `json:"title"`
+}
+
+// ListPublishedPages handles GET /pages — returns slug+title for all published pages.
+// Used by the frontend footer/nav to know which CMS pages exist.
+func (h *Handler) ListPublishedPages(c *fiber.Ctx) error {
+	tenantID := kernel.TenantID(c.Get("X-Tenant-ID"))
+	if tenantID == "" {
+		return errx.New("tenant ID required", errx.TypeAuthorization)
+	}
+
+	status := storefront.PageStatusPublished
+	result, err := h.svc.ListPages(c.Context(), tenantID, &status, kernel.PaginationOptions{Page: 1, PageSize: 100})
+	if err != nil {
+		return err
+	}
+
+	items := make([]pageNavItem, 0, len(result.Items))
+	for _, p := range result.Items {
+		items = append(items, pageNavItem{Slug: p.Slug, Title: p.Title})
+	}
+	return c.JSON(items)
 }
 
 // --- Admin handlers ---
