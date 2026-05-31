@@ -139,7 +139,6 @@ type Container struct {
 	Blog           *blogcontainer.Container
 	Collection     *collectioncontainer.Container
 	ABTest         *abtestcontainer.Container
-	Notification    *notificationcontainer.Container
 	Recommendation  *recommendationcontainer.Container
 }
 
