@@ -9,11 +9,20 @@ services:
       POSTGRES_PASSWORD: hada
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - hada
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    networks:
+      - hada
 
 volumes:
   pgdata:
+
+networks:
+  hada:
+    name: hada
+    driver: bridge
