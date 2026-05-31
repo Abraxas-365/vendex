@@ -12,6 +12,9 @@ export default defineConfig({
       },
       '/store': {
         target: 'http://localhost:8080',
+        // Preserve the original Host header (e.g. fashion.localhost:5174)
+        // so the backend tenant resolver can extract the subdomain
+        changeOrigin: false,
       },
     },
   },
