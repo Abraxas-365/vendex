@@ -19,6 +19,20 @@ type Config struct {
 	TenantConfig TenantConfig
 	Jobx         JobxConfig
 	Notifx       NotifxConfig
+	Agent        AgentConfig
+}
+
+// AgentConfig holds configuration for the AI agent powered by harness.
+type AgentConfig struct {
+	APIKey string
+	Model  string
+}
+
+func loadAgentConfig() AgentConfig {
+	return AgentConfig{
+		APIKey: getEnv("ANTHROPIC_API_KEY", ""),
+		Model:  getEnv("AGENT_MODEL", "claude-sonnet-4-20250514"),
+	}
 }
 
 type Environment string
@@ -68,6 +82,7 @@ func Load() (*Config, error) {
 
 	cfg.Jobx = loadJobxConfig()
 	cfg.Notifx = loadNotifxConfig()
+	cfg.Agent = loadAgentConfig()
 
 	return cfg, nil
 }
