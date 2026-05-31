@@ -9,6 +9,7 @@ import {
   ShoppingBag,
 } from 'lucide-react'
 import { useCart } from '../../lib/cart'
+import { useStoreInfo, useStorePageBySlug } from '../../lib/store-hooks'
 import type { Money } from '../../types/index'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -34,6 +35,9 @@ const SHIPPING_COST = 7.99           // $7.99
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, clearCart, total, itemCount } = useCart()
+  const { data: storeInfo } = useStoreInfo()
+  const { data: cartTemplate } = useStorePageBySlug('_cart')
+  const accent = storeInfo?.accent_color ?? '#6366f1'
 
   const shippingCost = total >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
   const orderTotal = total + shippingCost
@@ -45,8 +49,8 @@ export default function Cart() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center max-w-sm">
-          <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <ShoppingCart size={40} className="text-indigo-400" />
+          <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: `${accent}15` }}>
+            <ShoppingCart size={40} style={{ color: accent }} />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h1>
           <p className="text-gray-500 mb-8">
@@ -54,7 +58,8 @@ export default function Cart() {
           </p>
           <Link
             to="/products"
-            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3.5 rounded-2xl transition-colors shadow-lg shadow-indigo-200"
+            className="inline-flex items-center gap-2 text-white font-semibold px-8 py-3.5 rounded-2xl transition-opacity hover:opacity-90 shadow-lg"
+            style={{ backgroundColor: accent }}
           >
             <ShoppingBag size={18} />
             Continue Shopping
@@ -67,6 +72,15 @@ export default function Cart() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* ── CMS content (editable via workspace agent) ──────────────── */}
+        {cartTemplate?.html && (
+          <div
+            className="cms-cart-content mb-6"
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{ __html: cartTemplate.html }}
+          />
+        )}
+
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
           Shopping Cart
         </h1>
@@ -76,16 +90,16 @@ export default function Cart() {
 
         {/* Free shipping progress */}
         {total < FREE_SHIPPING_THRESHOLD && (
-          <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 mb-6">
-            <p className="text-sm text-indigo-700 mb-2">
+          <div className="rounded-2xl p-4 mb-6" style={{ backgroundColor: `${accent}10`, border: `1px solid ${accent}20` }}>
+            <p className="text-sm mb-2" style={{ color: accent }}>
               Add{' '}
               <span className="font-semibold">{formatAmount(remainingForFreeShipping)}</span>{' '}
               more for free shipping!
             </p>
-            <div className="h-2 bg-indigo-100 rounded-full overflow-hidden">
+            <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: `${accent}20` }}>
               <div
-                className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-                style={{ width: `${freeShippingProgress}%` }}
+                className="h-full rounded-full transition-all duration-500"
+                style={{ width: `${freeShippingProgress}%`, backgroundColor: accent }}
               />
             </div>
           </div>
@@ -233,14 +247,15 @@ export default function Cart() {
 
               <Link
                 to="/checkout"
-                className="flex items-center justify-center gap-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 rounded-2xl transition-colors shadow-lg shadow-indigo-200 mb-3"
+                className="flex items-center justify-center gap-2 w-full text-white font-semibold py-4 rounded-2xl transition-opacity hover:opacity-90 shadow-lg mb-3"
+                style={{ backgroundColor: accent }}
               >
                 Proceed to Checkout <ArrowRight size={18} />
               </Link>
 
               <Link
                 to="/products"
-                className="flex items-center justify-center w-full text-sm text-gray-500 hover:text-indigo-600 py-2 transition-colors"
+                className="flex items-center justify-center w-full text-sm text-gray-500 hover:opacity-80 py-2 transition-colors"
               >
                 Continue Shopping
               </Link>

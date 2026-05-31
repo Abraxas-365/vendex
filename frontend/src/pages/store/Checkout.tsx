@@ -9,6 +9,7 @@ import {
   ArrowLeft,
 } from 'lucide-react'
 import { useCart } from '../../lib/cart'
+import { useStoreInfo } from '../../lib/store-hooks'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -71,7 +72,7 @@ function Field({
 }
 
 const inputCls =
-  'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all'
+  'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100 transition-all'
 
 // ─── Success state ────────────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ function OrderSuccess({ orderNumber }: { orderNumber: string }) {
         </p>
         <Link
           to="/products"
-          className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3.5 rounded-2xl transition-colors"
+          className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold px-8 py-3.5 rounded-2xl transition-colors"
         >
           Continue Shopping
         </Link>
@@ -106,6 +107,8 @@ function OrderSuccess({ orderNumber }: { orderNumber: string }) {
 
 export default function Checkout() {
   const { items, total, clearCart } = useCart()
+  const { data: storeInfo } = useStoreInfo()
+  const accent = storeInfo?.accent_color ?? '#6366f1'
   const [form, setForm] = useState<ShippingForm>(EMPTY_FORM)
   const [promoCode, setPromoCode] = useState('')
   const [promoApplied, setPromoApplied] = useState(false)
@@ -185,7 +188,7 @@ export default function Checkout() {
             {/* Contact */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
               <h2 className="font-semibold text-gray-900 mb-5 flex items-center gap-2">
-                <span className="w-6 h-6 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full flex items-center justify-center">
+                <span className="w-6 h-6 text-xs font-bold rounded-full flex items-center justify-center" style={{ backgroundColor: `${accent}15`, color: accent }}>
                   1
                 </span>
                 Contact Information
@@ -240,7 +243,7 @@ export default function Checkout() {
             {/* Shipping address */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
               <h2 className="font-semibold text-gray-900 mb-5 flex items-center gap-2">
-                <span className="w-6 h-6 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full flex items-center justify-center">
+                <span className="w-6 h-6 text-xs font-bold rounded-full flex items-center justify-center" style={{ backgroundColor: `${accent}15`, color: accent }}>
                   2
                 </span>
                 Shipping Address
@@ -312,7 +315,7 @@ export default function Checkout() {
             {/* Payment placeholder */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
               <h2 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <span className="w-6 h-6 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full flex items-center justify-center">
+                <span className="w-6 h-6 text-xs font-bold rounded-full flex items-center justify-center" style={{ backgroundColor: `${accent}15`, color: accent }}>
                   3
                 </span>
                 Payment
@@ -364,7 +367,7 @@ export default function Checkout() {
                   Promo Code
                 </label>
                 <div className="flex gap-2">
-                  <div className="flex-1 flex items-center gap-2 border border-gray-200 rounded-xl px-3 focus-within:border-indigo-400 transition-colors">
+                  <div className="flex-1 flex items-center gap-2 border border-gray-200 rounded-xl px-3 focus-within:border-gray-400 transition-colors">
                     <Tag size={14} className="text-gray-400 shrink-0" />
                     <input
                       type="text"
@@ -431,7 +434,8 @@ export default function Checkout() {
               <button
                 onClick={handlePlaceOrder}
                 disabled={isPlacing || items.length === 0}
-                className="flex items-center justify-center gap-2 w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-semibold py-4 rounded-2xl transition-colors shadow-lg shadow-indigo-200"
+                className="flex items-center justify-center gap-2 w-full disabled:opacity-60 text-white font-semibold py-4 rounded-2xl transition-opacity hover:opacity-90 shadow-lg"
+                style={{ backgroundColor: accent }}
               >
                 {isPlacing ? (
                   <>

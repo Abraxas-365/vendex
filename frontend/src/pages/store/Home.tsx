@@ -1,7 +1,7 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useCallback } from 'react'
 import { ArrowRight, Sparkles, Truck, ShieldCheck, Package, Leaf, Gem, RefreshCw, Headphones } from 'lucide-react'
-import { useStoreProducts, useStoreInfo } from '../../lib/store-hooks'
+import { useStoreProducts, useStoreInfo, useStorePageBySlug } from '../../lib/store-hooks'
 import ProductCard from '../../components/store/ProductCard'
 
 // ─── Icon map for trust badges ──────────────────────────────────────────────
@@ -23,6 +23,7 @@ export default function Home() {
   const navigate = useNavigate()
   const { data: productsPage } = useStoreProducts({ page: 1, page_size: 6 })
   const { data: info } = useStoreInfo()
+  const { data: homeTemplate } = useStorePageBySlug('_home')
   const products = productsPage?.items ?? []
 
   const handleProductClick = useCallback(
@@ -207,6 +208,17 @@ export default function Home() {
           </Link>
         </div>
       </section>
+
+      {/* ── CMS content section (editable via workspace agent) ──────────── */}
+      {homeTemplate?.html && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div
+            className="cms-home-content"
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{ __html: homeTemplate.html }}
+          />
+        </section>
+      )}
 
       {/* ── CTA banner ───────────────────────────────────────────────────── */}
       <section style={{ background: isMinimal ? '#1c1917' : accent }}>

@@ -1,4 +1,4 @@
--- Template pages for PLP and PDP — editable via CMS / AI workspace agent.
+-- Template pages for storefront — editable via CMS / AI workspace agent.
 -- Slug prefix _ marks these as system templates (not shown in page nav).
 
 -- ═══════════════════════════════════════════════════════════════════════
@@ -94,6 +94,78 @@ VALUES (
       <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">Expert help when you need it</p>
     </div>
   </div>
+</div>',
+  '', 'published', 'html', NOW()
+)
+ON CONFLICT (tenant_id, slug) DO UPDATE SET
+  title = EXCLUDED.title,
+  html  = EXCLUDED.html,
+  status = 'published',
+  published_at = NOW();
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- Home template — Urban Threads (fashion)
+-- ═══════════════════════════════════════════════════════════════════════
+INSERT INTO pages (id, tenant_id, slug, title, html, css, status, content_type, published_at)
+VALUES (
+  'tpl_fashion_home', 'tnt_fashion', '_home', 'Home Content',
+  '<div style="background: #fdf2f8; border-radius: 1rem; padding: 2.5rem; text-align: center;">
+  <h3 style="font-size: 1.5rem; font-weight: 700; color: #831843; margin: 0 0 0.75rem;">New Season, New Style</h3>
+  <p style="color: #9d174d; font-size: 1rem; max-width: 500px; margin: 0 auto;">Explore our latest arrivals — fresh looks for every occasion, crafted with care and designed to last.</p>
+</div>',
+  '', 'published', 'html', NOW()
+)
+ON CONFLICT (tenant_id, slug) DO UPDATE SET
+  title = EXCLUDED.title,
+  html  = EXCLUDED.html,
+  status = 'published',
+  published_at = NOW();
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- Home template — Vendex Tech
+-- ═══════════════════════════════════════════════════════════════════════
+INSERT INTO pages (id, tenant_id, slug, title, html, css, status, content_type, published_at)
+VALUES (
+  'tpl_demo_home', 'tnt_demo', '_home', 'Home Content',
+  '<div style="background: #eef2ff; border-radius: 1rem; padding: 2.5rem; text-align: center;">
+  <h3 style="font-size: 1.5rem; font-weight: 700; color: #3730a3; margin: 0 0 0.75rem;">Deals of the Week</h3>
+  <p style="color: #4f46e5; font-size: 1rem; max-width: 500px; margin: 0 auto;">Save up to 30% on selected electronics. Limited time offer on our best-selling tech essentials.</p>
+</div>',
+  '', 'published', 'html', NOW()
+)
+ON CONFLICT (tenant_id, slug) DO UPDATE SET
+  title = EXCLUDED.title,
+  html  = EXCLUDED.html,
+  status = 'published',
+  published_at = NOW();
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- Cart template — Urban Threads (fashion)
+-- ═══════════════════════════════════════════════════════════════════════
+INSERT INTO pages (id, tenant_id, slug, title, html, css, status, content_type, published_at)
+VALUES (
+  'tpl_fashion_cart', 'tnt_fashion', '_cart', 'Cart Promo',
+  '<div style="background: linear-gradient(90deg, #fdf2f8, #fce7f3); border-radius: 0.75rem; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+  <span style="font-size: 1.1rem;">✨</span>
+  <p style="margin: 0; font-size: 0.875rem; color: #831843; font-weight: 500;">Use code <strong>STYLE15</strong> for 15% off your first order!</p>
+</div>',
+  '', 'published', 'html', NOW()
+)
+ON CONFLICT (tenant_id, slug) DO UPDATE SET
+  title = EXCLUDED.title,
+  html  = EXCLUDED.html,
+  status = 'published',
+  published_at = NOW();
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- Cart template — Vendex Tech
+-- ═══════════════════════════════════════════════════════════════════════
+INSERT INTO pages (id, tenant_id, slug, title, html, css, status, content_type, published_at)
+VALUES (
+  'tpl_demo_cart', 'tnt_demo', '_cart', 'Cart Promo',
+  '<div style="background: linear-gradient(90deg, #eef2ff, #e0e7ff); border-radius: 0.75rem; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+  <span style="font-size: 1.1rem;">🔥</span>
+  <p style="margin: 0; font-size: 0.875rem; color: #3730a3; font-weight: 500;">Use code <strong>TECH10</strong> for 10% off on accessories!</p>
 </div>',
   '', 'published', 'html', NOW()
 )

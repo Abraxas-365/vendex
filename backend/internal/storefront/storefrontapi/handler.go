@@ -113,6 +113,10 @@ func (h *Handler) ListPublishedPages(c *fiber.Ctx) error {
 
 	items := make([]pageNavItem, 0, len(result.Items))
 	for _, p := range result.Items {
+		// Skip template pages (underscore-prefixed slugs like _plp, _pdp, _home)
+		if strings.HasPrefix(p.Slug, "_") {
+			continue
+		}
 		items = append(items, pageNavItem{Slug: p.Slug, Title: p.Title})
 	}
 	return c.JSON(items)

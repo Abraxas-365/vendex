@@ -1,13 +1,15 @@
 import { useEffect, useRef } from 'react'
 import { useParams, Link } from '@tanstack/react-router'
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react'
-import { useStorePageBySlug } from '../../lib/store-hooks'
+import { useStorePageBySlug, useStoreInfo } from '../../lib/store-hooks'
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function DynamicPage() {
   const { slug } = useParams({ from: '/_store/pages/$slug' })
   const { data: page, isLoading, isError } = useStorePageBySlug(slug)
+  const { data: storeInfo } = useStoreInfo()
+  const accent = storeInfo?.accent_color ?? '#6366f1'
   const styleRef = useRef<HTMLStyleElement | null>(null)
 
   // Inject / remove the page's custom CSS as a <style> tag
@@ -60,7 +62,8 @@ export default function DynamicPage() {
           </p>
           <Link
             to="/"
-            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl transition-colors"
+            className="inline-flex items-center gap-2 text-white font-medium px-6 py-3 rounded-xl transition-opacity hover:opacity-90"
+            style={{ backgroundColor: accent }}
           >
             <ArrowLeft size={15} /> Go home
           </Link>
@@ -83,7 +86,8 @@ export default function DynamicPage() {
           </p>
           <Link
             to="/"
-            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl transition-colors"
+            className="inline-flex items-center gap-2 text-white font-medium px-6 py-3 rounded-xl transition-opacity hover:opacity-90"
+            style={{ backgroundColor: accent }}
           >
             <ArrowLeft size={15} /> Go home
           </Link>
