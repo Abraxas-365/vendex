@@ -24,13 +24,11 @@ frontend:
 frontend-build:
 	cd frontend && bun run build
 
-# Run everything in a tmux split
+# Run everything in a tmux split (works inside existing tmux)
 dev:
-	@tmux kill-session -t vendex 2>/dev/null; true
-	@tmux new-session -d -s vendex -n dev 'cd $(CURDIR)/backend && go run ./cmd/...'
-	@tmux split-window -h -t vendex 'cd $(CURDIR)/frontend && bun run dev'
-	@tmux select-pane -t vendex:dev.0
-	@tmux switch-client -t vendex 2>/dev/null || tmux attach -t vendex
+	@tmux send-keys 'cd $(CURDIR)/backend && go run ./cmd/...' Enter
+	@tmux split-window -h -c '$(CURDIR)/frontend' 'bun run dev'
+	@tmux select-pane -t 0
 
 # Migrate
 migrate:
