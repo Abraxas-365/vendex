@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Abraxas-365/hada-commerce/internal/abtest/abtestcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/bulkops/bulkopscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/dashboard/dashboardcontainer"
@@ -136,6 +137,7 @@ type Container struct {
 	BulkOps        *bulkopscontainer.Container
 	Blog           *blogcontainer.Container
 	Collection     *collectioncontainer.Container
+	ABTest         *abtestcontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -282,6 +284,7 @@ func (c *Container) initModules() {
 	c.BulkOps = bulkopscontainer.New(c.DB, bus)
 	c.Blog = blogcontainer.New(c.DB, bus)
 	c.Collection = collectioncontainer.New(c.DB, bus)
+	c.ABTest = abtestcontainer.New(c.DB, bus)
 
 	// Import/Export — depends on Product, Order, and Customer services.
 	c.ImportExport = importexport.New(

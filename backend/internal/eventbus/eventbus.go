@@ -113,6 +113,9 @@ const (
 	BulkOperationCompleted EventType = "bulk_operation.completed"
 	// Blog events
 	BlogPostPublished EventType = "blog_post.published"
+	// A/B testing events
+	ExperimentStarted   EventType = "experiment.started"
+	ExperimentCompleted EventType = "experiment.completed"
 )
 
 // Event is a domain event that has occurred in the system.

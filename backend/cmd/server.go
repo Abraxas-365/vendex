@@ -172,6 +172,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.SocialAuth.RegisterPublicRoutes(public)
 	container.MultiStore.RegisterPublicRoutes(public)
 	container.Blog.RegisterPublicRoutes(public)
+	container.ABTest.RegisterPublicRoutes(public)
 	logx.Info("  > Public storefront routes registered")
 
 	// Protected routes (require auth)
@@ -234,6 +235,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.BulkOps.RegisterRoutes(protected)
 	container.Blog.RegisterRoutes(protected)
 	container.Collection.RegisterRoutes(protected)
+	container.ABTest.RegisterRoutes(protected)
 	logx.Info("  > Commerce domain routes registered")
 
 	logx.Info("All routes registered")

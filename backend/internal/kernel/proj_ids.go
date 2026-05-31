@@ -360,3 +360,20 @@ type CollectionProductID string
 func NewCollectionProductID(id string) CollectionProductID { return CollectionProductID(id) }
 func (c CollectionProductID) String() string               { return string(c) }
 func (c CollectionProductID) IsEmpty() bool                { return string(c) == "" }
+type ExperimentID string
+
+func NewExperimentID(id string) ExperimentID { return ExperimentID(id) }
+func (e ExperimentID) String() string        { return string(e) }
+func (e ExperimentID) IsEmpty() bool         { return string(e) == "" }
+
+type ExperimentVariantID string
+
+func NewExperimentVariantID(id string) ExperimentVariantID { return ExperimentVariantID(id) }
+func (e ExperimentVariantID) String() string               { return string(e) }
+func (e ExperimentVariantID) IsEmpty() bool                { return string(e) == "" }
+
+type ExperimentAssignmentID string
+
+func NewExperimentAssignmentID(id string) ExperimentAssignmentID { return ExperimentAssignmentID(id) }
+func (e ExperimentAssignmentID) String() string                  { return string(e) }
+func (e ExperimentAssignmentID) IsEmpty() bool                   { return string(e) == "" }
