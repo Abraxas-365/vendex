@@ -1375,3 +1375,97 @@ export interface AgentEvent {
   error?: string
   timestamp: string
 }
+
+// ---------------------------------------------------------------------------
+// Approvals
+// ---------------------------------------------------------------------------
+
+export interface ApprovalRequest {
+  id: string
+  tenant_id: string
+  session_id: string
+  tool_name: string
+  tool_input: Record<string, unknown>
+  status: 'pending' | 'approved' | 'rejected'
+  reason: string
+  requested_by: string
+  reviewed_by: string
+  created_at: string
+  reviewed_at?: string
+}
+
+// ---------------------------------------------------------------------------
+// Agent Memory
+// ---------------------------------------------------------------------------
+
+export interface AgentMemory {
+  id: string
+  tenant_id: string
+  category: string
+  title: string
+  content: string
+  tags: string[]
+  source: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateMemoryRequest {
+  category: string
+  title: string
+  content: string
+  tags: string[]
+  source?: string
+}
+
+export interface UpdateMemoryRequest {
+  category?: string
+  title?: string
+  content?: string
+  tags?: string[]
+}
+
+// ---------------------------------------------------------------------------
+// Agent Triggers
+// ---------------------------------------------------------------------------
+
+export interface AgentTrigger {
+  id: string
+  tenant_id: string
+  name: string
+  event_type: string
+  prompt: string
+  preset_id: string
+  enabled: boolean
+  cooldown: number
+  last_fired_at?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateTriggerRequest {
+  name: string
+  event_type: string
+  prompt: string
+  preset_id?: string
+  cooldown?: number
+}
+
+export interface UpdateTriggerRequest {
+  name?: string
+  prompt?: string
+  preset_id?: string
+  enabled?: boolean
+  cooldown?: number
+}
+
+export interface TriggerLog {
+  id: string
+  trigger_id: string
+  tenant_id: string
+  event_type: string
+  event_payload: Record<string, unknown>
+  agent_response: string
+  status: 'success' | 'error' | 'skipped_cooldown'
+  created_at: string
+}
