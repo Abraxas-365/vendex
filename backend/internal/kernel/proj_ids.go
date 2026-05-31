@@ -394,3 +394,17 @@ type RecommendationRuleID string
 func NewRecommendationRuleID(id string) RecommendationRuleID { return RecommendationRuleID(id) }
 func (r RecommendationRuleID) String() string                { return string(r) }
 func (r RecommendationRuleID) IsEmpty() bool                 { return string(r) == "" }
+
+// Agent preset and session IDs
+
+type PresetID string
+
+func NewPresetID(id string) PresetID { return PresetID(id) }
+func (p PresetID) String() string    { return string(p) }
+func (p PresetID) IsEmpty() bool     { return string(p) == "" }
+
+type AgentSessionID string
+
+func NewAgentSessionID(id string) AgentSessionID { return AgentSessionID(id) }
+func (a AgentSessionID) String() string          { return string(a) }
+func (a AgentSessionID) IsEmpty() bool           { return string(a) == "" }

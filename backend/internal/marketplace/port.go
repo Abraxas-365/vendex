@@ -29,3 +29,22 @@ type VendorOrderRepository interface {
 	GetByID(ctx context.Context, tenantID kernel.TenantID, id string) (VendorOrder, error)
 	ListByVendor(ctx context.Context, tenantID kernel.TenantID, vendorID kernel.VendorID, p kernel.PaginationOptions) (kernel.Paginated[VendorOrder], error)
 }
+
+// PresetRepository defines persistence operations for Preset records.
+type PresetRepository interface {
+	Create(ctx context.Context, p Preset) (Preset, error)
+	GetByID(ctx context.Context, id kernel.PresetID) (Preset, error)
+	GetBySlug(ctx context.Context, slug string) (Preset, error)
+	Update(ctx context.Context, p Preset) (Preset, error)
+	Delete(ctx context.Context, id kernel.PresetID) error
+	List(ctx context.Context, opts PresetListOptions) (kernel.Paginated[Preset], error)
+	ListByTenant(ctx context.Context, tenantID kernel.TenantID, p kernel.PaginationOptions) (kernel.Paginated[Preset], error)
+}
+
+// PresetInstallRepository tracks preset installations per tenant.
+type PresetInstallRepository interface {
+	Install(ctx context.Context, install PresetInstall) (PresetInstall, error)
+	Uninstall(ctx context.Context, tenantID kernel.TenantID, presetID kernel.PresetID) error
+	ListByTenant(ctx context.Context, tenantID kernel.TenantID, p kernel.PaginationOptions) (kernel.Paginated[PresetInstall], error)
+	IsInstalled(ctx context.Context, tenantID kernel.TenantID, presetID kernel.PresetID) (bool, error)
+}

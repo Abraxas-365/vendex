@@ -8,4 +8,9 @@ var (
 	ErrVendorOrderNotFound   = errx.New("vendor order not found", errx.TypeNotFound)
 	ErrConflict              = errx.New("vendor already exists", errx.TypeConflict)
 	ErrInvalidInput          = errx.New("invalid input", errx.TypeValidation)
+
+	// Preset errors
+	ErrPresetNotFound     = errx.New("preset not found", errx.TypeNotFound)
+	ErrPresetSlugTaken    = errx.New("preset slug already taken", errx.TypeConflict)
+	ErrPresetNotInstalled = errx.New("preset not installed", errx.TypeNotFound)
 )
