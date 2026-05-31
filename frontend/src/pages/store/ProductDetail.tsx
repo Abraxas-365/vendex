@@ -11,7 +11,7 @@ import {
   XCircle,
   AlertCircle,
 } from 'lucide-react'
-import { useStoreProduct, useStoreInfo, useStorePageBySlug } from '../../lib/store-hooks'
+import { useStoreProduct, useStoreInfo, useStorePageBySlug, useStoreCategories } from '../../lib/store-hooks'
 import { useCart } from '../../lib/cart'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -63,6 +63,7 @@ export default function ProductDetail() {
   const { data: product, isLoading, isError } = useStoreProduct(id)
   const { data: storeInfo } = useStoreInfo()
   const { data: pdpTemplate } = useStorePageBySlug('_pdp')
+  const { data: categoriesData } = useStoreCategories()
   const accent = storeInfo?.accent_color ?? '#6366f1'
   const { addItem } = useCart()
 
@@ -184,12 +185,16 @@ export default function ProductDetail() {
 
           {/* ── Product info ─────────────────────────────────────────── */}
           <div className="flex flex-col">
-            {/* Category ID badge */}
-            {product.category_id && (
-              <span className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: accent }}>
-                {product.category_id}
-              </span>
-            )}
+            {/* Category badge */}
+            {product.category_id && (() => {
+              const cats = categoriesData ? (Array.isArray(categoriesData) ? categoriesData : categoriesData.items) : []
+              const cat = cats.find((c) => c.id === product.category_id)
+              return (
+                <span className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: accent }}>
+                  {cat?.name ?? product.category_id}
+                </span>
+              )
+            })()}
 
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-snug mb-3">
               {product.name}
