@@ -149,6 +149,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 
 	// Public storefront routes (no auth — tenant resolved from Host header or X-Tenant-ID)
 	public := app.Group("/store", container.MultiStore.TenantMiddleware.Resolve())
+	public.Get("/info", storeInfoHandler(container))
 	container.Storefront.Handler.RegisterPublicRoutes(public)
 	container.Theme.Handler.RegisterPublicRoutes(public)
 	container.Product.Handler.RegisterPublicRoutes(public)
@@ -175,7 +176,6 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.Blog.RegisterPublicRoutes(public)
 	container.ABTest.RegisterPublicRoutes(public)
 	container.Recommendation.RegisterPublicRoutes(public)
-	public.Get("/info", storeInfoHandler(container))
 	logx.Info("  > Public storefront routes registered")
 
 	// Protected routes (require auth)
