@@ -26,7 +26,7 @@ frontend-build:
 
 # Run everything in a tmux split (works inside existing tmux)
 dev:
-	@tmux send-keys 'cd $(CURDIR)/backend && go run ./cmd/...' Enter
+	@tmux send-keys 'cd $(CURDIR)/backend && export $$(cat $(CURDIR)/.env | xargs) && go run ./cmd/...' Enter
 	@tmux split-window -h -c '$(CURDIR)/frontend' 'bun run dev'
 	@tmux select-pane -t 0
 
