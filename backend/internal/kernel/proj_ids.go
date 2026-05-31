@@ -416,3 +416,8 @@ type ApprovalRequestID string
 func NewApprovalRequestID(id string) ApprovalRequestID { return ApprovalRequestID(id) }
 func (a ApprovalRequestID) String() string             { return string(a) }
 func (a ApprovalRequestID) IsEmpty() bool              { return string(a) == "" }
+type AgentMemoryID string
+
+func NewAgentMemoryID(id string) AgentMemoryID { return AgentMemoryID(id) }
+func (a AgentMemoryID) String() string         { return string(a) }
+func (a AgentMemoryID) IsEmpty() bool          { return string(a) == "" }
