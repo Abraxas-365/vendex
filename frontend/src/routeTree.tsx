@@ -47,6 +47,8 @@ import {
   Sparkles,
   Zap,
   MonitorPlay,
+  ShieldCheck,
+  Brain,
 } from 'lucide-react'
 
 // Store pages
@@ -104,6 +106,9 @@ import BulkOperations from './pages/admin/BulkOperations'
 import Presets from './pages/admin/Presets'
 import Workspaces from './pages/admin/Workspaces'
 import WorkspaceViewPage from './pages/admin/WorkspaceView'
+import Approvals from './pages/admin/Approvals'
+import AgentMemory from './pages/admin/AgentMemory'
+import AgentTriggers from './pages/admin/AgentTriggers'
 
 // Auth pages
 import Login from './pages/auth/Login'
@@ -184,6 +189,9 @@ const adminNavItems: NavItem[] = [
   { to: '/admin/agent', label: 'Agent Chat', icon: Bot },
   { to: '/admin/presets', label: 'Preset Marketplace', icon: Sparkles },
   { to: '/admin/workspaces', label: 'Workspaces', icon: MonitorPlay },
+  { to: '/admin/approvals', label: 'Approvals', icon: ShieldCheck },
+  { to: '/admin/agent-memory', label: 'Agent Memory', icon: Brain },
+  { to: '/admin/agent-triggers', label: 'Triggers', icon: Zap },
   { to: '/admin/marketplace', label: 'Marketplace', icon: Puzzle },
   { to: '/admin/theme', label: 'Theme', icon: Palette },
   { to: '/admin/settings', label: 'Settings', icon: Settings2 },
@@ -641,6 +649,24 @@ const adminWorkspaceViewRoute = createRoute({
   },
 })
 
+const adminApprovalsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/approvals',
+  component: Approvals,
+})
+
+const adminAgentMemoryRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/agent-memory',
+  component: AgentMemory,
+})
+
+const adminAgentTriggersRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/agent-triggers',
+  component: AgentTriggers,
+})
+
 // ─── Route tree ───────────────────────────────────────────────────────────────
 
 const storeTree = storeLayoutRoute.addChildren([
@@ -695,6 +721,9 @@ const adminTree = adminLayoutRoute.addChildren([
   adminPresetsRoute,
   adminWorkspacesRoute,
   adminWorkspaceViewRoute,
+  adminApprovalsRoute,
+  adminAgentMemoryRoute,
+  adminAgentTriggersRoute,
   adminMarketplaceRoute,
   adminPluginViewRoute,
   adminThemeRoute,

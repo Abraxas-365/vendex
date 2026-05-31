@@ -90,6 +90,14 @@ import type {
   PresetInstall,
   AgentSession,
   ChatMessage,
+  ApprovalRequest,
+  AgentMemory,
+  CreateMemoryRequest,
+  UpdateMemoryRequest,
+  AgentTrigger,
+  CreateTriggerRequest,
+  UpdateTriggerRequest,
+  TriggerLog,
 } from '../types'
 import * as api from './api'
 import type { PaginationParams } from './api'
@@ -2586,5 +2594,170 @@ export function useSessionHistory(id: string): UseQueryResult<ChatMessage[]> {
     queryKey: ['agent-sessions', id, 'history'],
     queryFn: () => api.fetchSessionHistory(id),
     enabled: Boolean(id),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Approvals
+// ---------------------------------------------------------------------------
+
+export function useApprovals(params?: { status?: string; page?: number; page_size?: number }): UseQueryResult<PaginatedResult<ApprovalRequest>> {
+  return useQuery({
+    queryKey: ['approvals', params],
+    queryFn: () => api.listApprovals(params),
+  })
+}
+
+export function useApprovalCount(): UseQueryResult<{ count: number }> {
+  return useQuery({
+    queryKey: ['approvals', 'count'],
+    queryFn: () => api.getApprovalCount(),
+    refetchInterval: 30000,
+  })
+}
+
+export function useApproveRequest(): UseMutationResult<ApprovalRequest, Error, { id: string; reason?: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, reason }) => api.approveRequest(id, reason),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['approvals'] })
+    },
+  })
+}
+
+export function useRejectRequest(): UseMutationResult<ApprovalRequest, Error, { id: string; reason?: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, reason }) => api.rejectRequest(id, reason),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['approvals'] })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Agent Memory
+// ---------------------------------------------------------------------------
+
+export function useAgentMemories(params?: { page?: number; page_size?: number }): UseQueryResult<PaginatedResult<AgentMemory>> {
+  return useQuery({
+    queryKey: ['agent-memories', params],
+    queryFn: () => api.listAgentMemories(params),
+  })
+}
+
+export function useSearchAgentMemories(params: { q?: string; category?: string; tags?: string }, enabled: boolean): UseQueryResult<PaginatedResult<AgentMemory>> {
+  return useQuery({
+    queryKey: ['agent-memories', 'search', params],
+    queryFn: () => api.searchAgentMemories(params),
+    enabled,
+  })
+}
+
+export function useCreateAgentMemory(): UseMutationResult<AgentMemory, Error, CreateMemoryRequest> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createAgentMemory(data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['agent-memories'] })
+    },
+  })
+}
+
+export function useUpdateAgentMemory(): UseMutationResult<AgentMemory, Error, { id: string; data: UpdateMemoryRequest }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateAgentMemory(id, data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['agent-memories'] })
+    },
+  })
+}
+
+export function useDeleteAgentMemory(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteAgentMemory(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['agent-memories'] })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Agent Triggers
+// ---------------------------------------------------------------------------
+
+export function useAgentTriggers(params?: { page?: number; page_size?: number }): UseQueryResult<PaginatedResult<AgentTrigger>> {
+  return useQuery({
+    queryKey: ['agent-triggers', params],
+    queryFn: () => api.listAgentTriggers(params),
+  })
+}
+
+export function useTriggerEventTypes(): UseQueryResult<{ event_types: string[] }> {
+  return useQuery({
+    queryKey: ['agent-triggers', 'event-types'],
+    queryFn: () => api.listTriggerEventTypes(),
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+export function useTriggerLogs(id: string, params?: { page?: number; page_size?: number }): UseQueryResult<PaginatedResult<TriggerLog>> {
+  return useQuery({
+    queryKey: ['agent-triggers', id, 'logs', params],
+    queryFn: () => api.listTriggerLogs(id, params),
+    enabled: Boolean(id),
+  })
+}
+
+export function useCreateAgentTrigger(): UseMutationResult<AgentTrigger, Error, CreateTriggerRequest> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createAgentTrigger(data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['agent-triggers'] })
+    },
+  })
+}
+
+export function useUpdateAgentTrigger(): UseMutationResult<AgentTrigger, Error, { id: string; data: UpdateTriggerRequest }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateAgentTrigger(id, data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['agent-triggers'] })
+    },
+  })
+}
+
+export function useDeleteAgentTrigger(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteAgentTrigger(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['agent-triggers'] })
+    },
+  })
+}
+
+export function useEnableAgentTrigger(): UseMutationResult<AgentTrigger, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.enableAgentTrigger(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['agent-triggers'] })
+    },
+  })
+}
+
+export function useDisableAgentTrigger(): UseMutationResult<AgentTrigger, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.disableAgentTrigger(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['agent-triggers'] })
+    },
   })
 }

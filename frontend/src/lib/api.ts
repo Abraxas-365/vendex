@@ -90,6 +90,14 @@ import type {
   PresetInstall,
   AgentSession,
   ChatMessage,
+  ApprovalRequest,
+  AgentMemory,
+  CreateMemoryRequest,
+  UpdateMemoryRequest,
+  AgentTrigger,
+  CreateTriggerRequest,
+  UpdateTriggerRequest,
+  TriggerLog,
 } from '../types'
 
 // ---------------------------------------------------------------------------
@@ -1612,4 +1620,96 @@ export function fetchSessionHistory(id: string): Promise<ChatMessage[]> {
 
 export function sendSessionMessage(id: string, message: string): Promise<ChatMessage> {
   return post<ChatMessage>(`/agent/sessions/${id}/message`, { message })
+}
+
+// ---------------------------------------------------------------------------
+// Approvals
+// ---------------------------------------------------------------------------
+
+export function listApprovals(params?: { status?: string; page?: number; page_size?: number }): Promise<PaginatedResult<ApprovalRequest>> {
+  return get<PaginatedResult<ApprovalRequest>>('/approvals', params as Record<string, string | number | undefined>)
+}
+
+export function getApproval(id: string): Promise<ApprovalRequest> {
+  return get<ApprovalRequest>(`/approvals/${id}`)
+}
+
+export function getApprovalCount(): Promise<{ count: number }> {
+  return get<{ count: number }>('/approvals/count')
+}
+
+export function approveRequest(id: string, reason?: string): Promise<ApprovalRequest> {
+  return post<ApprovalRequest>(`/approvals/${id}/approve`, { reason: reason ?? '' })
+}
+
+export function rejectRequest(id: string, reason?: string): Promise<ApprovalRequest> {
+  return post<ApprovalRequest>(`/approvals/${id}/reject`, { reason: reason ?? '' })
+}
+
+// ---------------------------------------------------------------------------
+// Agent Memory
+// ---------------------------------------------------------------------------
+
+export function listAgentMemories(params?: { page?: number; page_size?: number }): Promise<PaginatedResult<AgentMemory>> {
+  return get<PaginatedResult<AgentMemory>>('/agent/memories', params as Record<string, string | number | undefined>)
+}
+
+export function searchAgentMemories(params: { q?: string; category?: string; tags?: string }): Promise<PaginatedResult<AgentMemory>> {
+  return get<PaginatedResult<AgentMemory>>('/agent/memories/search', params as Record<string, string | undefined>)
+}
+
+export function createAgentMemory(data: CreateMemoryRequest): Promise<AgentMemory> {
+  return post<AgentMemory>('/agent/memories', data)
+}
+
+export function getAgentMemory(id: string): Promise<AgentMemory> {
+  return get<AgentMemory>(`/agent/memories/${id}`)
+}
+
+export function updateAgentMemory(id: string, data: UpdateMemoryRequest): Promise<AgentMemory> {
+  return put<AgentMemory>(`/agent/memories/${id}`, data)
+}
+
+export function deleteAgentMemory(id: string): Promise<void> {
+  return del(`/agent/memories/${id}`)
+}
+
+// ---------------------------------------------------------------------------
+// Agent Triggers
+// ---------------------------------------------------------------------------
+
+export function listAgentTriggers(params?: { page?: number; page_size?: number }): Promise<PaginatedResult<AgentTrigger>> {
+  return get<PaginatedResult<AgentTrigger>>('/agent/triggers', params as Record<string, string | number | undefined>)
+}
+
+export function createAgentTrigger(data: CreateTriggerRequest): Promise<AgentTrigger> {
+  return post<AgentTrigger>('/agent/triggers', data)
+}
+
+export function getAgentTrigger(id: string): Promise<AgentTrigger> {
+  return get<AgentTrigger>(`/agent/triggers/${id}`)
+}
+
+export function updateAgentTrigger(id: string, data: UpdateTriggerRequest): Promise<AgentTrigger> {
+  return put<AgentTrigger>(`/agent/triggers/${id}`, data)
+}
+
+export function deleteAgentTrigger(id: string): Promise<void> {
+  return del(`/agent/triggers/${id}`)
+}
+
+export function enableAgentTrigger(id: string): Promise<AgentTrigger> {
+  return post<AgentTrigger>(`/agent/triggers/${id}/enable`)
+}
+
+export function disableAgentTrigger(id: string): Promise<AgentTrigger> {
+  return post<AgentTrigger>(`/agent/triggers/${id}/disable`)
+}
+
+export function listTriggerLogs(id: string, params?: { page?: number; page_size?: number }): Promise<PaginatedResult<TriggerLog>> {
+  return get<PaginatedResult<TriggerLog>>(`/agent/triggers/${id}/logs`, params as Record<string, string | number | undefined>)
+}
+
+export function listTriggerEventTypes(): Promise<{ event_types: string[] }> {
+  return get<{ event_types: string[] }>('/agent/triggers/event-types')
 }
