@@ -355,3 +355,8 @@ type BlogCategoryID string
 func NewBlogCategoryID(id string) BlogCategoryID { return BlogCategoryID(id) }
 func (b BlogCategoryID) String() string          { return string(b) }
 func (b BlogCategoryID) IsEmpty() bool           { return string(b) == "" }
+type CollectionProductID string
+
+func NewCollectionProductID(id string) CollectionProductID { return CollectionProductID(id) }
+func (c CollectionProductID) String() string               { return string(c) }
+func (c CollectionProductID) IsEmpty() bool                { return string(c) == "" }

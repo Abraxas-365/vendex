@@ -32,6 +32,7 @@ const (
 
 	// Catalog events
 	CategoryCreated   EventType = "category.created"
+	CollectionCreated EventType = "collection.created"
 	CollectionUpdated EventType = "collection.updated"
 
 	// Storefront events
