@@ -69,3 +69,31 @@ export interface StorePage {
 export function getPageBySlug(slug: string): Promise<StorePage> {
   return storeGet<StorePage>(`/pages/slug/${slug}`)
 }
+
+// ---------------------------------------------------------------------------
+// Store Info (branding)
+// ---------------------------------------------------------------------------
+
+export interface TrustBadge {
+  icon: string
+  title: string
+  desc: string
+}
+
+export interface StoreInfo {
+  store_name: string
+  store_email: string
+  logo_url: string
+  currency: string
+  tagline: string
+  hero_title: string
+  hero_subtitle: string
+  accent_color: string
+  bg_style: string
+  announcement: string
+  trust_badges: TrustBadge[]
+}
+
+export function getStoreInfo(): Promise<StoreInfo> {
+  return storeGet<StoreInfo>('/info')
+}

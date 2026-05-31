@@ -23,10 +23,11 @@ function formatPrice(price: unknown): string {
 
 interface ProductCardProps {
   product: Product
+  accent?: string
   onNavigate?: (id: string) => void
 }
 
-export default function ProductCard({ product, onNavigate }: ProductCardProps) {
+export default function ProductCard({ product, accent = '#6366f1', onNavigate }: ProductCardProps) {
   const { addItem } = useCart()
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -84,7 +85,8 @@ export default function ProductCard({ product, onNavigate }: ProductCardProps) {
           <button
             onClick={handleAddToCart}
             disabled={product.stock === 0}
-            className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-200 disabled:text-gray-400 text-white text-xs font-medium px-3 py-2 rounded-xl transition-colors"
+            className="flex items-center gap-1.5 disabled:bg-gray-200 disabled:text-gray-400 text-white text-xs font-medium px-3 py-2 rounded-xl transition-colors hover:opacity-90"
+            style={{ backgroundColor: product.stock === 0 ? undefined : accent }}
           >
             <ShoppingCart size={14} />
             <span className="hidden sm:inline">Add</span>

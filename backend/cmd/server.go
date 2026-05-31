@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
@@ -174,6 +175,7 @@ func registerRoutes(app *fiber.App, container *Container) {
 	container.Blog.RegisterPublicRoutes(public)
 	container.ABTest.RegisterPublicRoutes(public)
 	container.Recommendation.RegisterPublicRoutes(public)
+	public.Get("/info", storeInfoHandler(container))
 	logx.Info("  > Public storefront routes registered")
 
 	// Protected routes (require auth)
@@ -419,6 +421,67 @@ func startServer(app *fiber.App, cfg *config.Config, cancel context.CancelFunc) 
 	}
 
 	logx.Info("Server exited successfully")
+}
+
+// ============================================================================
+// Store Info endpoint
+// ============================================================================
+
+// storeInfoHandler returns combined store settings + branding for the resolved tenant.
+func storeInfoHandler(c *Container) fiber.Handler {
+	return func(ctx *fiber.Ctx) error {
+		tenantID := ctx.Get("X-Tenant-ID")
+		if tenantID == "" {
+			return errx.New("tenant not resolved", errx.TypeValidation)
+		}
+
+		type trustBadge struct {
+			Icon  string `json:"icon"`
+			Title string `json:"title"`
+			Desc  string `json:"desc"`
+		}
+
+		type storeInfo struct {
+			StoreName    string       `json:"store_name"`
+			StoreEmail   string       `json:"store_email"`
+			LogoURL      string       `json:"logo_url"`
+			Currency     string       `json:"currency"`
+			Tagline      string       `json:"tagline"`
+			HeroTitle    string       `json:"hero_title"`
+			HeroSubtitle string       `json:"hero_subtitle"`
+			AccentColor  string       `json:"accent_color"`
+			BgStyle      string       `json:"bg_style"`
+			Announcement string       `json:"announcement"`
+			TrustBadges  []trustBadge `json:"trust_badges"`
+		}
+
+		info := storeInfo{AccentColor: "#6366f1", BgStyle: "gradient"}
+
+		// Get store settings
+		row := c.DB.QueryRowContext(ctx.Context(),
+			`SELECT store_name, store_email, logo_url, currency FROM store_settings WHERE tenant_id = $1`, tenantID)
+		_ = row.Scan(&info.StoreName, &info.StoreEmail, &info.LogoURL, &info.Currency)
+
+		// Fallback store name from tenant
+		if info.StoreName == "" {
+			_ = c.DB.QueryRowContext(ctx.Context(),
+				`SELECT company_name FROM tenants WHERE id = $1`, tenantID).Scan(&info.StoreName)
+		}
+
+		// Get branding
+		var badgesJSON []byte
+		row2 := c.DB.QueryRowContext(ctx.Context(),
+			`SELECT tagline, hero_title, hero_subtitle, accent_color, bg_style, trust_badges, announcement
+			 FROM store_branding WHERE tenant_id = $1`, tenantID)
+		_ = row2.Scan(&info.Tagline, &info.HeroTitle, &info.HeroSubtitle,
+			&info.AccentColor, &info.BgStyle, &badgesJSON, &info.Announcement)
+
+		if len(badgesJSON) > 0 {
+			_ = json.Unmarshal(badgesJSON, &info.TrustBadges)
+		}
+
+		return ctx.JSON(info)
+	}
 }
 
 // ============================================================================
