@@ -102,6 +102,11 @@ const (
 	// Bundle events
 	BundleCreated EventType = "bundle.created"
 	BundleUpdated EventType = "bundle.updated"
+
+	// Multi-storefront events
+	StorefrontCreated EventType = "storefront_entry.created"
+	StorefrontUpdated EventType = "storefront_entry.updated"
+	StorefrontDeleted EventType = "storefront_entry.deleted"
 )
 
 // Event is a domain event that has occurred in the system.

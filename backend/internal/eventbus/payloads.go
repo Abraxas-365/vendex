@@ -153,3 +153,10 @@ type BundlePayload struct {
 	DiscountType  string `json:"discount_type"`
 	DiscountValue int    `json:"discount_value"`
 }
+
+// StorefrontPayload is the payload for storefront_entry.* events.
+type StorefrontPayload struct {
+	StorefrontID string `json:"storefront_id"`
+	Name         string `json:"name"`
+	Slug         string `json:"slug"`
+}
