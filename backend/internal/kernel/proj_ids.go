@@ -408,3 +408,15 @@ type AgentSessionID string
 func NewAgentSessionID(id string) AgentSessionID { return AgentSessionID(id) }
 func (a AgentSessionID) String() string          { return string(a) }
 func (a AgentSessionID) IsEmpty() bool           { return string(a) == "" }
+
+type AgentTriggerID string
+
+func NewAgentTriggerID(id string) AgentTriggerID { return AgentTriggerID(id) }
+func (a AgentTriggerID) String() string          { return string(a) }
+func (a AgentTriggerID) IsEmpty() bool           { return string(a) == "" }
+
+type TriggerLogID string
+
+func NewTriggerLogID(id string) TriggerLogID { return TriggerLogID(id) }
+func (t TriggerLogID) String() string        { return string(t) }
+func (t TriggerLogID) IsEmpty() bool         { return string(t) == "" }
