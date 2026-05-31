@@ -73,6 +73,19 @@ import type {
   SocialProvider,
   AdminNotification,
   UnreadCount,
+  Storefront,
+  StorefrontCatalog,
+  BulkOperation,
+  BulkOperationItem,
+  BlogPost,
+  BlogCategory,
+  AdminCollection,
+  CollectionProduct,
+  Experiment,
+  ExperimentVariant,
+  ExperimentResults,
+  RecommendationRule,
+  RecommendedProduct,
 } from '../types'
 
 // ---------------------------------------------------------------------------
@@ -1319,4 +1332,228 @@ export function markNotificationRead(id: string): Promise<AdminNotification> {
 
 export function deleteNotification(id: string): Promise<void> {
   return del(`/notifications/${id}`)
+}
+
+// ---------------------------------------------------------------------------
+// Storefronts / Multistore (037)
+// ---------------------------------------------------------------------------
+
+export function listStorefronts(params?: PaginationParams): Promise<PaginatedResult<Storefront>> {
+  return get<PaginatedResult<Storefront>>('/storefronts', params as Record<string, string | number | undefined>)
+}
+
+export function getStorefront(id: string): Promise<Storefront> {
+  return get<Storefront>(`/storefronts/${id}`)
+}
+
+export function createStorefront(data: Partial<Storefront>): Promise<Storefront> {
+  return post<Storefront>('/storefronts', data)
+}
+
+export function updateStorefront(id: string, data: Partial<Storefront>): Promise<Storefront> {
+  return put<Storefront>(`/storefronts/${id}`, data)
+}
+
+export function deleteStorefront(id: string): Promise<void> {
+  return del(`/storefronts/${id}`)
+}
+
+export function setDefaultStorefront(id: string): Promise<Storefront> {
+  return put<Storefront>(`/storefronts/${id}/default`)
+}
+
+export function getStorefrontCatalogs(id: string): Promise<StorefrontCatalog[]> {
+  return get<StorefrontCatalog[]>(`/storefronts/${id}/catalogs`)
+}
+
+export function addStorefrontCatalog(id: string, data: { catalog_id: string; display_order?: number }): Promise<StorefrontCatalog> {
+  return post<StorefrontCatalog>(`/storefronts/${id}/catalogs`, data)
+}
+
+export function removeStorefrontCatalog(id: string, catalogId: string): Promise<void> {
+  return del(`/storefronts/${id}/catalogs/${catalogId}`)
+}
+
+// ---------------------------------------------------------------------------
+// Bulk Operations (038)
+// ---------------------------------------------------------------------------
+
+export function listBulkOperations(params?: PaginationParams): Promise<PaginatedResult<BulkOperation>> {
+  return get<PaginatedResult<BulkOperation>>('/bulk-operations', params as Record<string, string | number | undefined>)
+}
+
+export function getBulkOperation(id: string): Promise<BulkOperation> {
+  return get<BulkOperation>(`/bulk-operations/${id}`)
+}
+
+export function createBulkOperation(data: Partial<BulkOperation>): Promise<BulkOperation> {
+  return post<BulkOperation>('/bulk-operations', data)
+}
+
+export function getBulkOperationItems(id: string): Promise<BulkOperationItem[]> {
+  return get<BulkOperationItem[]>(`/bulk-operations/${id}/items`)
+}
+
+export function processBulkOperation(id: string): Promise<BulkOperation> {
+  return post<BulkOperation>(`/bulk-operations/${id}/process`)
+}
+
+export function cancelBulkOperation(id: string): Promise<BulkOperation> {
+  return post<BulkOperation>(`/bulk-operations/${id}/cancel`)
+}
+
+// ---------------------------------------------------------------------------
+// Blog (039)
+// ---------------------------------------------------------------------------
+
+export function listBlogPosts(params?: PaginationParams): Promise<PaginatedResult<BlogPost>> {
+  return get<PaginatedResult<BlogPost>>('/blog', params as Record<string, string | number | undefined>)
+}
+
+export function getBlogPost(id: string): Promise<BlogPost> {
+  return get<BlogPost>(`/blog/${id}`)
+}
+
+export function createBlogPost(data: Partial<BlogPost>): Promise<BlogPost> {
+  return post<BlogPost>('/blog', data)
+}
+
+export function updateBlogPost(id: string, data: Partial<BlogPost>): Promise<BlogPost> {
+  return put<BlogPost>(`/blog/${id}`, data)
+}
+
+export function deleteBlogPost(id: string): Promise<void> {
+  return del(`/blog/${id}`)
+}
+
+export function publishBlogPost(id: string): Promise<BlogPost> {
+  return put<BlogPost>(`/blog/${id}/publish`)
+}
+
+export function archiveBlogPost(id: string): Promise<BlogPost> {
+  return put<BlogPost>(`/blog/${id}/archive`)
+}
+
+export function listBlogCategories(): Promise<BlogCategory[]> {
+  return get<BlogCategory[]>('/blog/categories')
+}
+
+export function createBlogCategory(data: Partial<BlogCategory>): Promise<BlogCategory> {
+  return post<BlogCategory>('/blog/categories', data)
+}
+
+export function updateBlogCategory(id: string, data: Partial<BlogCategory>): Promise<BlogCategory> {
+  return put<BlogCategory>(`/blog/categories/${id}`, data)
+}
+
+export function deleteBlogCategory(id: string): Promise<void> {
+  return del(`/blog/categories/${id}`)
+}
+
+// ---------------------------------------------------------------------------
+// Admin Collections (040)
+// ---------------------------------------------------------------------------
+
+export function listAdminCollections(params?: PaginationParams): Promise<PaginatedResult<AdminCollection>> {
+  return get<PaginatedResult<AdminCollection>>('/collections', params as Record<string, string | number | undefined>)
+}
+
+export function getAdminCollection(id: string): Promise<AdminCollection> {
+  return get<AdminCollection>(`/collections/${id}`)
+}
+
+export function createAdminCollection(data: Partial<AdminCollection>): Promise<AdminCollection> {
+  return post<AdminCollection>('/collections', data)
+}
+
+export function updateAdminCollection(id: string, data: Partial<AdminCollection>): Promise<AdminCollection> {
+  return put<AdminCollection>(`/collections/${id}`, data)
+}
+
+export function deleteAdminCollection(id: string): Promise<void> {
+  return del(`/collections/${id}`)
+}
+
+export function getCollectionProducts(id: string): Promise<CollectionProduct[]> {
+  return get<CollectionProduct[]>(`/collections/${id}/products`)
+}
+
+export function addCollectionProduct(id: string, data: { product_id: string; sort_order?: number }): Promise<CollectionProduct> {
+  return post<CollectionProduct>(`/collections/${id}/products`, data)
+}
+
+export function removeCollectionProduct(id: string, productId: string): Promise<void> {
+  return del(`/collections/${id}/products/${productId}`)
+}
+
+// ---------------------------------------------------------------------------
+// A/B Testing — Experiments (041)
+// ---------------------------------------------------------------------------
+
+export function listExperiments(params?: PaginationParams): Promise<PaginatedResult<Experiment>> {
+  return get<PaginatedResult<Experiment>>('/experiments', params as Record<string, string | number | undefined>)
+}
+
+export function getExperiment(id: string): Promise<Experiment> {
+  return get<Experiment>(`/experiments/${id}`)
+}
+
+export function createExperiment(data: Partial<Experiment>): Promise<Experiment> {
+  return post<Experiment>('/experiments', data)
+}
+
+export function updateExperiment(id: string, data: Partial<Experiment>): Promise<Experiment> {
+  return put<Experiment>(`/experiments/${id}`, data)
+}
+
+export function deleteExperiment(id: string): Promise<void> {
+  return del(`/experiments/${id}`)
+}
+
+export function startExperiment(id: string): Promise<Experiment> {
+  return put<Experiment>(`/experiments/${id}/start`)
+}
+
+export function pauseExperiment(id: string): Promise<Experiment> {
+  return put<Experiment>(`/experiments/${id}/pause`)
+}
+
+export function completeExperiment(id: string): Promise<Experiment> {
+  return put<Experiment>(`/experiments/${id}/complete`)
+}
+
+export function getExperimentResults(id: string): Promise<ExperimentResults> {
+  return get<ExperimentResults>(`/experiments/${id}/results`)
+}
+
+export function addExperimentVariant(id: string, data: Partial<ExperimentVariant>): Promise<ExperimentVariant> {
+  return post<ExperimentVariant>(`/experiments/${id}/variants`, data)
+}
+
+export function deleteExperimentVariant(id: string, variantId: string): Promise<void> {
+  return del(`/experiments/${id}/variants/${variantId}`)
+}
+
+// ---------------------------------------------------------------------------
+// Recommendations (042)
+// ---------------------------------------------------------------------------
+
+export function listRecommendationRules(params?: PaginationParams): Promise<PaginatedResult<RecommendationRule>> {
+  return get<PaginatedResult<RecommendationRule>>('/recommendations', params as Record<string, string | number | undefined>)
+}
+
+export function createRecommendationRule(data: Partial<RecommendationRule>): Promise<RecommendationRule> {
+  return post<RecommendationRule>('/recommendations', data)
+}
+
+export function updateRecommendationRule(id: string, data: Partial<RecommendationRule>): Promise<RecommendationRule> {
+  return put<RecommendationRule>(`/recommendations/${id}`, data)
+}
+
+export function deleteRecommendationRule(id: string): Promise<void> {
+  return del(`/recommendations/${id}`)
+}
+
+export function getRecommendations(productId: string): Promise<RecommendedProduct[]> {
+  return get<RecommendedProduct[]>(`/recommendations/products/${productId}`)
 }

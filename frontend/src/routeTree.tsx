@@ -40,6 +40,12 @@ import {
   BarChart2,
   Share2,
   Bell,
+  Globe2,
+  Newspaper,
+  FolderTree,
+  FlaskConical,
+  Sparkles,
+  Zap,
 } from 'lucide-react'
 
 // Store pages
@@ -88,6 +94,12 @@ import Bundles from './pages/admin/Bundles'
 import Reporting from './pages/admin/Reporting'
 import SocialAccounts from './pages/admin/SocialAccounts'
 import Notifications from './pages/admin/Notifications'
+import Multistores from './pages/admin/Multistores'
+import Blog from './pages/admin/Blog'
+import Collections from './pages/admin/Collections'
+import ABTesting from './pages/admin/ABTesting'
+import Recommendations from './pages/admin/Recommendations'
+import BulkOperations from './pages/admin/BulkOperations'
 
 // Auth pages
 import Login from './pages/auth/Login'
@@ -158,6 +170,12 @@ const adminNavItems: NavItem[] = [
   { to: '/admin/reporting', label: 'Reporting', icon: BarChart2 },
   { to: '/admin/social-accounts', label: 'Social Accounts', icon: Share2 },
   { to: '/admin/notifications', label: 'Notifications', icon: Bell },
+  { to: '/admin/storefronts', label: 'Storefronts', icon: Globe2 },
+  { to: '/admin/blog', label: 'Blog', icon: Newspaper },
+  { to: '/admin/collections', label: 'Collections', icon: FolderTree },
+  { to: '/admin/ab-testing', label: 'A/B Testing', icon: FlaskConical },
+  { to: '/admin/recommendations', label: 'Recommendations', icon: Sparkles },
+  { to: '/admin/bulk-operations', label: 'Bulk Ops', icon: Zap },
   { to: '/admin/media', label: 'Media', icon: Image },
   { to: '/admin/agent', label: 'Agent Chat', icon: Bot },
   { to: '/admin/marketplace', label: 'Marketplace', icon: Puzzle },
@@ -560,6 +578,42 @@ const adminNotificationsRoute = createRoute({
   component: Notifications,
 })
 
+const adminStorefrontsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/storefronts',
+  component: Multistores,
+})
+
+const adminBlogRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/blog',
+  component: Blog,
+})
+
+const adminCollectionsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/collections',
+  component: Collections,
+})
+
+const adminABTestingRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/ab-testing',
+  component: ABTesting,
+})
+
+const adminRecommendationsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/recommendations',
+  component: Recommendations,
+})
+
+const adminBulkOperationsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/bulk-operations',
+  component: BulkOperations,
+})
+
 // ─── Route tree ───────────────────────────────────────────────────────────────
 
 const storeTree = storeLayoutRoute.addChildren([
@@ -603,6 +657,12 @@ const adminTree = adminLayoutRoute.addChildren([
   adminReportingRoute,
   adminSocialAccountsRoute,
   adminNotificationsRoute,
+  adminStorefrontsRoute,
+  adminBlogRoute,
+  adminCollectionsRoute,
+  adminABTestingRoute,
+  adminRecommendationsRoute,
+  adminBulkOperationsRoute,
   adminMediaRoute,
   adminAgentRoute,
   adminMarketplaceRoute,

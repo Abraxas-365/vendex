@@ -1092,3 +1092,215 @@ export interface AdminNotification {
 export interface UnreadCount {
   count: number
 }
+
+// ---------------------------------------------------------------------------
+// Storefronts / Multistore (037)
+// ---------------------------------------------------------------------------
+
+export interface Storefront {
+  id: string
+  tenant_id: string
+  name: string
+  slug: string
+  domain: string
+  description: string
+  logo_url: string
+  favicon_url: string
+  theme: string
+  default_locale: string
+  default_currency: string
+  is_default: boolean
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface StorefrontCatalog {
+  storefront_id: string
+  catalog_id: string
+  display_order: number
+  created_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Bulk Operations (038)
+// ---------------------------------------------------------------------------
+
+export type BulkOperationStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+export type BulkOperationType =
+  | 'price_update'
+  | 'status_update'
+  | 'inventory_update'
+  | 'category_assign'
+  | 'tag_assign'
+  | 'delete'
+
+export interface BulkOperation {
+  id: string
+  tenant_id: string
+  type: BulkOperationType
+  status: BulkOperationStatus
+  total_items: number
+  processed_items: number
+  failed_items: number
+  errors: string[]
+  created_by: string
+  started_at: string | null
+  completed_at: string | null
+  created_at: string
+}
+
+export interface BulkOperationItem {
+  id: string
+  operation_id: string
+  resource_id: string
+  status: BulkOperationStatus
+  error: string | null
+  processed_at: string | null
+}
+
+// ---------------------------------------------------------------------------
+// Blog (039)
+// ---------------------------------------------------------------------------
+
+export type BlogPostStatus = 'draft' | 'published' | 'archived'
+
+export interface BlogPost {
+  id: string
+  tenant_id: string
+  title: string
+  slug: string
+  content: string
+  excerpt: string
+  featured_image_url: string
+  author: string
+  status: BlogPostStatus
+  published_at: string | null
+  tags: string[]
+  seo_title: string
+  seo_description: string
+  created_at: string
+  updated_at: string
+}
+
+export interface BlogCategory {
+  id: string
+  tenant_id: string
+  name: string
+  slug: string
+  description: string
+  parent_id: string | null
+  sort_order: number
+  created_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Collections — extended (040)
+// ---------------------------------------------------------------------------
+
+export type CollectionType = 'manual' | 'automated'
+
+export interface CollectionRule {
+  field: string
+  operator: string
+  value: string
+}
+
+export interface AdminCollection {
+  id: string
+  tenant_id: string
+  name: string
+  slug: string
+  description: string
+  image_url: string
+  type: CollectionType
+  rules: CollectionRule[]
+  sort_order: number
+  is_active: boolean
+  product_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface CollectionProduct {
+  collection_id: string
+  product_id: string
+  sort_order: number
+  added_at: string
+}
+
+// ---------------------------------------------------------------------------
+// A/B Testing — Experiments (041)
+// ---------------------------------------------------------------------------
+
+export type ExperimentStatus = 'draft' | 'running' | 'paused' | 'completed'
+
+export interface ExperimentVariant {
+  id: string
+  experiment_id: string
+  name: string
+  description: string
+  is_control: boolean
+  traffic_weight: number
+  conversions: number
+  impressions: number
+  revenue: number
+  created_at: string
+}
+
+export interface Experiment {
+  id: string
+  tenant_id: string
+  name: string
+  description: string
+  type: string
+  status: ExperimentStatus
+  traffic_percentage: number
+  variants: ExperimentVariant[]
+  started_at: string | null
+  completed_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface VariantResult {
+  variant_id: string
+  name: string
+  impressions: number
+  conversions: number
+  revenue: number
+  conversion_rate: number
+  revenue_per_visitor: number
+  is_winner: boolean
+}
+
+export interface ExperimentResults {
+  experiment_id: string
+  variants: VariantResult[]
+  total_impressions: number
+}
+
+// ---------------------------------------------------------------------------
+// Recommendations (042)
+// ---------------------------------------------------------------------------
+
+export type RecommendationType = 'similar' | 'frequently_bought' | 'trending' | 'personalized'
+
+export interface RecommendationRule {
+  id: string
+  tenant_id: string
+  name: string
+  type: RecommendationType
+  source_product_id: string | null
+  weight: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface RecommendedProduct {
+  product_id: string
+  name: string
+  score: number
+  reason: string
+}

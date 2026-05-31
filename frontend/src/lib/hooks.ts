@@ -73,6 +73,19 @@ import type {
   SocialProvider,
   AdminNotification,
   UnreadCount,
+  Storefront,
+  StorefrontCatalog,
+  BulkOperation,
+  BulkOperationItem,
+  BlogPost,
+  BlogCategory,
+  AdminCollection,
+  CollectionProduct,
+  Experiment,
+  ExperimentVariant,
+  ExperimentResults,
+  RecommendationRule,
+  RecommendedProduct,
 } from '../types'
 import * as api from './api'
 import type { PaginationParams } from './api'
@@ -244,6 +257,43 @@ export const queryKeys = {
     all: ['notifications'] as const,
     list: (params?: PaginationParams & { read?: boolean }) => ['notifications', 'list', params] as const,
     unreadCount: ['notifications', 'unread-count'] as const,
+  },
+  storefronts: {
+    all: ['storefronts'] as const,
+    list: (params?: PaginationParams) => ['storefronts', 'list', params] as const,
+    detail: (id: string) => ['storefronts', 'detail', id] as const,
+    catalogs: (id: string) => ['storefronts', id, 'catalogs'] as const,
+  },
+  bulkOperations: {
+    all: ['bulk-operations'] as const,
+    list: (params?: PaginationParams) => ['bulk-operations', 'list', params] as const,
+    detail: (id: string) => ['bulk-operations', 'detail', id] as const,
+    items: (id: string) => ['bulk-operations', id, 'items'] as const,
+  },
+  blog: {
+    posts: {
+      all: ['blog-posts'] as const,
+      list: (params?: PaginationParams) => ['blog-posts', 'list', params] as const,
+      detail: (id: string) => ['blog-posts', 'detail', id] as const,
+    },
+    categories: ['blog-categories'] as const,
+  },
+  adminCollections: {
+    all: ['admin-collections'] as const,
+    list: (params?: PaginationParams) => ['admin-collections', 'list', params] as const,
+    detail: (id: string) => ['admin-collections', 'detail', id] as const,
+    products: (id: string) => ['admin-collections', id, 'products'] as const,
+  },
+  experiments: {
+    all: ['experiments'] as const,
+    list: (params?: PaginationParams) => ['experiments', 'list', params] as const,
+    detail: (id: string) => ['experiments', 'detail', id] as const,
+    results: (id: string) => ['experiments', id, 'results'] as const,
+  },
+  recommendations: {
+    all: ['recommendations'] as const,
+    list: (params?: PaginationParams) => ['recommendations', 'list', params] as const,
+    forProduct: (productId: string) => ['recommendations', 'product', productId] as const,
   },
 } as const
 
@@ -2005,5 +2055,440 @@ export function useDeleteNotification(): UseMutationResult<void, Error, string> 
   return useMutation({
     mutationFn: (id) => api.deleteNotification(id),
     onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.notifications.all }) },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Storefronts / Multistore (037)
+// ---------------------------------------------------------------------------
+
+export function useStorefronts(params?: PaginationParams): UseQueryResult<PaginatedResult<Storefront>> {
+  return useQuery({
+    queryKey: queryKeys.storefronts.list(params),
+    queryFn: () => api.listStorefronts(params),
+  })
+}
+
+export function useStorefront(id: string): UseQueryResult<Storefront> {
+  return useQuery({
+    queryKey: queryKeys.storefronts.detail(id),
+    queryFn: () => api.getStorefront(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useCreateStorefront(): UseMutationResult<Storefront, Error, Partial<Storefront>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createStorefront(data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.storefronts.all }) },
+  })
+}
+
+export function useUpdateStorefront(): UseMutationResult<Storefront, Error, { id: string; data: Partial<Storefront> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateStorefront(id, data),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.storefronts.all })
+      qc.setQueryData(queryKeys.storefronts.detail(updated.id), updated)
+    },
+  })
+}
+
+export function useDeleteStorefront(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteStorefront(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.storefronts.all }) },
+  })
+}
+
+export function useSetDefaultStorefront(): UseMutationResult<Storefront, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.setDefaultStorefront(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.storefronts.all }) },
+  })
+}
+
+export function useStorefrontCatalogs(id: string): UseQueryResult<StorefrontCatalog[]> {
+  return useQuery({
+    queryKey: queryKeys.storefronts.catalogs(id),
+    queryFn: () => api.getStorefrontCatalogs(id),
+    enabled: Boolean(id),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Bulk Operations (038)
+// ---------------------------------------------------------------------------
+
+export function useBulkOperations(params?: PaginationParams): UseQueryResult<PaginatedResult<BulkOperation>> {
+  return useQuery({
+    queryKey: queryKeys.bulkOperations.list(params),
+    queryFn: () => api.listBulkOperations(params),
+  })
+}
+
+export function useBulkOperation(id: string): UseQueryResult<BulkOperation> {
+  return useQuery({
+    queryKey: queryKeys.bulkOperations.detail(id),
+    queryFn: () => api.getBulkOperation(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useCreateBulkOperation(): UseMutationResult<BulkOperation, Error, Partial<BulkOperation>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createBulkOperation(data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.bulkOperations.all }) },
+  })
+}
+
+export function useBulkOperationItems(id: string): UseQueryResult<BulkOperationItem[]> {
+  return useQuery({
+    queryKey: queryKeys.bulkOperations.items(id),
+    queryFn: () => api.getBulkOperationItems(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useProcessBulkOperation(): UseMutationResult<BulkOperation, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.processBulkOperation(id),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.bulkOperations.all })
+      qc.setQueryData(queryKeys.bulkOperations.detail(updated.id), updated)
+    },
+  })
+}
+
+export function useCancelBulkOperation(): UseMutationResult<BulkOperation, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.cancelBulkOperation(id),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.bulkOperations.all })
+      qc.setQueryData(queryKeys.bulkOperations.detail(updated.id), updated)
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Blog (039)
+// ---------------------------------------------------------------------------
+
+export function useBlogPosts(params?: PaginationParams): UseQueryResult<PaginatedResult<BlogPost>> {
+  return useQuery({
+    queryKey: queryKeys.blog.posts.list(params),
+    queryFn: () => api.listBlogPosts(params),
+  })
+}
+
+export function useBlogPost(id: string): UseQueryResult<BlogPost> {
+  return useQuery({
+    queryKey: queryKeys.blog.posts.detail(id),
+    queryFn: () => api.getBlogPost(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useCreateBlogPost(): UseMutationResult<BlogPost, Error, Partial<BlogPost>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createBlogPost(data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.blog.posts.all }) },
+  })
+}
+
+export function useUpdateBlogPost(): UseMutationResult<BlogPost, Error, { id: string; data: Partial<BlogPost> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateBlogPost(id, data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.blog.posts.all }) },
+  })
+}
+
+export function useDeleteBlogPost(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteBlogPost(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.blog.posts.all }) },
+  })
+}
+
+export function usePublishBlogPost(): UseMutationResult<BlogPost, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.publishBlogPost(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.blog.posts.all }) },
+  })
+}
+
+export function useArchiveBlogPost(): UseMutationResult<BlogPost, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.archiveBlogPost(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.blog.posts.all }) },
+  })
+}
+
+export function useBlogCategories(): UseQueryResult<BlogCategory[]> {
+  return useQuery({
+    queryKey: queryKeys.blog.categories,
+    queryFn: () => api.listBlogCategories(),
+  })
+}
+
+export function useCreateBlogCategory(): UseMutationResult<BlogCategory, Error, Partial<BlogCategory>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createBlogCategory(data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.blog.categories }) },
+  })
+}
+
+export function useUpdateBlogCategory(): UseMutationResult<BlogCategory, Error, { id: string; data: Partial<BlogCategory> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateBlogCategory(id, data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.blog.categories }) },
+  })
+}
+
+export function useDeleteBlogCategory(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteBlogCategory(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.blog.categories }) },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Admin Collections (040)
+// ---------------------------------------------------------------------------
+
+export function useAdminCollections(params?: PaginationParams): UseQueryResult<PaginatedResult<AdminCollection>> {
+  return useQuery({
+    queryKey: queryKeys.adminCollections.list(params),
+    queryFn: () => api.listAdminCollections(params),
+  })
+}
+
+export function useAdminCollection(id: string): UseQueryResult<AdminCollection> {
+  return useQuery({
+    queryKey: queryKeys.adminCollections.detail(id),
+    queryFn: () => api.getAdminCollection(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useCreateAdminCollection(): UseMutationResult<AdminCollection, Error, Partial<AdminCollection>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createAdminCollection(data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.adminCollections.all }) },
+  })
+}
+
+export function useUpdateAdminCollection(): UseMutationResult<AdminCollection, Error, { id: string; data: Partial<AdminCollection> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateAdminCollection(id, data),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.adminCollections.all })
+      qc.setQueryData(queryKeys.adminCollections.detail(updated.id), updated)
+    },
+  })
+}
+
+export function useDeleteAdminCollection(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteAdminCollection(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.adminCollections.all }) },
+  })
+}
+
+export function useCollectionProducts(id: string): UseQueryResult<CollectionProduct[]> {
+  return useQuery({
+    queryKey: queryKeys.adminCollections.products(id),
+    queryFn: () => api.getCollectionProducts(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useAddCollectionProduct(): UseMutationResult<CollectionProduct, Error, { id: string; product_id: string; sort_order?: number }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...data }) => api.addCollectionProduct(id, data),
+    onSuccess: (_data, { id }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.adminCollections.products(id) })
+      void qc.invalidateQueries({ queryKey: queryKeys.adminCollections.all })
+    },
+  })
+}
+
+export function useRemoveCollectionProduct(): UseMutationResult<void, Error, { id: string; productId: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, productId }) => api.removeCollectionProduct(id, productId),
+    onSuccess: (_data, { id }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.adminCollections.products(id) })
+      void qc.invalidateQueries({ queryKey: queryKeys.adminCollections.all })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// A/B Testing — Experiments (041)
+// ---------------------------------------------------------------------------
+
+export function useExperiments(params?: PaginationParams): UseQueryResult<PaginatedResult<Experiment>> {
+  return useQuery({
+    queryKey: queryKeys.experiments.list(params),
+    queryFn: () => api.listExperiments(params),
+  })
+}
+
+export function useExperiment(id: string): UseQueryResult<Experiment> {
+  return useQuery({
+    queryKey: queryKeys.experiments.detail(id),
+    queryFn: () => api.getExperiment(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useCreateExperiment(): UseMutationResult<Experiment, Error, Partial<Experiment>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createExperiment(data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.experiments.all }) },
+  })
+}
+
+export function useUpdateExperiment(): UseMutationResult<Experiment, Error, { id: string; data: Partial<Experiment> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateExperiment(id, data),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.experiments.all })
+      qc.setQueryData(queryKeys.experiments.detail(updated.id), updated)
+    },
+  })
+}
+
+export function useDeleteExperiment(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteExperiment(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.experiments.all }) },
+  })
+}
+
+export function useStartExperiment(): UseMutationResult<Experiment, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.startExperiment(id),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.experiments.all })
+      qc.setQueryData(queryKeys.experiments.detail(updated.id), updated)
+    },
+  })
+}
+
+export function usePauseExperiment(): UseMutationResult<Experiment, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.pauseExperiment(id),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.experiments.all })
+      qc.setQueryData(queryKeys.experiments.detail(updated.id), updated)
+    },
+  })
+}
+
+export function useCompleteExperiment(): UseMutationResult<Experiment, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.completeExperiment(id),
+    onSuccess: (updated) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.experiments.all })
+      qc.setQueryData(queryKeys.experiments.detail(updated.id), updated)
+    },
+  })
+}
+
+export function useExperimentResults(id: string): UseQueryResult<ExperimentResults> {
+  return useQuery({
+    queryKey: queryKeys.experiments.results(id),
+    queryFn: () => api.getExperimentResults(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useAddExperimentVariant(): UseMutationResult<ExperimentVariant, Error, { id: string; data: Partial<ExperimentVariant> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.addExperimentVariant(id, data),
+    onSuccess: (_data, { id }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.experiments.detail(id) })
+    },
+  })
+}
+
+export function useDeleteExperimentVariant(): UseMutationResult<void, Error, { id: string; variantId: string }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, variantId }) => api.deleteExperimentVariant(id, variantId),
+    onSuccess: (_data, { id }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.experiments.detail(id) })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Recommendations (042)
+// ---------------------------------------------------------------------------
+
+export function useRecommendationRules(params?: PaginationParams): UseQueryResult<PaginatedResult<RecommendationRule>> {
+  return useQuery({
+    queryKey: queryKeys.recommendations.list(params),
+    queryFn: () => api.listRecommendationRules(params),
+  })
+}
+
+export function useCreateRecommendationRule(): UseMutationResult<RecommendationRule, Error, Partial<RecommendationRule>> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.createRecommendationRule(data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.recommendations.all }) },
+  })
+}
+
+export function useUpdateRecommendationRule(): UseMutationResult<RecommendationRule, Error, { id: string; data: Partial<RecommendationRule> }> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.updateRecommendationRule(id, data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.recommendations.all }) },
+  })
+}
+
+export function useDeleteRecommendationRule(): UseMutationResult<void, Error, string> {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.deleteRecommendationRule(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: queryKeys.recommendations.all }) },
+  })
+}
+
+export function useRecommendations(productId: string): UseQueryResult<RecommendedProduct[]> {
+  return useQuery({
+    queryKey: queryKeys.recommendations.forProduct(productId),
+    queryFn: () => api.getRecommendations(productId),
+    enabled: Boolean(productId),
   })
 }
