@@ -263,6 +263,11 @@ func (s *Service) GetPage(ctx context.Context, tenantID kernel.TenantID, id kern
 	return s.pages.GetByID(ctx, tenantID, id)
 }
 
+// GetPageBySlug returns any page by slug (any status) — used by agent tools.
+func (s *Service) GetPageBySlug(ctx context.Context, tenantID kernel.TenantID, slug string) (*storefront.Page, error) {
+	return s.pages.GetBySlug(ctx, tenantID, slug)
+}
+
 // ListPages returns pages with optional status filter.
 func (s *Service) ListPages(ctx context.Context, tenantID kernel.TenantID, status *storefront.PageStatus, p kernel.PaginationOptions) (kernel.Paginated[storefront.Page], error) {
 	if status != nil {
