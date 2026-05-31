@@ -15,6 +15,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/containerx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/harness"
+	"github.com/Abraxas-365/harness/tools"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -340,14 +341,21 @@ func (h *Handler) getOrCreateSession(key string, presetID string) (*harness.Sess
 		}
 	}
 
+	// Add harness built-in tools (WebSearch, WebFetch) for research capabilities.
+	builtinTools := []tools.Tool{
+		&tools.WebSearchTool{},
+		&tools.WebFetchTool{},
+	}
+	allTools := append(builtinTools, domainTools...)
+
 	opts := []harness.Option{
 		harness.WithAPIKey(h.apiKey),
 		harness.WithModel(h.model),
 		harness.WithSystemPrompt(sysPrompt),
 		harness.WithPermissionMode("headless"),
 	}
-	if len(domainTools) > 0 {
-		opts = append(opts, harness.WithTools(domainTools...))
+	if len(allTools) > 0 {
+		opts = append(opts, harness.WithTools(allTools...))
 	}
 
 	harn, err := harness.New(opts...)
