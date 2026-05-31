@@ -252,6 +252,18 @@ func registerRoutes(app *fiber.App, container *Container) {
 		logx.Info("  > Agent session routes registered")
 	}
 
+	// Approval workflow routes
+	container.Approval.RegisterRoutes(protected)
+	logx.Info("  > Approval workflow routes registered")
+
+	// Agent memory routes
+	container.AgentMemory.RegisterRoutes(protected)
+	logx.Info("  > Agent memory routes registered")
+
+	// Agent trigger routes
+	container.AgentTrigger.RegisterRoutes(protected)
+	logx.Info("  > Agent trigger routes registered")
+
 	logx.Info("All routes registered")
 }
 

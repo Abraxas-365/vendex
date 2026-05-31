@@ -17,6 +17,9 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/agentsession/agentsessionsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/containerx"
 	"github.com/Abraxas-365/hada-commerce/internal/containerxdocker"
+	"github.com/Abraxas-365/hada-commerce/internal/agentmemory/agentmemorycontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/agenttrigger/agenttriggercontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/approval/approvalcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/abtest/abtestcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/bulkops/bulkopscontainer"
@@ -156,6 +159,9 @@ type Container struct {
 	// AI Agent
 	Agent        *agentapi.Handler
 	AgentSession *agentsessioncontainer.Container
+	AgentMemory  *agentmemorycontainer.Container
+	AgentTrigger *agenttriggercontainer.Container
+	Approval     *approvalcontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -326,6 +332,18 @@ func (c *Container) initModules() {
 	)
 	emailHandler.RegisterSubscriptions(bus)
 	logx.Info("  Email notifications wired to event bus")
+
+	// Approval workflow — human-in-the-loop for sensitive agent actions.
+	c.Approval = approvalcontainer.New(c.DB)
+	logx.Info("  Approval workflow initialized")
+
+	// Agent memory — persistent knowledge base.
+	c.AgentMemory = agentmemorycontainer.New(c.DB)
+	logx.Info("  Agent memory initialized")
+
+	// Agent triggers — event-driven agent actions.
+	c.AgentTrigger = agenttriggercontainer.New(c.DB)
+	logx.Info("  Agent triggers initialized")
 
 	// Agent Sessions — workspace management via Docker containers.
 	// Initialized before the AI Agent so the workspace provider can be passed in.
