@@ -246,6 +246,12 @@ func registerRoutes(app *fiber.App, container *Container) {
 		logx.Info("  > Agent chat routes registered")
 	}
 
+	// Agent session management routes
+	if container.AgentSession != nil {
+		container.AgentSession.RegisterRoutes(protected)
+		logx.Info("  > Agent session routes registered")
+	}
+
 	logx.Info("All routes registered")
 }
 

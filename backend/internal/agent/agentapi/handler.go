@@ -31,10 +31,18 @@ You can:
 
 Always be concise and helpful. When asked to perform an action, use the appropriate tool. When displaying results, format them clearly.`
 
+// PresetProvider retrieves preset configuration for the agent.
+// This decouples agentapi from the marketplace package.
+type PresetProvider interface {
+	GetPresetSystemPrompt(ctx context.Context, presetID string) (string, error)
+	GetPresetToolsManifest(ctx context.Context, presetID string) (json.RawMessage, error)
+}
+
 // ChatRequest is the JSON body accepted by the POST /agent/chat endpoint.
 type ChatRequest struct {
 	Message   string `json:"message"`
 	SessionID string `json:"session_id,omitempty"`
+	PresetID  string `json:"preset_id,omitempty"`
 }
 
 // Handler manages the agent chat HTTP endpoint.
@@ -43,13 +51,14 @@ type ChatRequest struct {
 // per-tenant dynamically using agent.Services, ensuring proper
 // tenant scoping for multi-tenant deployments.
 type Handler struct {
-	apiKey       string
-	model        string
-	systemPrompt string
-	services     agent.Services
+	apiKey         string
+	model          string
+	systemPrompt   string
+	services       agent.Services
+	presetProvider PresetProvider // may be nil — presets disabled
 
 	mu       sync.RWMutex
-	sessions map[string]*sessionEntry // key = tenantID + ":" + sessionID
+	sessions map[string]*sessionEntry // key = tenantID + ":" + presetID + ":" + sessionID
 }
 
 type sessionEntry struct {
@@ -63,16 +72,18 @@ type sessionEntry struct {
 //   - model: model identifier, e.g. "claude-sonnet-4-20250514"
 //   - systemPrompt: override the default store-assistant system prompt (pass "" for default)
 //   - services: domain services used to create tenant-scoped tools per session
-func NewHandler(apiKey, model, systemPrompt string, services agent.Services) *Handler {
+//   - presetProvider: optional preset config provider (pass nil to disable presets)
+func NewHandler(apiKey, model, systemPrompt string, services agent.Services, presetProvider PresetProvider) *Handler {
 	if systemPrompt == "" {
 		systemPrompt = defaultSystemPrompt
 	}
 	return &Handler{
-		apiKey:       apiKey,
-		model:        model,
-		systemPrompt: systemPrompt,
-		services:     services,
-		sessions:     make(map[string]*sessionEntry),
+		apiKey:         apiKey,
+		model:          model,
+		systemPrompt:   systemPrompt,
+		services:       services,
+		presetProvider: presetProvider,
+		sessions:       make(map[string]*sessionEntry),
 	}
 }
 
@@ -124,10 +135,11 @@ func (h *Handler) Chat(c *fiber.Ctx) error {
 	if sessionID == "" {
 		sessionID = "default"
 	}
-	sessionKey := tenantID + ":" + sessionID
+	presetID := req.PresetID
+	sessionKey := tenantID + ":" + presetID + ":" + sessionID
 
-	// Obtain or create a harness session for this tenant+session pair.
-	sess, err := h.getOrCreateSession(sessionKey)
+	// Obtain or create a harness session for this tenant+session+preset triple.
+	sess, err := h.getOrCreateSession(sessionKey, presetID)
 	if err != nil {
 		log.Printf("[agentapi] failed to create harness session key=%q err=%v", sessionKey, err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -222,9 +234,10 @@ func (h *Handler) Chat(c *fiber.Ctx) error {
 }
 
 // getOrCreateSession returns an existing harness session or creates a new one.
-// Sessions are keyed by tenantID:sessionID and reuse conversation history.
+// Sessions are keyed by tenantID:presetID:sessionID and reuse conversation history.
 // Tools are created per-tenant to ensure proper multi-tenant scoping.
-func (h *Handler) getOrCreateSession(key string) (*harness.Session, error) {
+// When presetID is non-empty, the preset's system prompt is used instead of the default.
+func (h *Handler) getOrCreateSession(key string, presetID string) (*harness.Session, error) {
 	h.mu.RLock()
 	entry, ok := h.sessions[key]
 	h.mu.RUnlock()
@@ -240,10 +253,18 @@ func (h *Handler) getOrCreateSession(key string) (*harness.Session, error) {
 		return entry.session, nil
 	}
 
-	// Extract tenantID from the session key (format: "tenantID:sessionID").
+	// Extract tenantID from the session key (format: "tenantID:presetID:sessionID").
 	tenantID := key
 	if idx := strings.IndexByte(key, ':'); idx >= 0 {
 		tenantID = key[:idx]
+	}
+
+	// Determine the system prompt: use preset's if available, else default.
+	sysPrompt := h.systemPrompt
+	if presetID != "" && h.presetProvider != nil {
+		if presetPrompt, err := h.presetProvider.GetPresetSystemPrompt(context.Background(), presetID); err == nil && presetPrompt != "" {
+			sysPrompt = presetPrompt
+		}
 	}
 
 	// Create tenant-scoped domain tools.
@@ -252,7 +273,7 @@ func (h *Handler) getOrCreateSession(key string) (*harness.Session, error) {
 	opts := []harness.Option{
 		harness.WithAPIKey(h.apiKey),
 		harness.WithModel(h.model),
-		harness.WithSystemPrompt(h.systemPrompt),
+		harness.WithSystemPrompt(sysPrompt),
 		harness.WithPermissionMode("headless"),
 	}
 	if len(domainTools) > 0 {

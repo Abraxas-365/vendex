@@ -2,11 +2,15 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/Abraxas-365/hada-commerce/internal/agent"
 	"github.com/Abraxas-365/hada-commerce/internal/agent/agentapi"
+	"github.com/Abraxas-365/hada-commerce/internal/marketplace/marketplacesrv"
+	"github.com/Abraxas-365/hada-commerce/internal/agentsession/agentsessioncontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/containerxdocker"
 	"github.com/Abraxas-365/hada-commerce/internal/abtest/abtestcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/bulkops/bulkopscontainer"
@@ -144,7 +148,8 @@ type Container struct {
 	Recommendation  *recommendationcontainer.Container
 
 	// AI Agent
-	Agent *agentapi.Handler
+	Agent        *agentapi.Handler
+	AgentSession *agentsessioncontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -324,8 +329,22 @@ func (c *Container) initModules() {
 			c.Config.Agent.Model,
 			"", // use default system prompt
 			agentSvc,
+			&presetProviderAdapter{svc: c.Marketplace.PresetService},
 		)
 		logx.Info("  AI Agent chat handler initialized")
+	}
+
+	// Agent Sessions — workspace management via Docker containers.
+	containerMgr, err := containerxdocker.New()
+	if err != nil {
+		logx.Warnf("Docker unavailable, agent sessions disabled: %v", err)
+	} else {
+		c.AgentSession = agentsessioncontainer.New(agentsessioncontainer.Deps{
+			DB:        c.DB,
+			Manager:   containerMgr,
+			PresetSvc: c.Marketplace.PresetService,
+		})
+		logx.Info("  Agent session manager initialized")
 	}
 
 	logx.Info("All modules initialized")
@@ -527,6 +546,27 @@ func (r *orderCustomerResolver) ResolveOrderCustomerID(ctx context.Context, tena
 		return "", err
 	}
 	return string(o.CustomerID), nil
+}
+
+// presetProviderAdapter adapts marketplacesrv.PresetService to agentapi.PresetProvider.
+type presetProviderAdapter struct {
+	svc *marketplacesrv.PresetService
+}
+
+func (a *presetProviderAdapter) GetPresetSystemPrompt(ctx context.Context, presetID string) (string, error) {
+	p, err := a.svc.Get(ctx, kernel.PresetID(presetID))
+	if err != nil {
+		return "", err
+	}
+	return p.SystemPrompt, nil
+}
+
+func (a *presetProviderAdapter) GetPresetToolsManifest(ctx context.Context, presetID string) (json.RawMessage, error) {
+	p, err := a.svc.Get(ctx, kernel.PresetID(presetID))
+	if err != nil {
+		return nil, err
+	}
+	return p.ToolsManifest, nil
 }
 
 // ---------------------------------------------------------------------------
