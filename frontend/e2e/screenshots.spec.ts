@@ -24,6 +24,7 @@ const pages = [
   { name: 'admin-orders', path: '/admin/orders', title: 'Orders' },
   { name: 'admin-customers', path: '/admin/customers', title: 'Customers' },
   { name: 'admin-catalog', path: '/admin/catalog', title: 'Catalog' },
+  { name: 'admin-collections', path: '/admin/collections', title: 'Collections' },
   { name: 'admin-pages', path: '/admin/pages', title: 'Pages' },
   { name: 'admin-promos', path: '/admin/promos', title: 'Promotions' },
   { name: 'admin-media', path: '/admin/media', title: 'Media Library' },
@@ -31,6 +32,47 @@ const pages = [
   { name: 'admin-theme', path: '/admin/theme', title: 'Theme Editor' },
   { name: 'admin-settings', path: '/admin/settings', title: 'Settings' },
   { name: 'admin-agent', path: '/admin/agent', title: 'AI Agent' },
+
+  // Fulfillment & Logistics
+  { name: 'admin-shipping', path: '/admin/shipping', title: 'Shipping' },
+  { name: 'admin-tax', path: '/admin/tax', title: 'Tax' },
+  { name: 'admin-inventory', path: '/admin/inventory', title: 'Inventory' },
+  { name: 'admin-returns', path: '/admin/returns', title: 'Returns' },
+
+  // Payments & Finance
+  { name: 'admin-payments', path: '/admin/payments', title: 'Payments' },
+  { name: 'admin-gift-cards', path: '/admin/gift-cards', title: 'Gift Cards' },
+  { name: 'admin-currency', path: '/admin/currency-rates', title: 'Currency Rates' },
+
+  // Customers & Loyalty
+  { name: 'admin-customer-groups', path: '/admin/customer-groups', title: 'Customer Groups' },
+  { name: 'admin-loyalty', path: '/admin/loyalty', title: 'Loyalty' },
+  { name: 'admin-subscriptions', path: '/admin/subscriptions', title: 'Subscriptions' },
+
+  // Marketing & Growth
+  { name: 'admin-cart-recovery', path: '/admin/cart-recovery', title: 'Cart Recovery' },
+  { name: 'admin-reviews', path: '/admin/reviews', title: 'Reviews' },
+  { name: 'admin-bundles', path: '/admin/bundles', title: 'Bundles' },
+  { name: 'admin-ab-testing', path: '/admin/ab-testing', title: 'A/B Testing' },
+  { name: 'admin-recommendations', path: '/admin/recommendations', title: 'Recommendations' },
+
+  // Content & CMS
+  { name: 'admin-blog', path: '/admin/blog', title: 'Blog' },
+  { name: 'admin-translations', path: '/admin/translations', title: 'Translations' },
+
+  // Analytics & Reporting
+  { name: 'admin-reporting', path: '/admin/reporting', title: 'Reporting' },
+
+  // Operations & Tech
+  { name: 'admin-import-export', path: '/admin/import-export', title: 'Import / Export' },
+  { name: 'admin-webhooks', path: '/admin/webhooks', title: 'Webhooks' },
+  { name: 'admin-audit', path: '/admin/audit-logs', title: 'Audit Logs' },
+  { name: 'admin-bulk-operations', path: '/admin/bulk-operations', title: 'Bulk Operations' },
+
+  // Multi-channel & Social
+  { name: 'admin-multistores', path: '/admin/storefronts', title: 'Storefronts' },
+  { name: 'admin-social-accounts', path: '/admin/social-accounts', title: 'Social Accounts' },
+  { name: 'admin-notifications', path: '/admin/notifications', title: 'Notifications' },
 ]
 
 // ── Mock Data ────────────────────────────────────────────────────────────────
@@ -358,6 +400,228 @@ test.beforeEach(async ({ page }) => {
     // Settings
     if (url.match(/\/settings\/?(\?.*)?$/) && !url.includes('/plugins/')) {
       return json(mockSettings)
+    }
+
+    // Shipping
+    if (url.match(/\/shipping\/zones\/[\w-]+\/rates\/?(\?.*)?$/)) {
+      return paginated(mockShippingRates)
+    }
+    if (url.match(/\/shipping\/zones\/?(\?.*)?$/)) {
+      return paginated(mockShippingZones)
+    }
+    if (url.match(/\/shipping\/rates\/?(\?.*)?$/)) {
+      return paginated(mockShippingRates)
+    }
+
+    // Tax
+    if (url.match(/\/tax\/rates\/?(\?.*)?$/)) {
+      return paginated(mockTaxRates)
+    }
+
+    // Payments
+    if (url.match(/\/payments\/order\//)) {
+      return paginated(mockPayments)
+    }
+    if (url.match(/\/payments\/[\w-]+\/refunds\/?(\?.*)?$/)) {
+      return paginated([])
+    }
+    if (url.match(/\/payments\/?(\?.*)?$/)) {
+      return paginated(mockPayments)
+    }
+
+    // Customer Groups
+    if (url.match(/\/customer-groups\/[\w-]+\/members\/?(\?.*)?$/)) {
+      return paginated(mockCustomers.slice(0, 2))
+    }
+    if (url.match(/\/customer-groups\/?(\?.*)?$/)) {
+      return paginated(mockCustomerGroups)
+    }
+
+    // Gift Cards
+    if (url.match(/\/gift-cards\/[\w-]+\/transactions\/?(\?.*)?$/)) {
+      return paginated([])
+    }
+    if (url.match(/\/gift-cards\/?(\?.*)?$/)) {
+      return paginated(mockGiftCards)
+    }
+
+    // Cart Recovery
+    if (url.match(/\/cart-recovery\/stats\/?(\?.*)?$/)) {
+      return json({ total_abandoned: 47, recovered: 12, recovery_rate: 25.5, revenue_recovered: 189400 })
+    }
+    if (url.match(/\/cart-recovery\/?(\?.*)?$/)) {
+      return paginated(mockCartRecovery)
+    }
+
+    // Currency Rates
+    if (url.match(/\/currencies\/?(\?.*)?$/)) {
+      return json(['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CNY', 'MXN'])
+    }
+    if (url.match(/\/currency\/convert\/?(\?.*)?$/)) {
+      return json({ from: 'USD', to: 'EUR', amount: 100, converted: 92.5, rate: 0.925 })
+    }
+    if (url.match(/\/currency-rates\/?(\?.*)?$/)) {
+      return paginated(mockCurrencyRates)
+    }
+
+    // Translations
+    if (url.match(/\/i18n\/supported-locales\/?(\?.*)?$/)) {
+      return json(['en', 'es', 'fr', 'de', 'ja', 'zh'])
+    }
+    if (url.match(/\/i18n\/[\w-]+\/[\w-]+\/locales\/?(\?.*)?$/)) {
+      return json(['en', 'es', 'fr'])
+    }
+    if (url.match(/\/i18n\//)) {
+      return json({ locale: 'es', fields: { name: 'Serum de Vitamina C', description: 'Un poderoso suero antioxidante.' } })
+    }
+
+    // Subscriptions
+    if (url.match(/\/subscriptions\/[\w-]+\/billing\/?(\?.*)?$/)) {
+      return paginated([])
+    }
+    if (url.match(/\/subscriptions\/due\/?(\?.*)?$/)) {
+      return paginated(mockSubscriptions.slice(0, 1))
+    }
+    if (url.match(/\/subscriptions\/?(\?.*)?$/)) {
+      return paginated(mockSubscriptions)
+    }
+
+    // Inventory
+    if (url.match(/\/inventory\/stock\/low\/?(\?.*)?$/)) {
+      return paginated(mockLowStockAlerts)
+    }
+    if (url.match(/\/inventory\/stock\/[\w-]+\/?(\?.*)?$/)) {
+      return paginated([])
+    }
+    if (url.match(/\/inventory\/warehouses\/?(\?.*)?$/)) {
+      return paginated(mockWarehouses)
+    }
+
+    // Reviews
+    if (url.match(/\/reviews\/?(\?.*)?$/)) {
+      return paginated(mockReviews)
+    }
+
+    // Returns
+    if (url.match(/\/returns\/[\w-]+\/?(\?.*)?$/) && !url.match(/\/returns\/?(\?.*)?$/)) {
+      return json(mockReturns[0])
+    }
+    if (url.match(/\/returns\/?(\?.*)?$/)) {
+      return paginated(mockReturns)
+    }
+
+    // Webhooks
+    if (url.match(/\/webhooks\/[\w-]+\/deliveries\/?(\?.*)?$/)) {
+      return paginated(mockWebhookDeliveries)
+    }
+    if (url.match(/\/webhooks\/?(\?.*)?$/)) {
+      return paginated(mockWebhooks)
+    }
+
+    // Audit Logs
+    if (url.match(/\/audit\/stats\/?(\?.*)?$/)) {
+      return json({ total_events: 1243, unique_users: 5, top_actions: ['update', 'create', 'delete'] })
+    }
+    if (url.match(/\/audit\/[\w-]+\/?(\?.*)?$/) && !url.match(/\/audit\/stats/)) {
+      return json(mockAuditLogs[0])
+    }
+    if (url.match(/\/audit\/?(\?.*)?$/)) {
+      return paginated(mockAuditLogs)
+    }
+
+    // Loyalty
+    if (url.match(/\/loyalty\/accounts\/[\w-]+\/transactions\/?(\?.*)?$/)) {
+      return paginated([])
+    }
+    if (url.match(/\/loyalty\/accounts\/?(\?.*)?$/)) {
+      return paginated(mockLoyaltyAccounts)
+    }
+    if (url.match(/\/loyalty\/rewards\/?(\?.*)?$/)) {
+      return paginated(mockLoyaltyRewards)
+    }
+
+    // Bundles
+    if (url.match(/\/bundles\/[\w-]+\/price\/?(\?.*)?$/)) {
+      return json({ bundle_id: 'bun1', total: { amount: 7500, currency: 'USD' }, savings: { amount: 1500, currency: 'USD' } })
+    }
+    if (url.match(/\/bundles\/?(\?.*)?$/)) {
+      return paginated(mockBundles)
+    }
+
+    // Reporting / Dashboard
+    if (url.match(/\/dashboard\/sales\/?(\?.*)?$/)) {
+      return json({ total_revenue: 1284500, order_count: 156, average_order_value: 8234, refund_total: 45000 })
+    }
+    if (url.match(/\/dashboard\/top-products\/?(\?.*)?$/)) {
+      return json([
+        { product_id: 'p1', name: 'Vitamin C Brightening Serum', total_sold: 245, revenue: 1102500 },
+        { product_id: 'p3', name: 'Retinol Night Oil', total_sold: 156, revenue: 904800 },
+        { product_id: 'p2', name: 'Hydrating Rose Cream', total_sold: 198, revenue: 633600 },
+        { product_id: 'p4', name: 'SPF 50 Daily Sunscreen', total_sold: 134, revenue: 375200 },
+        { product_id: 'p5', name: 'Gentle Cleansing Balm', total_sold: 112, revenue: 268800 },
+      ])
+    }
+    if (url.match(/\/dashboard\/revenue\/?(\?.*)?$/)) {
+      return json(Array.from({ length: 30 }, (_, i) => {
+        const d = new Date(); d.setDate(d.getDate() - (29 - i))
+        return { date: d.toISOString().slice(0, 10), amount: Math.floor(20000 + Math.sin(i * 0.5) * 15000 + i * 2000) }
+      }))
+    }
+    if (url.match(/\/dashboard\/customers\/?(\?.*)?$/)) {
+      return json({ new_customers: 23, returning_customers: 66, churn_rate: 3.2, lifetime_value: 18500 })
+    }
+    if (url.match(/\/dashboard\/funnel\/?(\?.*)?$/)) {
+      return json([
+        { step: 'Visited', count: 4200 }, { step: 'Added to Cart', count: 1890 },
+        { step: 'Checkout Started', count: 720 }, { step: 'Purchased', count: 540 },
+      ])
+    }
+
+    // Social Accounts
+    if (url.match(/\/social-accounts\/?(\?.*)?$/)) {
+      return paginated(mockSocialAccounts)
+    }
+
+    // Notifications
+    if (url.match(/\/notifications\/unread-count\/?(\?.*)?$/)) {
+      return json({ count: 3 })
+    }
+    if (url.match(/\/notifications\/?(\?.*)?$/)) {
+      return paginated(mockNotifications)
+    }
+
+    // Storefronts (Multistores)
+    if (url.match(/\/storefronts\/?(\?.*)?$/)) {
+      return paginated(mockStorefronts)
+    }
+
+    // Blog
+    if (url.match(/\/blog\/categories\/?(\?.*)?$/)) {
+      return paginated(mockBlogCategories)
+    }
+    if (url.match(/\/blog\/?(\?.*)?$/)) {
+      return paginated(mockBlogPosts)
+    }
+
+    // A/B Testing
+    if (url.match(/\/experiments\/[\w-]+\/results\/?(\?.*)?$/)) {
+      return json({ experiment_id: 'exp1', variants: [{ name: 'control', conversions: 45, visitors: 500 }, { name: 'variant_a', conversions: 62, visitors: 498 }] })
+    }
+    if (url.match(/\/experiments\/?(\?.*)?$/)) {
+      return paginated(mockExperiments)
+    }
+
+    // Recommendations
+    if (url.match(/\/recommendations\/?(\?.*)?$/)) {
+      return paginated(mockRecommendations)
+    }
+
+    // Bulk Operations
+    if (url.match(/\/bulk-operations\/[\w-]+\/items\/?(\?.*)?$/)) {
+      return paginated([])
+    }
+    if (url.match(/\/bulk-operations\/?(\?.*)?$/)) {
+      return paginated(mockBulkOperations)
     }
 
     // Default fallback
