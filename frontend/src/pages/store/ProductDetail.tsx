@@ -11,7 +11,7 @@ import {
   XCircle,
   AlertCircle,
 } from 'lucide-react'
-import { useProduct } from '../../lib/hooks'
+import { useStoreProduct } from '../../lib/store-hooks'
 import { useCart } from '../../lib/cart'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -60,7 +60,7 @@ function StockIndicator({ stock }: { stock?: number }) {
 
 export default function ProductDetail() {
   const { id } = useParams({ from: '/_store/products/$id' })
-  const { data: product, isLoading, isError } = useProduct(id)
+  const { data: product, isLoading, isError } = useStoreProduct(id)
   const { addItem } = useCart()
 
   const [selectedImage, setSelectedImage] = useState(0)

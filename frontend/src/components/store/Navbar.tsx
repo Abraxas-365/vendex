@@ -18,7 +18,7 @@ export default function Navbar() {
             className="flex items-center gap-2 font-bold text-xl text-indigo-600 hover:text-indigo-700 transition-colors"
           >
             <Leaf size={22} />
-            <span>Hada Store</span>
+            <span>Vendex Store</span>
           </Link>
 
           {/* Desktop nav links */}

@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, Sparkles, Package, Truck, ShieldCheck } from 'lucide-react'
-import { useProducts } from '../../lib/hooks'
+import { useStoreProducts } from '../../lib/store-hooks'
 import ProductCard from '../../components/store/ProductCard'
 
 // ─── Static data ─────────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@ const PERKS = [
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const { data: productsPage } = useProducts({ page: 1, page_size: 6 })
+  const { data: productsPage } = useStoreProducts({ page: 1, page_size: 6 })
   const products = productsPage?.items ?? []
 
   return (
@@ -42,7 +42,7 @@ export default function Home() {
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 leading-tight tracking-tight mb-6">
             Welcome to{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
-              Hada Store
+              Vendex Store
             </span>
           </h1>
 

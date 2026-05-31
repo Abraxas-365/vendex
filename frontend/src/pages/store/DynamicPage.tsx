@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { useParams, Link } from '@tanstack/react-router'
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react'
-import { usePageBySlug } from '../../lib/hooks'
+import { useStorePageBySlug } from '../../lib/store-hooks'
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function DynamicPage() {
   const { slug } = useParams({ from: '/_store/pages/$slug' })
-  const { data: page, isLoading, isError } = usePageBySlug(slug)
+  const { data: page, isLoading, isError } = useStorePageBySlug(slug)
   const styleRef = useRef<HTMLStyleElement | null>(null)
 
   // Inject / remove the page's custom CSS as a <style> tag

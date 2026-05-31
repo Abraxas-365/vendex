@@ -136,7 +136,7 @@ const storeLayoutRoute = createRoute({
       </main>
       <footer className="bg-white border-t border-gray-100 py-8 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-400">
-          © {new Date().getFullYear()} Hada Store. All rights reserved.
+          © {new Date().getFullYear()} Vendex Store. All rights reserved.
         </div>
       </footer>
     </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { SlidersHorizontal, ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { useProducts } from '../../lib/hooks'
+import { useStoreProducts } from '../../lib/store-hooks'
 import ProductCard from '../../components/store/ProductCard'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -37,7 +37,7 @@ export default function ProductList() {
   })
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const { data, isLoading, isError } = useProducts({
+  const { data, isLoading, isError } = useStoreProducts({
     page,
     page_size: PAGE_SIZE,
   })
