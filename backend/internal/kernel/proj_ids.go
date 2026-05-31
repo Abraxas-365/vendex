@@ -333,3 +333,14 @@ type StorefrontCatalogID string
 func NewStorefrontCatalogID(id string) StorefrontCatalogID { return StorefrontCatalogID(id) }
 func (s StorefrontCatalogID) String() string               { return string(s) }
 func (s StorefrontCatalogID) IsEmpty() bool                { return string(s) == "" }
+type BulkOperationID string
+
+func NewBulkOperationID(id string) BulkOperationID { return BulkOperationID(id) }
+func (b BulkOperationID) String() string           { return string(b) }
+func (b BulkOperationID) IsEmpty() bool            { return string(b) == "" }
+
+type BulkOperationItemID string
+
+func NewBulkOperationItemID(id string) BulkOperationItemID { return BulkOperationItemID(id) }
+func (b BulkOperationItemID) String() string               { return string(b) }
+func (b BulkOperationItemID) IsEmpty() bool                { return string(b) == "" }

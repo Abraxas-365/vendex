@@ -107,6 +107,9 @@ const (
 	StorefrontCreated EventType = "storefront_entry.created"
 	StorefrontUpdated EventType = "storefront_entry.updated"
 	StorefrontDeleted EventType = "storefront_entry.deleted"
+	// Bulk operation events
+	BulkOperationStarted   EventType = "bulk_operation.started"
+	BulkOperationCompleted EventType = "bulk_operation.completed"
 )
 
 // Event is a domain event that has occurred in the system.

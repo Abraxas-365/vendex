@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/bulkops/bulkopscontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/dashboard/dashboardcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/inventory/inventorycontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/audit/auditcontainer"
@@ -130,6 +131,7 @@ type Container struct {
 	SocialAuth     *socialauthcontainer.Container
 	Notification   *notificationcontainer.Container
 	MultiStore     *multistorecontainer.Container
+	BulkOps        *bulkopscontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -273,6 +275,7 @@ func (c *Container) initModules() {
 	c.SocialAuth = socialauthcontainer.New(c.DB)
 	c.Notification = notificationcontainer.New(c.DB, bus)
 	c.MultiStore = multistorecontainer.New(c.DB, bus)
+	c.BulkOps = bulkopscontainer.New(c.DB, bus)
 
 	// Import/Export — depends on Product, Order, and Customer services.
 	c.ImportExport = importexport.New(
