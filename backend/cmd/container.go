@@ -11,7 +11,9 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/audit/auditcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/cartrecovery/cartrecoverycontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/sitemap"
+	"github.com/Abraxas-365/hada-commerce/internal/customer/customersrv"
 	"github.com/Abraxas-365/hada-commerce/internal/emails"
+	"github.com/Abraxas-365/hada-commerce/internal/order/ordersrv"
 	"github.com/Abraxas-365/hada-commerce/internal/cart/cartcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/importexport"
 	"github.com/Abraxas-365/hada-commerce/internal/customergroup/customergroupcontainer"
@@ -285,6 +287,8 @@ func (c *Container) initModules() {
 		c.NotifxClient,
 		c.Config.Notifx.FromAddress,
 		c.Config.Notifx.FromName,
+		newCustomerEmailResolver(c.Customer.Service),
+		newOrderCustomerResolver(c.Order.Service),
 	)
 	emailHandler.RegisterSubscriptions(bus)
 	logx.Info("  Email notifications wired to event bus")
@@ -450,4 +454,42 @@ func (n *NotifxInvitationNotifier) SendInvitation(ctx context.Context, email str
 		HTMLBody: fmt.Sprintf("<h2>You've been invited!</h2><p>Use the following token to accept your invitation: <strong>%s</strong></p>", token),
 		TextBody: fmt.Sprintf("You've been invited! Use the following token to accept your invitation: %s", token),
 	})
+}
+
+// ---------------------------------------------------------------------------
+// Email resolver adapters for the emails package
+// ---------------------------------------------------------------------------
+
+// customerEmailResolver implements emails.EmailResolver using the customer service.
+type customerEmailResolver struct {
+	customers *customersrv.Service
+}
+
+func newCustomerEmailResolver(svc *customersrv.Service) *customerEmailResolver {
+	return &customerEmailResolver{customers: svc}
+}
+
+func (r *customerEmailResolver) ResolveEmail(ctx context.Context, tenantID string, customerID string) (string, error) {
+	c, err := r.customers.GetByID(ctx, kernel.TenantID(tenantID), kernel.CustomerID(customerID))
+	if err != nil {
+		return "", err
+	}
+	return string(c.Email), nil
+}
+
+// orderCustomerResolver implements emails.OrderCustomerResolver using the order service.
+type orderCustomerResolver struct {
+	orders *ordersrv.Service
+}
+
+func newOrderCustomerResolver(svc *ordersrv.Service) *orderCustomerResolver {
+	return &orderCustomerResolver{orders: svc}
+}
+
+func (r *orderCustomerResolver) ResolveOrderCustomerID(ctx context.Context, tenantID string, orderID string) (string, error) {
+	o, err := r.orders.GetByID(ctx, kernel.TenantID(tenantID), kernel.OrderID(orderID))
+	if err != nil {
+		return "", err
+	}
+	return string(o.CustomerID), nil
 }

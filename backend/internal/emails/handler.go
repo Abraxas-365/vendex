@@ -4,25 +4,42 @@
 package emails
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Abraxas-365/hada-commerce/internal/notifx"
 )
 
+// EmailResolver resolves a customer's email address by customer ID and tenant ID.
+// Implementations should look up the customer record and return the email string.
+type EmailResolver interface {
+	ResolveEmail(ctx context.Context, tenantID string, customerID string) (string, error)
+}
+
+// OrderCustomerResolver resolves the customer ID associated with an order.
+// Used by payment and refund handlers where the payload only carries OrderID.
+type OrderCustomerResolver interface {
+	ResolveOrderCustomerID(ctx context.Context, tenantID string, orderID string) (string, error)
+}
+
 // Handler handles transactional email delivery by subscribing to domain events.
 type Handler struct {
-	client    *notifx.Client
-	fromEmail string
-	storeName string
+	client        *notifx.Client
+	fromEmail     string
+	storeName     string
+	resolver      EmailResolver
+	orderResolver OrderCustomerResolver
 }
 
 // New creates a new email Handler, registers all HTML templates, and returns it
 // ready for subscription wiring via RegisterSubscriptions.
-func New(client *notifx.Client, fromEmail, storeName string) *Handler {
+func New(client *notifx.Client, fromEmail, storeName string, resolver EmailResolver, orderResolver OrderCustomerResolver) *Handler {
 	h := &Handler{
-		client:    client,
-		fromEmail: fromEmail,
-		storeName: storeName,
+		client:        client,
+		fromEmail:     fromEmail,
+		storeName:     storeName,
+		resolver:      resolver,
+		orderResolver: orderResolver,
 	}
 	h.registerTemplates()
 	return h

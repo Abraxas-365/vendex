@@ -22,10 +22,7 @@ func (h *Handler) RegisterSubscriptions(bus eventbus.Bus) {
 }
 
 // onOrderPlaced fires when an order is placed.
-// NOTE: OrderPayload only carries CustomerID, not the customer email. To send
-// this email to the customer we would need to resolve the email from the customer
-// service. For now we log the intent and skip the actual send.
-// TODO: inject a customer lookup service and resolve email before sending.
+// Resolves the customer email via the EmailResolver and sends an order confirmation.
 func (h *Handler) onOrderPlaced(ctx context.Context, event eventbus.Event) error {
 	var payload eventbus.OrderPayload
 	if err := json.Unmarshal(event.Payload, &payload); err != nil {
@@ -33,19 +30,36 @@ func (h *Handler) onOrderPlaced(ctx context.Context, event eventbus.Event) error
 		return nil // fault-tolerant
 	}
 
-	logx.WithFields(logx.Fields{
-		"order_id":    payload.OrderID,
-		"customer_id": payload.CustomerID,
-		"total":       payload.Total,
-		"item_count":  payload.ItemCount,
-	}).Info("emails: would send order_confirmation (customer email not in payload — TODO: look up via customer service)")
+	email, err := h.resolver.ResolveEmail(ctx, string(event.TenantID), payload.CustomerID)
+	if err != nil {
+		logx.Errorf("emails: failed to resolve email for customer %s (order_confirmation): %v", payload.CustomerID, err)
+		return nil
+	}
 
+	data := map[string]any{
+		"StoreName": h.storeName,
+		"OrderID":   payload.OrderID,
+		"Total":     formatMoney(int64(payload.Total), payload.Currency),
+		"ItemCount": payload.ItemCount,
+	}
+
+	msg := notifx.EmailMessage{
+		From:    h.fromEmail,
+		To:      []string{email},
+		Subject: "Order Confirmation — " + payload.OrderID,
+	}
+
+	if err := h.client.SendTemplatedEmail(ctx, "order_confirmation", data, msg); err != nil {
+		logx.Errorf("emails: failed to send order_confirmation to %s: %v", email, err)
+		return nil // fault-tolerant
+	}
+
+	logx.Infof("emails: sent order_confirmation to %s (order_id: %s)", email, payload.OrderID)
 	return nil
 }
 
 // onOrderShipped fires when an order status transitions to shipped.
-// NOTE: Same limitation as onOrderPlaced — customer email not in OrderPayload.
-// TODO: inject a customer lookup service and resolve email before sending.
+// Resolves the customer email via the EmailResolver and sends a shipped notification.
 func (h *Handler) onOrderShipped(ctx context.Context, event eventbus.Event) error {
 	var payload eventbus.OrderPayload
 	if err := json.Unmarshal(event.Payload, &payload); err != nil {
@@ -53,18 +67,35 @@ func (h *Handler) onOrderShipped(ctx context.Context, event eventbus.Event) erro
 		return nil
 	}
 
-	logx.WithFields(logx.Fields{
-		"order_id":    payload.OrderID,
-		"customer_id": payload.CustomerID,
-		"status":      payload.Status,
-	}).Info("emails: would send order_shipped (customer email not in payload — TODO: look up via customer service)")
+	email, err := h.resolver.ResolveEmail(ctx, string(event.TenantID), payload.CustomerID)
+	if err != nil {
+		logx.Errorf("emails: failed to resolve email for customer %s (order_shipped): %v", payload.CustomerID, err)
+		return nil
+	}
 
+	data := map[string]any{
+		"StoreName": h.storeName,
+		"OrderID":   payload.OrderID,
+		"Status":    payload.Status,
+	}
+
+	msg := notifx.EmailMessage{
+		From:    h.fromEmail,
+		To:      []string{email},
+		Subject: "Your order has shipped — " + payload.OrderID,
+	}
+
+	if err := h.client.SendTemplatedEmail(ctx, "order_shipped", data, msg); err != nil {
+		logx.Errorf("emails: failed to send order_shipped to %s: %v", email, err)
+		return nil // fault-tolerant
+	}
+
+	logx.Infof("emails: sent order_shipped to %s (order_id: %s)", email, payload.OrderID)
 	return nil
 }
 
 // onOrderDelivered fires when an order status transitions to delivered.
-// NOTE: Same limitation as onOrderPlaced — customer email not in OrderPayload.
-// TODO: inject a customer lookup service and resolve email before sending.
+// Resolves the customer email via the EmailResolver and sends a delivered notification.
 func (h *Handler) onOrderDelivered(ctx context.Context, event eventbus.Event) error {
 	var payload eventbus.OrderPayload
 	if err := json.Unmarshal(event.Payload, &payload); err != nil {
@@ -72,11 +103,29 @@ func (h *Handler) onOrderDelivered(ctx context.Context, event eventbus.Event) er
 		return nil
 	}
 
-	logx.WithFields(logx.Fields{
-		"order_id":    payload.OrderID,
-		"customer_id": payload.CustomerID,
-	}).Info("emails: would send order_delivered (customer email not in payload — TODO: look up via customer service)")
+	email, err := h.resolver.ResolveEmail(ctx, string(event.TenantID), payload.CustomerID)
+	if err != nil {
+		logx.Errorf("emails: failed to resolve email for customer %s (order_delivered): %v", payload.CustomerID, err)
+		return nil
+	}
 
+	data := map[string]any{
+		"StoreName": h.storeName,
+		"OrderID":   payload.OrderID,
+	}
+
+	msg := notifx.EmailMessage{
+		From:    h.fromEmail,
+		To:      []string{email},
+		Subject: "Your order has been delivered — " + payload.OrderID,
+	}
+
+	if err := h.client.SendTemplatedEmail(ctx, "order_delivered", data, msg); err != nil {
+		logx.Errorf("emails: failed to send order_delivered to %s: %v", email, err)
+		return nil // fault-tolerant
+	}
+
+	logx.Infof("emails: sent order_delivered to %s (order_id: %s)", email, payload.OrderID)
 	return nil
 }
 
@@ -116,8 +165,7 @@ func (h *Handler) onCustomerRegistered(ctx context.Context, event eventbus.Event
 }
 
 // onPaymentCompleted fires when a payment is successfully charged.
-// NOTE: PaymentPayload carries an OrderID but not the customer email.
-// TODO: inject a customer lookup service and resolve email before sending.
+// Resolves the customer email via order lookup then EmailResolver.
 func (h *Handler) onPaymentCompleted(ctx context.Context, event eventbus.Event) error {
 	var payload eventbus.PaymentPayload
 	if err := json.Unmarshal(event.Payload, &payload); err != nil {
@@ -125,18 +173,42 @@ func (h *Handler) onPaymentCompleted(ctx context.Context, event eventbus.Event) 
 		return nil
 	}
 
-	logx.WithFields(logx.Fields{
-		"payment_id": payload.PaymentID,
-		"order_id":   payload.OrderID,
-		"amount":     formatMoney(payload.Amount, payload.Currency),
-	}).Info("emails: would send payment_completed (customer email not in payload — TODO: look up via customer service)")
+	customerID, err := h.orderResolver.ResolveOrderCustomerID(ctx, string(event.TenantID), payload.OrderID)
+	if err != nil {
+		logx.Errorf("emails: failed to resolve customer for order %s (payment_completed): %v", payload.OrderID, err)
+		return nil
+	}
 
+	email, err := h.resolver.ResolveEmail(ctx, string(event.TenantID), customerID)
+	if err != nil {
+		logx.Errorf("emails: failed to resolve email for customer %s (payment_completed): %v", customerID, err)
+		return nil
+	}
+
+	data := map[string]any{
+		"StoreName": h.storeName,
+		"OrderID":   payload.OrderID,
+		"Amount":    formatMoney(payload.Amount, payload.Currency),
+		"PaymentID": payload.PaymentID,
+	}
+
+	msg := notifx.EmailMessage{
+		From:    h.fromEmail,
+		To:      []string{email},
+		Subject: "Payment confirmed — order " + payload.OrderID,
+	}
+
+	if err := h.client.SendTemplatedEmail(ctx, "payment_completed", data, msg); err != nil {
+		logx.Errorf("emails: failed to send payment_completed to %s: %v", email, err)
+		return nil // fault-tolerant
+	}
+
+	logx.Infof("emails: sent payment_completed to %s (order_id: %s, payment_id: %s)", email, payload.OrderID, payload.PaymentID)
 	return nil
 }
 
 // onRefundCompleted fires when a refund is successfully processed.
-// NOTE: RefundPayload carries an OrderID but not the customer email.
-// TODO: inject a customer lookup service and resolve email before sending.
+// Resolves the customer email via order lookup then EmailResolver.
 func (h *Handler) onRefundCompleted(ctx context.Context, event eventbus.Event) error {
 	var payload eventbus.RefundPayload
 	if err := json.Unmarshal(event.Payload, &payload); err != nil {
@@ -144,11 +216,36 @@ func (h *Handler) onRefundCompleted(ctx context.Context, event eventbus.Event) e
 		return nil
 	}
 
-	logx.WithFields(logx.Fields{
-		"refund_id": payload.RefundID,
-		"order_id":  payload.OrderID,
-		"amount":    formatMoney(payload.Amount, payload.Currency),
-	}).Info("emails: would send refund_completed (customer email not in payload — TODO: look up via customer service)")
+	customerID, err := h.orderResolver.ResolveOrderCustomerID(ctx, string(event.TenantID), payload.OrderID)
+	if err != nil {
+		logx.Errorf("emails: failed to resolve customer for order %s (refund_completed): %v", payload.OrderID, err)
+		return nil
+	}
 
+	email, err := h.resolver.ResolveEmail(ctx, string(event.TenantID), customerID)
+	if err != nil {
+		logx.Errorf("emails: failed to resolve email for customer %s (refund_completed): %v", customerID, err)
+		return nil
+	}
+
+	data := map[string]any{
+		"StoreName": h.storeName,
+		"OrderID":   payload.OrderID,
+		"Amount":    formatMoney(payload.Amount, payload.Currency),
+		"RefundID":  payload.RefundID,
+	}
+
+	msg := notifx.EmailMessage{
+		From:    h.fromEmail,
+		To:      []string{email},
+		Subject: "Refund processed — order " + payload.OrderID,
+	}
+
+	if err := h.client.SendTemplatedEmail(ctx, "refund_completed", data, msg); err != nil {
+		logx.Errorf("emails: failed to send refund_completed to %s: %v", email, err)
+		return nil // fault-tolerant
+	}
+
+	logx.Infof("emails: sent refund_completed to %s (order_id: %s, refund_id: %s)", email, payload.OrderID, payload.RefundID)
 	return nil
 }
