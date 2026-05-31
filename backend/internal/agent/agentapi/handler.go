@@ -8,11 +8,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 
-	"strings"
-
 	"github.com/Abraxas-365/hada-commerce/internal/agent"
+	"github.com/Abraxas-365/hada-commerce/internal/containerx"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/harness"
 	"github.com/gofiber/fiber/v2"
@@ -38,6 +38,14 @@ type PresetProvider interface {
 	GetPresetToolsManifest(ctx context.Context, presetID string) (json.RawMessage, error)
 }
 
+// WorkspaceProvider checks whether a session has an active workspace container.
+// This decouples agentapi from the agentsession package.
+type WorkspaceProvider interface {
+	// GetActiveWorkspace returns the container ID and preview URL for a running session
+	// workspace. Returns ("", "", nil) when no workspace is active for the session.
+	GetActiveWorkspace(ctx context.Context, tenantID, sessionID string) (containerID string, previewURL string, err error)
+}
+
 // ChatRequest is the JSON body accepted by the POST /agent/chat endpoint.
 type ChatRequest struct {
 	Message   string `json:"message"`
@@ -51,15 +59,26 @@ type ChatRequest struct {
 // per-tenant dynamically using agent.Services, ensuring proper
 // tenant scoping for multi-tenant deployments.
 type Handler struct {
-	apiKey         string
-	model          string
-	systemPrompt   string
-	services       agent.Services
-	presetProvider PresetProvider // may be nil — presets disabled
+	apiKey            string
+	model             string
+	systemPrompt      string
+	services          agent.Services
+	presetProvider    PresetProvider    // may be nil — presets disabled
+	workspaceProvider WorkspaceProvider // may be nil — workspace tools disabled
+	containerMgr      containerx.Manager // may be nil — workspace tools disabled
 
 	mu       sync.RWMutex
 	sessions map[string]*sessionEntry // key = tenantID + ":" + presetID + ":" + sessionID
 }
+
+// staticAccessor implements workspace.ContainerAccessor with fixed container info.
+type staticAccessor struct {
+	containerID containerx.ID
+	previewURL  string
+}
+
+func (a *staticAccessor) ContainerID() containerx.ID { return a.containerID }
+func (a *staticAccessor) PreviewBaseURL() string      { return a.previewURL }
 
 type sessionEntry struct {
 	session *harness.Session
@@ -73,17 +92,21 @@ type sessionEntry struct {
 //   - systemPrompt: override the default store-assistant system prompt (pass "" for default)
 //   - services: domain services used to create tenant-scoped tools per session
 //   - presetProvider: optional preset config provider (pass nil to disable presets)
-func NewHandler(apiKey, model, systemPrompt string, services agent.Services, presetProvider PresetProvider) *Handler {
+//   - workspaceProvider: optional workspace provider; pass nil to disable workspace tools
+//   - containerMgr: optional container manager; pass nil to disable workspace tools
+func NewHandler(apiKey, model, systemPrompt string, services agent.Services, presetProvider PresetProvider, workspaceProvider WorkspaceProvider, containerMgr containerx.Manager) *Handler {
 	if systemPrompt == "" {
 		systemPrompt = defaultSystemPrompt
 	}
 	return &Handler{
-		apiKey:         apiKey,
-		model:          model,
-		systemPrompt:   systemPrompt,
-		services:       services,
-		presetProvider: presetProvider,
-		sessions:       make(map[string]*sessionEntry),
+		apiKey:            apiKey,
+		model:             model,
+		systemPrompt:      systemPrompt,
+		services:          services,
+		presetProvider:    presetProvider,
+		workspaceProvider: workspaceProvider,
+		containerMgr:      containerMgr,
+		sessions:          make(map[string]*sessionEntry),
 	}
 }
 
@@ -269,6 +292,23 @@ func (h *Handler) getOrCreateSession(key string, presetID string) (*harness.Sess
 
 	// Create tenant-scoped domain tools.
 	domainTools := agent.AdaptTools(agent.Setup(kernel.TenantID(tenantID), h.services))
+
+	// Inject workspace tools if the session has an active container.
+	if h.workspaceProvider != nil && h.containerMgr != nil {
+		// Extract sessionID — key format: "tenantID:presetID:sessionID"
+		sessionIDPart := key
+		if idx := strings.LastIndexByte(key, ':'); idx >= 0 {
+			sessionIDPart = key[idx+1:]
+		}
+		if containerID, previewURL, err := h.workspaceProvider.GetActiveWorkspace(context.Background(), tenantID, sessionIDPart); err == nil && containerID != "" {
+			accessor := &staticAccessor{
+				containerID: containerx.ID(containerID),
+				previewURL:  previewURL,
+			}
+			wsTools := agent.AdaptTools(agent.WorkspaceTools(h.containerMgr, accessor))
+			domainTools = append(domainTools, wsTools...)
+		}
+	}
 
 	opts := []harness.Option{
 		harness.WithAPIKey(h.apiKey),
