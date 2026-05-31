@@ -636,6 +636,24 @@ func (a *workspaceProviderAdapter) GetActiveWorkspace(ctx context.Context, tenan
 	return sess.ContainerID, sess.FrontendURL, nil
 }
 
+func (a *workspaceProviderAdapter) EnsureWorkspace(ctx context.Context, tenantID, sessionID string) (string, string, error) {
+	// First check if there's already an active workspace.
+	containerID, previewURL, err := a.GetActiveWorkspace(ctx, tenantID, sessionID)
+	if err == nil && containerID != "" {
+		return containerID, previewURL, nil
+	}
+
+	// No active workspace — auto-create one using the webdev preset.
+	sess, err := a.svc.CreateSession(ctx, kernel.TenantID(tenantID), agentsession.CreateSessionRequest{
+		PresetID: "preset_webdev",
+	})
+	if err != nil {
+		return "", "", fmt.Errorf("auto-create workspace: %w", err)
+	}
+
+	return sess.ContainerID, sess.FrontendURL, nil
+}
+
 // ---------------------------------------------------------------------------
 // Agent tools wiring
 // ---------------------------------------------------------------------------

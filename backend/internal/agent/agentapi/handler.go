@@ -44,6 +44,10 @@ type WorkspaceProvider interface {
 	// GetActiveWorkspace returns the container ID and preview URL for a running session
 	// workspace. Returns ("", "", nil) when no workspace is active for the session.
 	GetActiveWorkspace(ctx context.Context, tenantID, sessionID string) (containerID string, previewURL string, err error)
+
+	// EnsureWorkspace returns an active workspace for the session, creating one
+	// if none exists. Uses the default webdev preset for auto-provisioned sessions.
+	EnsureWorkspace(ctx context.Context, tenantID, sessionID string) (containerID string, previewURL string, err error)
 }
 
 // ChatRequest is the JSON body accepted by the POST /agent/chat endpoint.
@@ -325,20 +329,22 @@ func (h *Handler) getOrCreateSession(key string, presetID string) (*harness.Sess
 	// Create tenant-scoped domain tools.
 	domainTools := agent.AdaptTools(agent.Setup(kernel.TenantID(tenantID), h.services))
 
-	// Inject workspace tools if the session has an active container.
+	// Inject workspace tools — auto-provision a container if none exists yet.
 	if h.workspaceProvider != nil && h.containerMgr != nil {
 		// Extract sessionID — key format: "tenantID:presetID:sessionID"
 		sessionIDPart := key
 		if idx := strings.LastIndexByte(key, ':'); idx >= 0 {
 			sessionIDPart = key[idx+1:]
 		}
-		if containerID, previewURL, err := h.workspaceProvider.GetActiveWorkspace(context.Background(), tenantID, sessionIDPart); err == nil && containerID != "" {
+		if containerID, previewURL, err := h.workspaceProvider.EnsureWorkspace(context.Background(), tenantID, sessionIDPart); err == nil && containerID != "" {
 			accessor := &staticAccessor{
 				containerID: containerx.ID(containerID),
 				previewURL:  previewURL,
 			}
 			wsTools := agent.AdaptTools(agent.WorkspaceTools(h.containerMgr, accessor))
 			domainTools = append(domainTools, wsTools...)
+		} else if err != nil {
+			log.Printf("[agentapi] failed to ensure workspace tenant=%s session=%s err=%v", tenantID, sessionIDPart, err)
 		}
 	}
 
