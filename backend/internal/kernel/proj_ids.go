@@ -377,3 +377,20 @@ type ExperimentAssignmentID string
 func NewExperimentAssignmentID(id string) ExperimentAssignmentID { return ExperimentAssignmentID(id) }
 func (e ExperimentAssignmentID) String() string                  { return string(e) }
 func (e ExperimentAssignmentID) IsEmpty() bool                   { return string(e) == "" }
+type ProductViewID string
+
+func NewProductViewID(id string) ProductViewID { return ProductViewID(id) }
+func (p ProductViewID) String() string         { return string(p) }
+func (p ProductViewID) IsEmpty() bool          { return string(p) == "" }
+
+type ProductInteractionID string
+
+func NewProductInteractionID(id string) ProductInteractionID { return ProductInteractionID(id) }
+func (p ProductInteractionID) String() string                { return string(p) }
+func (p ProductInteractionID) IsEmpty() bool                 { return string(p) == "" }
+
+type RecommendationRuleID string
+
+func NewRecommendationRuleID(id string) RecommendationRuleID { return RecommendationRuleID(id) }
+func (r RecommendationRuleID) String() string                { return string(r) }
+func (r RecommendationRuleID) IsEmpty() bool                 { return string(r) == "" }

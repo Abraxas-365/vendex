@@ -63,6 +63,7 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/multistore/multistorecontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/notification/notificationcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/collection/collectioncontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/recommendation/recommendationcontainer"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
@@ -138,6 +139,8 @@ type Container struct {
 	Blog           *blogcontainer.Container
 	Collection     *collectioncontainer.Container
 	ABTest         *abtestcontainer.Container
+	Notification    *notificationcontainer.Container
+	Recommendation  *recommendationcontainer.Container
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -285,6 +288,7 @@ func (c *Container) initModules() {
 	c.Blog = blogcontainer.New(c.DB, bus)
 	c.Collection = collectioncontainer.New(c.DB, bus)
 	c.ABTest = abtestcontainer.New(c.DB, bus)
+	c.Recommendation = recommendationcontainer.New(c.DB)
 
 	// Import/Export — depends on Product, Order, and Customer services.
 	c.ImportExport = importexport.New(
