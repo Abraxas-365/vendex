@@ -500,6 +500,48 @@ export interface MeResponse {
 }
 
 // ---------------------------------------------------------------------------
+// Passwordless / OTP Auth
+// ---------------------------------------------------------------------------
+
+export interface PasswordlessTenantAuthMethods {
+  otp: boolean
+  oauth: boolean
+  oauth_provider: string
+}
+
+export interface PasswordlessTenant {
+  tenant_id: string
+  company_name: string
+  user_status: string
+  auth_methods: PasswordlessTenantAuthMethods
+}
+
+export interface PasswordlessTenantsResponse {
+  email: string
+  tenants: PasswordlessTenant[]
+  count: number
+}
+
+export interface PasswordlessInitiateResponse {
+  message: string
+  email: string
+  expires_in_seconds: number
+}
+
+export interface PasswordlessVerifyResponse {
+  access_token: string
+  refresh_token: string
+  token_type: string
+  expires_in: number
+  user: AuthUser
+  tenant: AuthTenant
+}
+
+export interface PasswordlessResendResponse {
+  message: string
+}
+
+// ---------------------------------------------------------------------------
 // Shipping
 // ---------------------------------------------------------------------------
 

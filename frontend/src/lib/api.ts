@@ -98,6 +98,10 @@ import type {
   CreateTriggerRequest,
   UpdateTriggerRequest,
   TriggerLog,
+  PasswordlessTenantsResponse,
+  PasswordlessInitiateResponse,
+  PasswordlessVerifyResponse,
+  PasswordlessResendResponse,
 } from '../types'
 
 // ---------------------------------------------------------------------------
@@ -329,6 +333,53 @@ export async function getMe(): Promise<MeResponse> {
     headers: buildHeaders(),
   })
   return handleResponse<MeResponse>(res)
+}
+
+// ---------------------------------------------------------------------------
+// Passwordless / OTP Auth — these do NOT use withRefreshRetry (pre-auth flows)
+// ---------------------------------------------------------------------------
+
+export async function getPasswordlessTenants(email: string): Promise<PasswordlessTenantsResponse> {
+  const res = await fetch(`${BASE_URL}/auth/passwordless/tenants`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+  return handleResponse<PasswordlessTenantsResponse>(res)
+}
+
+export async function initiatePasswordlessLogin(
+  email: string,
+  tenantId: string,
+): Promise<PasswordlessInitiateResponse> {
+  const res = await fetch(`${BASE_URL}/auth/passwordless/login/initiate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, tenant_id: tenantId }),
+  })
+  return handleResponse<PasswordlessInitiateResponse>(res)
+}
+
+export async function verifyPasswordlessLogin(
+  email: string,
+  code: string,
+  tenantId: string,
+): Promise<PasswordlessVerifyResponse> {
+  const res = await fetch(`${BASE_URL}/auth/passwordless/login/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, code, tenant_id: tenantId }),
+  })
+  return handleResponse<PasswordlessVerifyResponse>(res)
+}
+
+export async function resendOTP(email: string, tenantId: string): Promise<PasswordlessResendResponse> {
+  const res = await fetch(`${BASE_URL}/auth/passwordless/resend-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, tenant_id: tenantId, purpose: 'login' }),
+  })
+  return handleResponse<PasswordlessResendResponse>(res)
 }
 
 // ---------------------------------------------------------------------------

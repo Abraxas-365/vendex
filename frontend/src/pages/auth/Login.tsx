@@ -1,6 +1,19 @@
-import { useState } from 'react'
-import { Store, ShoppingBag, BarChart3, Sparkles } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Store, ShoppingBag, BarChart3, Sparkles, Mail, KeyRound, ChevronLeft } from 'lucide-react'
 import { useAuth } from '../../lib/auth'
+import {
+  getPasswordlessTenants,
+  initiatePasswordlessLogin,
+  verifyPasswordlessLogin,
+  resendOTP,
+  setTokens,
+  setTenantId,
+} from '../../lib/api'
+import type { PasswordlessTenant } from '../../types'
+
+// ---------------------------------------------------------------------------
+// Icon helpers
+// ---------------------------------------------------------------------------
 
 function GoogleIcon() {
   return (
@@ -37,6 +50,333 @@ function FeatureItem({ icon: Icon, title, desc }: { icon: React.ElementType; tit
     </div>
   )
 }
+
+// ---------------------------------------------------------------------------
+// OTP flow types
+// ---------------------------------------------------------------------------
+
+type OtpStep = 'email' | 'tenant' | 'code'
+
+const RESEND_COOLDOWN = 60 // seconds
+
+// ---------------------------------------------------------------------------
+// OTP section component
+// ---------------------------------------------------------------------------
+
+function OtpLoginSection() {
+  const [step, setStep] = useState<OtpStep>('email')
+  const [email, setEmail] = useState('')
+  const [tenants, setTenants] = useState<PasswordlessTenant[]>([])
+  const [selectedTenantId, setSelectedTenantId] = useState('')
+  const [code, setCode] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [otpError, setOtpError] = useState<string | null>(null)
+  const [resendCountdown, setResendCountdown] = useState(0)
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const codeInputRef = useRef<HTMLInputElement>(null)
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current)
+    }
+  }, [])
+
+  function startResendCountdown() {
+    setResendCountdown(RESEND_COOLDOWN)
+    if (countdownRef.current) clearInterval(countdownRef.current)
+    countdownRef.current = setInterval(() => {
+      setResendCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownRef.current!)
+          countdownRef.current = null
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  // Step 1 → fetch tenants for this email
+  async function handleEmailSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!email.trim()) return
+    setIsLoading(true)
+    setOtpError(null)
+    try {
+      const data = await getPasswordlessTenants(email.trim())
+      if (!data.tenants || data.tenants.length === 0) {
+        setOtpError('No account found for this email address.')
+        return
+      }
+      setTenants(data.tenants)
+
+      // Filter tenants that support OTP
+      const otpTenants = data.tenants.filter((t) => t.auth_methods.otp)
+      if (otpTenants.length === 0) {
+        setOtpError('OTP login is not enabled for your account. Please use OAuth.')
+        return
+      }
+
+      if (otpTenants.length === 1) {
+        // Auto-select the only OTP tenant and skip to code step
+        const tenant = otpTenants[0]
+        setSelectedTenantId(tenant.tenant_id)
+        await sendOtpCode(email.trim(), tenant.tenant_id)
+      } else {
+        // Multiple tenants — show selection step
+        setTenants(otpTenants)
+        setStep('tenant')
+      }
+    } catch (err) {
+      setOtpError(err instanceof Error ? err.message : 'Failed to look up email. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Step 2 → user selected a tenant
+  async function handleTenantSelect(tenantId: string) {
+    setSelectedTenantId(tenantId)
+    setIsLoading(true)
+    setOtpError(null)
+    try {
+      await sendOtpCode(email.trim(), tenantId)
+    } catch (err) {
+      setOtpError(err instanceof Error ? err.message : 'Failed to send code. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function sendOtpCode(emailAddr: string, tenantId: string) {
+    await initiatePasswordlessLogin(emailAddr, tenantId)
+    startResendCountdown()
+    setStep('code')
+    // Focus code input after render
+    setTimeout(() => codeInputRef.current?.focus(), 100)
+  }
+
+  // Step 3 → verify OTP
+  async function handleCodeSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (code.length !== 6) return
+    setIsLoading(true)
+    setOtpError(null)
+    try {
+      const data = await verifyPasswordlessLogin(email.trim(), code, selectedTenantId)
+      setTokens(data.access_token, data.refresh_token)
+      setTenantId(data.tenant.id)
+      window.location.href = '/'
+    } catch (err) {
+      setOtpError(err instanceof Error ? err.message : 'Invalid or expired code. Please try again.')
+      setIsLoading(false)
+    }
+  }
+
+  async function handleResend() {
+    if (resendCountdown > 0 || isLoading) return
+    setIsLoading(true)
+    setOtpError(null)
+    try {
+      await resendOTP(email.trim(), selectedTenantId)
+      startResendCountdown()
+      setCode('')
+    } catch (err) {
+      setOtpError(err instanceof Error ? err.message : 'Failed to resend code.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  function handleBack() {
+    setOtpError(null)
+    setCode('')
+    if (step === 'code') {
+      if (tenants.length > 1) {
+        setStep('tenant')
+      } else {
+        setStep('email')
+      }
+    } else if (step === 'tenant') {
+      setStep('email')
+    }
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current)
+      countdownRef.current = null
+    }
+    setResendCountdown(0)
+  }
+
+  // ---- Render steps ----
+
+  if (step === 'email') {
+    return (
+      <form onSubmit={(e) => void handleEmailSubmit(e)} className="space-y-3">
+        {otpError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm text-red-700">{otpError}</p>
+          </div>
+        )}
+        <div className="relative">
+          <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
+            <Mail className="h-4 w-4 text-gray-400" />
+          </div>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
+            required
+            autoComplete="email"
+            className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={isLoading || !email.trim()}
+          className="flex w-full items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isLoading ? 'Checking...' : 'Continue with email'}
+        </button>
+      </form>
+    )
+  }
+
+  if (step === 'tenant') {
+    return (
+      <div className="space-y-3">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+          Back
+        </button>
+
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-1">Select your account</p>
+          <p className="text-xs text-gray-400 mb-3">
+            Multiple accounts found for <span className="font-medium text-gray-600">{email}</span>
+          </p>
+        </div>
+
+        {otpError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm text-red-700">{otpError}</p>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          {tenants.map((tenant) => (
+            <button
+              key={tenant.tenant_id}
+              type="button"
+              disabled={isLoading}
+              onClick={() => void handleTenantSelect(tenant.tenant_id)}
+              className="group flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-left shadow-sm transition-all hover:border-indigo-300 hover:bg-indigo-50/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <div>
+                <p className="text-sm font-medium text-gray-800">{tenant.company_name}</p>
+                <p className="text-xs text-gray-400">{tenant.tenant_id}</p>
+              </div>
+              <div className="h-2 w-2 rounded-full bg-indigo-600 opacity-0 transition-opacity group-hover:opacity-100" />
+            </button>
+          ))}
+        </div>
+
+        {isLoading && (
+          <p className="text-center text-xs text-gray-400">Sending code…</p>
+        )}
+      </div>
+    )
+  }
+
+  // step === 'code'
+  return (
+    <form onSubmit={(e) => void handleCodeSubmit(e)} className="space-y-3">
+      <button
+        type="button"
+        onClick={handleBack}
+        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+      >
+        <ChevronLeft className="h-3.5 w-3.5" />
+        Back
+      </button>
+
+      <div>
+        <p className="text-sm font-medium text-gray-700 mb-0.5">Check your email</p>
+        <p className="text-xs text-gray-400">
+          We sent a 6-digit code to <span className="font-medium text-gray-600">{email}</span>
+        </p>
+      </div>
+
+      {/* Dev hint */}
+      {import.meta.env.DEV && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+          <p className="text-xs text-amber-700">
+            💡 Dev mode — check your server console for the OTP code.
+          </p>
+        </div>
+      )}
+
+      {otpError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm text-red-700">{otpError}</p>
+        </div>
+      )}
+
+      <div className="relative">
+        <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
+          <KeyRound className="h-4 w-4 text-gray-400" />
+        </div>
+        <input
+          ref={codeInputRef}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={6}
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+          placeholder="000000"
+          autoComplete="one-time-code"
+          className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-4 text-center font-mono text-lg tracking-[0.3em] text-gray-900 shadow-sm transition-all focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder-gray-300"
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={isLoading || code.length !== 6}
+        className="flex w-full items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {isLoading ? 'Verifying…' : 'Verify & sign in'}
+      </button>
+
+      <div className="text-center">
+        {resendCountdown > 0 ? (
+          <p className="text-xs text-gray-400">
+            Resend code in{' '}
+            <span className="font-medium text-gray-600">{resendCountdown}s</span>
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => void handleResend()}
+            disabled={isLoading}
+            className="text-xs text-indigo-600 hover:text-indigo-700 underline underline-offset-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Resend code
+          </button>
+        )}
+      </div>
+    </form>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Main Login page
+// ---------------------------------------------------------------------------
 
 export default function Login() {
   const { login } = useAuth()
@@ -157,8 +497,12 @@ export default function Login() {
 
           <div className="mt-8 flex items-center gap-3">
             <div className="h-px flex-1 bg-gray-200" />
-            <span className="text-xs text-gray-400">Secure authentication</span>
+            <span className="text-xs text-gray-400">or continue with email</span>
             <div className="h-px flex-1 bg-gray-200" />
+          </div>
+
+          <div className="mt-5">
+            <OtpLoginSection />
           </div>
 
           <p className="mt-6 text-center text-xs text-gray-400 leading-relaxed">
