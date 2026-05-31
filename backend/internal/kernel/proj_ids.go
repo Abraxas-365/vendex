@@ -421,3 +421,14 @@ type AgentMemoryID string
 func NewAgentMemoryID(id string) AgentMemoryID { return AgentMemoryID(id) }
 func (a AgentMemoryID) String() string         { return string(a) }
 func (a AgentMemoryID) IsEmpty() bool          { return string(a) == "" }
+type AgentTriggerID string
+
+func NewAgentTriggerID(id string) AgentTriggerID { return AgentTriggerID(id) }
+func (a AgentTriggerID) String() string          { return string(a) }
+func (a AgentTriggerID) IsEmpty() bool           { return string(a) == "" }
+
+type TriggerLogID string
+
+func NewTriggerLogID(id string) TriggerLogID { return TriggerLogID(id) }
+func (t TriggerLogID) String() string        { return string(t) }
+func (t TriggerLogID) IsEmpty() bool         { return string(t) == "" }
