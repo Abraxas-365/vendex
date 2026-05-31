@@ -97,3 +97,31 @@ export interface StoreInfo {
 export function getStoreInfo(): Promise<StoreInfo> {
   return storeGet<StoreInfo>('/info')
 }
+
+// ---------------------------------------------------------------------------
+// Categories
+// ---------------------------------------------------------------------------
+
+export interface Category {
+  id: string
+  name: string
+  slug?: string
+  description?: string
+}
+
+export function listCategories(): Promise<{ items: Category[] } | Category[]> {
+  return storeGet<{ items: Category[] } | Category[]>('/categories')
+}
+
+// ---------------------------------------------------------------------------
+// Pages (nav/footer links)
+// ---------------------------------------------------------------------------
+
+export interface PageLink {
+  slug: string
+  title: string
+}
+
+export function listPages(): Promise<PageLink[]> {
+  return storeGet<PageLink[]>('/pages')
+}

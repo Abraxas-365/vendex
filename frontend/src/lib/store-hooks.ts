@@ -5,7 +5,7 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import type { Product, PaginatedResult } from '../types'
 import * as storeApi from './store-api'
-import type { StoreInfo } from './store-api'
+import type { StoreInfo, Category, PageLink } from './store-api'
 
 export function useStoreInfo(): UseQueryResult<StoreInfo> {
   return useQuery({
@@ -35,5 +35,21 @@ export function useStorePageBySlug(slug: string): UseQueryResult<storeApi.StoreP
     queryKey: ['store', 'pages', slug],
     queryFn: () => storeApi.getPageBySlug(slug),
     enabled: Boolean(slug),
+  })
+}
+
+export function useStoreCategories(): UseQueryResult<{ items: Category[] } | Category[]> {
+  return useQuery({
+    queryKey: ['store', 'categories'],
+    queryFn: () => storeApi.listCategories(),
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+export function useStorePages(): UseQueryResult<PageLink[]> {
+  return useQuery({
+    queryKey: ['store', 'pages-list'],
+    queryFn: () => storeApi.listPages(),
+    staleTime: 5 * 60 * 1000,
   })
 }

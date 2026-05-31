@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { SlidersHorizontal, ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { useStoreProducts } from '../../lib/store-hooks'
+import { useStoreProducts, useStoreInfo, useStoreCategories } from '../../lib/store-hooks'
+import type { Category } from '../../lib/store-api'
 import ProductCard from '../../components/store/ProductCard'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -8,13 +9,11 @@ import ProductCard from '../../components/store/ProductCard'
 type SortOption = 'newest' | 'price_asc' | 'price_desc' | 'name_asc'
 
 interface Filters {
-  category: string
+  categoryId: string
   minPrice: string
   maxPrice: string
   sort: SortOption
 }
-
-const CATEGORIES = ['All', 'Skincare', 'Haircare', 'Body', 'Wellness']
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'newest', label: 'Newest' },
@@ -25,21 +24,35 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 
 const PAGE_SIZE = 12
 
+// Normalize categories API response — backend may return `{items:[]}` or `[]`
+function normalizeCategories(data: { items: Category[] } | Category[] | undefined): Category[] {
+  if (!data) return []
+  if (Array.isArray(data)) return data
+  return data.items ?? []
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function ProductList() {
   const [page, setPage] = useState(1)
   const [filters, setFilters] = useState<Filters>({
-    category: '',
+    categoryId: '',
     minPrice: '',
     maxPrice: '',
     sort: 'newest',
   })
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  const { data: storeInfo } = useStoreInfo()
+  const accent = storeInfo?.accent_color ?? '#6366f1'
+
+  const { data: categoriesRaw } = useStoreCategories()
+  const categories = normalizeCategories(categoriesRaw)
+
   const { data, isLoading, isError } = useStoreProducts({
     page,
     page_size: PAGE_SIZE,
+    category_id: filters.categoryId || undefined,
   })
 
   const products = data?.items ?? []
@@ -51,12 +64,12 @@ export default function ProductList() {
   }
 
   const clearFilters = () => {
-    setFilters({ category: '', minPrice: '', maxPrice: '', sort: 'newest' })
+    setFilters({ categoryId: '', minPrice: '', maxPrice: '', sort: 'newest' })
     setPage(1)
   }
 
   const hasActiveFilters =
-    filters.category !== '' ||
+    filters.categoryId !== '' ||
     filters.minPrice !== '' ||
     filters.maxPrice !== ''
 
@@ -77,12 +90,15 @@ export default function ProductList() {
         <div className="flex items-center justify-between gap-3 mb-6 lg:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="flex items-center gap-2 bg-white border border-gray-200 text-sm font-medium text-gray-700 px-4 py-2.5 rounded-xl hover:border-indigo-300 transition-colors"
+            className="flex items-center gap-2 bg-white border border-gray-200 text-sm font-medium text-gray-700 px-4 py-2.5 rounded-xl hover:border-gray-300 transition-colors"
           >
             <SlidersHorizontal size={15} />
             Filters
             {hasActiveFilters && (
-              <span className="bg-indigo-600 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
+              <span
+                className="text-white text-xs w-4 h-4 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: accent }}
+              >
                 !
               </span>
             )}
@@ -91,7 +107,7 @@ export default function ProductList() {
           <select
             value={filters.sort}
             onChange={(e) => updateFilter('sort', e.target.value as SortOption)}
-            className="bg-white border border-gray-200 text-sm text-gray-700 px-3 py-2.5 rounded-xl outline-none focus:border-indigo-400 cursor-pointer"
+            className="bg-white border border-gray-200 text-sm text-gray-700 px-3 py-2.5 rounded-xl outline-none cursor-pointer"
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -135,23 +151,40 @@ export default function ProductList() {
                   Category
                 </h3>
                 <ul className="space-y-1">
-                  {CATEGORIES.map((cat) => {
-                    const value = cat === 'All' ? '' : cat.toLowerCase()
-                    const active = filters.category === value
+                  {/* All */}
+                  <li>
+                    <button
+                      onClick={() => {
+                        updateFilter('categoryId', '')
+                        setSidebarOpen(false)
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-sm transition-colors"
+                      style={
+                        filters.categoryId === ''
+                          ? { backgroundColor: `${accent}15`, color: accent, fontWeight: 500 }
+                          : {}
+                      }
+                    >
+                      All
+                    </button>
+                  </li>
+                  {categories.map((cat) => {
+                    const active = filters.categoryId === cat.id
                     return (
-                      <li key={cat}>
+                      <li key={cat.id}>
                         <button
                           onClick={() => {
-                            updateFilter('category', value)
+                            updateFilter('categoryId', cat.id)
                             setSidebarOpen(false)
                           }}
-                          className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-colors ${
+                          className="w-full text-left px-3 py-2 rounded-xl text-sm transition-colors"
+                          style={
                             active
-                              ? 'bg-indigo-50 text-indigo-700 font-medium'
-                              : 'text-gray-600 hover:bg-gray-100'
-                          }`}
+                              ? { backgroundColor: `${accent}15`, color: accent, fontWeight: 500 }
+                              : { color: '#4b5563' }
+                          }
                         >
-                          {cat}
+                          {cat.name}
                         </button>
                       </li>
                     )
@@ -170,7 +203,7 @@ export default function ProductList() {
                     placeholder="Min"
                     value={filters.minPrice}
                     onChange={(e) => updateFilter('minPrice', e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-400"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400"
                   />
                   <span className="text-gray-400 text-sm shrink-0">–</span>
                   <input
@@ -178,7 +211,7 @@ export default function ProductList() {
                     placeholder="Max"
                     value={filters.maxPrice}
                     onChange={(e) => updateFilter('maxPrice', e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-400"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400"
                   />
                 </div>
               </div>
@@ -207,7 +240,7 @@ export default function ProductList() {
               <select
                 value={filters.sort}
                 onChange={(e) => updateFilter('sort', e.target.value as SortOption)}
-                className="bg-white border border-gray-200 text-sm text-gray-700 px-3 py-2 rounded-xl outline-none focus:border-indigo-400 cursor-pointer"
+                className="bg-white border border-gray-200 text-sm text-gray-700 px-3 py-2 rounded-xl outline-none cursor-pointer"
               >
                 {SORT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -241,13 +274,14 @@ export default function ProductList() {
               </div>
             ) : products.length === 0 ? (
               <div className="text-center py-24">
-                <div className="text-6xl mb-4">🌿</div>
+                <div className="text-6xl mb-4">🛍️</div>
                 <p className="text-gray-500 text-lg font-medium mb-1">No products found</p>
                 <p className="text-gray-400 text-sm">
                   Try adjusting your filters or{' '}
                   <button
                     onClick={clearFilters}
-                    className="text-indigo-600 hover:underline"
+                    className="hover:underline"
+                    style={{ color: accent }}
                   >
                     clear all
                   </button>
@@ -256,7 +290,7 @@ export default function ProductList() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard key={product.id} product={product} accent={accent} />
                 ))}
               </div>
             )}
@@ -267,7 +301,7 @@ export default function ProductList() {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl disabled:opacity-40 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
+                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl disabled:opacity-40 hover:border-gray-300 transition-colors"
                 >
                   <ChevronLeft size={15} /> Prev
                 </button>
@@ -296,11 +330,12 @@ export default function ProductList() {
                         <button
                           key={p}
                           onClick={() => setPage(p as number)}
-                          className={`w-9 h-9 rounded-xl text-sm font-medium transition-colors ${
+                          className="w-9 h-9 rounded-xl text-sm font-medium transition-colors"
+                          style={
                             page === p
-                              ? 'bg-indigo-600 text-white'
-                              : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600'
-                          }`}
+                              ? { backgroundColor: accent, color: '#fff' }
+                              : { backgroundColor: '#fff', border: '1px solid #e5e7eb', color: '#4b5563' }
+                          }
                         >
                           {p}
                         </button>
@@ -311,7 +346,7 @@ export default function ProductList() {
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl disabled:opacity-40 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
+                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl disabled:opacity-40 hover:border-gray-300 transition-colors"
                 >
                   Next <ChevronRight size={15} />
                 </button>
