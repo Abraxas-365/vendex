@@ -86,7 +86,7 @@ func (s *Service) CreateSession(ctx context.Context, tenantID kernel.TenantID, r
 		return agentsession.Session{}, err
 	}
 
-	cfg := containerx.ContainerConfig{
+	spec := containerx.Spec{
 		Image: preset.Image,
 		Name:  fmt.Sprintf("agentsession-%s", string(sessionID)),
 		Env: map[string]string{
@@ -94,11 +94,13 @@ func (s *Service) CreateSession(ctx context.Context, tenantID kernel.TenantID, r
 			"TENANT_ID":  string(tenantID),
 			"PRESET_ID":  string(req.PresetID),
 		},
-		Ports: []containerx.PortBinding{
+		Ports: []containerx.Port{
 			{ContainerPort: preset.FrontendPort, HostPort: 0, Protocol: "tcp"},
 		},
-		VolumeName:  volumeName,
-		NetworkName: networkID,
+		Volumes: []containerx.Volume{
+			{Name: volumeName, ContainerPath: "/workspace"},
+		},
+		Network: networkID,
 		Labels: map[string]string{
 			"managed-by": "hada-agentsession",
 			"session-id": string(sessionID),
@@ -106,8 +108,27 @@ func (s *Service) CreateSession(ctx context.Context, tenantID kernel.TenantID, r
 		},
 	}
 
-	info, err := s.containers.CreateAndStart(ctx, cfg)
+	containerID, err := s.containers.Create(ctx, spec)
 	if err != nil {
+		_ = s.containers.RemoveNetwork(ctx, networkID)
+		_ = s.containers.RemoveVolume(ctx, volumeName)
+		_ = s.markFailed(ctx, sess)
+		return agentsession.Session{}, err
+	}
+
+	if err := s.containers.Start(ctx, containerID); err != nil {
+		_ = s.containers.Remove(ctx, containerID)
+		_ = s.containers.RemoveNetwork(ctx, networkID)
+		_ = s.containers.RemoveVolume(ctx, volumeName)
+		_ = s.markFailed(ctx, sess)
+		return agentsession.Session{}, err
+	}
+
+	// Get runtime status to discover assigned host ports
+	status, err := s.containers.Status(ctx, containerID)
+	if err != nil {
+		_ = s.containers.Stop(ctx, containerID, 10*time.Second)
+		_ = s.containers.Remove(ctx, containerID)
 		_ = s.containers.RemoveNetwork(ctx, networkID)
 		_ = s.containers.RemoveVolume(ctx, volumeName)
 		_ = s.markFailed(ctx, sess)
@@ -116,7 +137,7 @@ func (s *Service) CreateSession(ctx context.Context, tenantID kernel.TenantID, r
 
 	// Determine the frontend URL from assigned host port
 	frontendURL := ""
-	for _, p := range info.Ports {
+	for _, p := range status.Ports {
 		if p.ContainerPort == preset.FrontendPort && p.HostPort > 0 {
 			frontendURL = fmt.Sprintf("http://localhost:%d", p.HostPort)
 			break
@@ -124,7 +145,7 @@ func (s *Service) CreateSession(ctx context.Context, tenantID kernel.TenantID, r
 	}
 
 	// Update session to running
-	sess.ContainerID = info.ID
+	sess.ContainerID = string(containerID)
 	sess.Status = agentsession.SessionStatusRunning
 	sess.FrontendURL = frontendURL
 	sess.UpdatedAt = time.Now()
@@ -153,7 +174,7 @@ func (s *Service) StopSession(ctx context.Context, tenantID kernel.TenantID, id 
 	}
 
 	if sess.ContainerID != "" {
-		if err := s.containers.Stop(ctx, sess.ContainerID); err != nil {
+		if err := s.containers.Stop(ctx, containerx.ID(sess.ContainerID), 30*time.Second); err != nil {
 			return agentsession.Session{}, err
 		}
 	}

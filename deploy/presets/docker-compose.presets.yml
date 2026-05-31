@@ -1,0 +1,31 @@
+# docker-compose.presets.yml — Example showing how preset containers integrate.
+# In production, the agent session manager creates these dynamically via Docker API.
+# This file is for local development and testing only.
+
+services:
+  # Base image build (dependency for all presets)
+  preset-base:
+    build:
+      context: ./base
+      dockerfile: Dockerfile
+    image: hada-preset-base:latest
+
+  # Web Designer preset (for development/testing)
+  preset-webdev:
+    build:
+      context: ./webdev
+      dockerfile: Dockerfile
+    image: hada-preset-webdev:latest
+    depends_on:
+      - preset-base
+    ports:
+      - "8090:8080"   # Frontend UI
+      - "9091:9091"   # Workspace file server
+    volumes:
+      - webdev-workspace:/workspace
+    labels:
+      hada.preset: "webdev"
+      hada.preset.version: "1.0.0"
+
+volumes:
+  webdev-workspace:
