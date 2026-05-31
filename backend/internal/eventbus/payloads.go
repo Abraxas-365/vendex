@@ -159,4 +159,9 @@ type StorefrontPayload struct {
 	StorefrontID string `json:"storefront_id"`
 	Name         string `json:"name"`
 	Slug         string `json:"slug"`
+// BlogPostPayload is the payload for blog_post.* events.
+type BlogPostPayload struct {
+	PostID string `json:"post_id"`
+	Title  string `json:"title"`
+	Slug   string `json:"slug"`
 }

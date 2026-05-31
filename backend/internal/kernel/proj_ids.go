@@ -344,3 +344,14 @@ type BulkOperationItemID string
 func NewBulkOperationItemID(id string) BulkOperationItemID { return BulkOperationItemID(id) }
 func (b BulkOperationItemID) String() string               { return string(b) }
 func (b BulkOperationItemID) IsEmpty() bool                { return string(b) == "" }
+type BlogPostID string
+
+func NewBlogPostID(id string) BlogPostID { return BlogPostID(id) }
+func (b BlogPostID) String() string      { return string(b) }
+func (b BlogPostID) IsEmpty() bool       { return string(b) == "" }
+
+type BlogCategoryID string
+
+func NewBlogCategoryID(id string) BlogCategoryID { return BlogCategoryID(id) }
+func (b BlogCategoryID) String() string          { return string(b) }
+func (b BlogCategoryID) IsEmpty() bool           { return string(b) == "" }
