@@ -102,6 +102,9 @@ const (
 	// Bundle events
 	BundleCreated EventType = "bundle.created"
 	BundleUpdated EventType = "bundle.updated"
+
+	// Blog events
+	BlogPostPublished EventType = "blog_post.published"
 )
 
 // Event is a domain event that has occurred in the system.

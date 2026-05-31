@@ -321,3 +321,15 @@ type NotificationID string
 func NewNotificationID(id string) NotificationID { return NotificationID(id) }
 func (n NotificationID) String() string          { return string(n) }
 func (n NotificationID) IsEmpty() bool           { return string(n) == "" }
+
+type BlogPostID string
+
+func NewBlogPostID(id string) BlogPostID { return BlogPostID(id) }
+func (b BlogPostID) String() string      { return string(b) }
+func (b BlogPostID) IsEmpty() bool       { return string(b) == "" }
+
+type BlogCategoryID string
+
+func NewBlogCategoryID(id string) BlogCategoryID { return BlogCategoryID(id) }
+func (b BlogCategoryID) String() string          { return string(b) }
+func (b BlogCategoryID) IsEmpty() bool           { return string(b) == "" }
