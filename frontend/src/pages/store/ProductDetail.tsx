@@ -11,7 +11,7 @@ import {
   XCircle,
   AlertCircle,
 } from 'lucide-react'
-import { useStoreProduct } from '../../lib/store-hooks'
+import { useStoreProduct, useStoreInfo, useStorePageBySlug } from '../../lib/store-hooks'
 import { useCart } from '../../lib/cart'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -61,6 +61,9 @@ function StockIndicator({ stock }: { stock?: number }) {
 export default function ProductDetail() {
   const { id } = useParams({ from: '/_store/products/$id' })
   const { data: product, isLoading, isError } = useStoreProduct(id)
+  const { data: storeInfo } = useStoreInfo()
+  const { data: pdpTemplate } = useStorePageBySlug('_pdp')
+  const accent = storeInfo?.accent_color ?? '#6366f1'
   const { addItem } = useCart()
 
   const [selectedImage, setSelectedImage] = useState(0)
@@ -108,7 +111,8 @@ export default function ProductDetail() {
         </p>
         <Link
           to="/products"
-          className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl transition-colors"
+          className="inline-flex items-center gap-2 text-white font-medium px-6 py-3 rounded-xl transition-opacity hover:opacity-90"
+            style={{ backgroundColor: accent }}
         >
           <ChevronLeft size={16} /> Back to products
         </Link>
@@ -124,11 +128,11 @@ export default function ProductDetail() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-gray-400 mb-8">
-          <Link to="/" className="hover:text-indigo-600 transition-colors">
+          <Link to="/" className="hover:opacity-80 transition-colors" style={{ color: accent }}>
             Home
           </Link>
           <span>/</span>
-          <Link to="/products" className="hover:text-indigo-600 transition-colors">
+          <Link to="/products" className="hover:opacity-80 transition-colors" style={{ color: accent }}>
             Products
           </Link>
           <span>/</span>
@@ -162,9 +166,10 @@ export default function ProductDetail() {
                     onClick={() => setSelectedImage(i)}
                     className={`shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-colors ${
                       selectedImage === i
-                        ? 'border-indigo-500'
-                        : 'border-gray-100 hover:border-indigo-300'
+                        ? ''
+                        : 'border-gray-100 hover:border-gray-300'
                     }`}
+                    style={selectedImage === i ? { borderColor: accent } : undefined}
                   >
                     <img
                       src={src}
@@ -181,7 +186,7 @@ export default function ProductDetail() {
           <div className="flex flex-col">
             {/* Category ID badge */}
             {product.category_id && (
-              <span className="text-xs font-semibold text-indigo-600 uppercase tracking-widest mb-2">
+              <span className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: accent }}>
                 {product.category_id}
               </span>
             )}
@@ -252,8 +257,9 @@ export default function ProductDetail() {
                   ? 'bg-green-500 text-white shadow-green-200'
                   : outOfStock
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'
+                    : 'text-white hover:opacity-90'
               }`}
+              style={!addedToCart && !outOfStock ? { backgroundColor: accent } : undefined}
             >
               {addedToCart ? (
                 <>
@@ -269,7 +275,7 @@ export default function ProductDetail() {
 
             <Link
               to="/cart"
-              className="text-center text-sm text-gray-500 hover:text-indigo-600 transition-colors"
+              className="text-center text-sm text-gray-500 hover:opacity-80 transition-colors"
             >
               View cart →
             </Link>
@@ -292,6 +298,15 @@ export default function ProductDetail() {
             )}
           </div>
         </div>
+
+        {/* ── CMS content section (editable via workspace agent) ────── */}
+        {pdpTemplate?.html && (
+          <div
+            className="cms-pdp-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8"
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{ __html: pdpTemplate.html }}
+          />
+        )}
       </div>
     </div>
   )

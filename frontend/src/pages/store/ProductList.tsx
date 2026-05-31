@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { SlidersHorizontal, ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { useStoreProducts, useStoreInfo, useStoreCategories } from '../../lib/store-hooks'
+import { useStoreProducts, useStoreInfo, useStoreCategories, useStorePageBySlug } from '../../lib/store-hooks'
 import type { Category } from '../../lib/store-api'
 import ProductCard from '../../components/store/ProductCard'
 
@@ -52,6 +52,7 @@ export default function ProductList() {
 
   const { data: storeInfo } = useStoreInfo()
   const accent = storeInfo?.accent_color ?? '#6366f1'
+  const { data: plpTemplate } = useStorePageBySlug('_plp')
 
   const { data: categoriesRaw } = useStoreCategories()
   const categories = normalizeCategories(categoriesRaw)
@@ -83,15 +84,26 @@ export default function ProductList() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* ── CMS hero section (editable via workspace agent) ────────── */}
+        {plpTemplate?.html && (
+          <div
+            className="cms-hero"
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{ __html: plpTemplate.html }}
+          />
+        )}
+
         {/* ── Page header ──────────────────────────────────────────────── */}
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Products</h1>
-          {data && (
-            <p className="text-sm text-gray-500 mt-1">
-              {data.total} product{data.total !== 1 ? 's' : ''} found
-            </p>
-          )}
-        </div>
+        {!plpTemplate?.html && (
+          <div className="mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Products</h1>
+          </div>
+        )}
+        {data && (
+          <p className="text-sm text-gray-500 mb-6">
+            {data.total} product{data.total !== 1 ? 's' : ''} found
+          </p>
+        )}
 
         {/* ── Top bar (mobile filter toggle + sort) ────────────────────── */}
         <div className="flex items-center justify-between gap-3 mb-6 lg:hidden">
