@@ -3,257 +3,106 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hada Commerce - Platform Presentation</title>
+  <title>Hada Commerce - UI Screenshots</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #09090b; color: #e4e4e7; }
-    nav { position: sticky; top: 0; z-index: 100; background: rgba(9,9,11,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #27272a; padding: 0.75rem 2rem; display: flex; gap: 1.5rem; overflow-x: auto; }
-    nav a { color: #a1a1aa; text-decoration: none; font-size: 0.8rem; white-space: nowrap; transition: color 0.2s; }
-    nav a:hover { color: #818cf8; }
-    .hero { text-align: center; padding: 4rem 2rem 2rem; }
-    .hero h1 { font-size: 2.5rem; font-weight: 700; background: linear-gradient(135deg, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .hero p { color: #71717a; margin-top: 0.5rem; font-size: 1.1rem; }
-    .hero .stats { display: flex; gap: 2rem; justify-content: center; margin-top: 1.5rem; }
-    .hero .stat { text-align: center; }
-    .hero .stat .num { font-size: 1.8rem; font-weight: 700; color: #818cf8; }
-    .hero .stat .label { font-size: 0.75rem; color: #71717a; text-transform: uppercase; }
-    section { max-width: 1400px; margin: 0 auto; padding: 3rem 2rem 1rem; }
-    section h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; scroll-margin-top: 4rem; }
-    section .desc { color: #71717a; font-size: 0.9rem; margin-bottom: 1.5rem; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(580px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-    .card { background: #18181b; border: 1px solid #27272a; border-radius: 12px; overflow: hidden; transition: all 0.25s; }
-    .card:hover { border-color: #818cf8; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(129,140,248,0.08); }
-    .card img { width: 100%; height: auto; display: block; }
-    .card .info { padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #27272a; }
-    .card .info .title { font-weight: 500; font-size: 0.9rem; }
-    .card .info .badge { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; background: #27272a; color: #a1a1aa; }
-    .card .info .badge.new { background: #312e81; color: #a5b4fc; }
-    footer { text-align: center; padding: 3rem; color: #52525b; font-size: 0.8rem; border-top: 1px solid #18181b; margin-top: 2rem; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e5e5e5; padding: 2rem; }
+    h1 { text-align: center; font-size: 2rem; margin-bottom: 0.5rem; }
+    .subtitle { text-align: center; color: #888; margin-bottom: 2rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(600px, 1fr)); gap: 2rem; max-width: 1800px; margin: 0 auto; }
+    .card { background: #141414; border: 1px solid #222; border-radius: 12px; overflow: hidden; transition: transform 0.2s; }
+    .card:hover { transform: translateY(-4px); border-color: #444; }
+    .card img { width: 100%; height: auto; display: block; border-bottom: 1px solid #222; }
+    .card .label { padding: 1rem; font-size: 0.95rem; font-weight: 500; }
+    .card .label .path { color: #666; font-size: 0.8rem; margin-top: 0.25rem; }
   </style>
 </head>
 <body>
-
-<nav>
-  <a href="#ai-agent">AI Agent</a>
-  <a href="#presets">Presets</a>
-  <a href="#workspaces">Workspaces</a>
-  <a href="#approvals">Approvals</a>
-  <a href="#memory">Memory</a>
-  <a href="#triggers">Triggers</a>
-  <a href="#dashboard">Dashboard</a>
-  <a href="#commerce">Commerce</a>
-  <a href="#catalog">Catalog</a>
-  <a href="#content">Content</a>
-  <a href="#storefront">Storefront</a>
-  <a href="#public">Public Store</a>
-</nav>
-
-<div class="hero">
   <h1>Hada Commerce</h1>
-  <p>AI-extensible e-commerce platform with 57+ domains, 92+ agent tools, and preset workspaces</p>
-  <div class="stats">
-    <div class="stat"><div class="num">57+</div><div class="label">DDD Domains</div></div>
-    <div class="stat"><div class="num">92+</div><div class="label">Agent Tools</div></div>
-    <div class="stat"><div class="num">45</div><div class="label">Admin Pages</div></div>
-    <div class="stat"><div class="num">6</div><div class="label">Preset Types</div></div>
-  </div>
-</div>
-
-<section id="ai-agent">
-  <h2>AI Store Assistant</h2>
-  <p class="desc">Chat-based AI assistant with 92+ tools for managing products, pages, promos, and more</p>
+  <p class="subtitle">UI Screenshots &mdash; 5/31/2026</p>
   <div class="grid">
     <div class="card">
-      <img src="admin-agent.png" alt="Agent Chat" loading="lazy" />
-      <div class="info"><span class="title">Agent Chat</span><span class="badge">SSE Streaming</span></div>
+      <img src="admin-agent-memory.png" alt="admin agent memory" loading="lazy" />
+      <div class="label">admin agent memory<div class="path">/admin/agent-memory</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-agent-triggers.png" alt="admin agent triggers" loading="lazy" />
+      <div class="label">admin agent triggers<div class="path">/admin/agent-triggers</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-agent.png" alt="admin agent" loading="lazy" />
+      <div class="label">admin agent<div class="path">/admin/agent</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-approvals.png" alt="admin approvals" loading="lazy" />
+      <div class="label">admin approvals<div class="path">/admin/approvals</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-catalog.png" alt="admin catalog" loading="lazy" />
+      <div class="label">admin catalog<div class="path">/admin/catalog</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-collections.png" alt="admin collections" loading="lazy" />
+      <div class="label">admin collections<div class="path">/admin/collections</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-customers.png" alt="admin customers" loading="lazy" />
+      <div class="label">admin customers<div class="path">/admin/customers</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-dashboard.png" alt="admin dashboard" loading="lazy" />
+      <div class="label">admin dashboard<div class="path">/admin</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-import-export.png" alt="admin import export" loading="lazy" />
+      <div class="label">admin import export<div class="path">/admin/import-export</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-marketplace.png" alt="admin marketplace" loading="lazy" />
+      <div class="label">admin marketplace<div class="path">/admin/marketplace</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-media.png" alt="admin media" loading="lazy" />
+      <div class="label">admin media<div class="path">/admin/media</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-orders.png" alt="admin orders" loading="lazy" />
+      <div class="label">admin orders<div class="path">/admin/orders</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-pages.png" alt="admin pages" loading="lazy" />
+      <div class="label">admin pages<div class="path">/admin/pages</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-payments.png" alt="admin payments" loading="lazy" />
+      <div class="label">admin payments<div class="path">/admin/payments</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-presets.png" alt="admin presets" loading="lazy" />
+      <div class="label">admin presets<div class="path">/admin/presets</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-products.png" alt="admin products" loading="lazy" />
+      <div class="label">admin products<div class="path">/admin/products</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-promos.png" alt="admin promos" loading="lazy" />
+      <div class="label">admin promos<div class="path">/admin/promos</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-reporting.png" alt="admin reporting" loading="lazy" />
+      <div class="label">admin reporting<div class="path">/admin/reporting</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-settings.png" alt="admin settings" loading="lazy" />
+      <div class="label">admin settings<div class="path">/admin/settings</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-theme.png" alt="admin theme" loading="lazy" />
+      <div class="label">admin theme<div class="path">/admin/theme</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-translations.png" alt="admin translations" loading="lazy" />
+      <div class="label">admin translations<div class="path">/admin/translations</div></div>
+    </div>\n    <div class="card">
+      <img src="admin-workspaces.png" alt="admin workspaces" loading="lazy" />
+      <div class="label">admin workspaces<div class="path">/admin/workspaces</div></div>
+    </div>\n    <div class="card">
+      <img src="auth-login.png" alt="auth login" loading="lazy" />
+      <div class="label">auth login<div class="path">/login</div></div>
+    </div>\n    <div class="card">
+      <img src="store-cart.png" alt="store cart" loading="lazy" />
+      <div class="label">store cart<div class="path">/cart</div></div>
+    </div>\n    <div class="card">
+      <img src="store-checkout.png" alt="store checkout" loading="lazy" />
+      <div class="label">store checkout<div class="path">/checkout</div></div>
+    </div>\n    <div class="card">
+      <img src="store-home.png" alt="store home" loading="lazy" />
+      <div class="label">store home<div class="path">/</div></div>
+    </div>\n    <div class="card">
+      <img src="store-products.png" alt="store products" loading="lazy" />
+      <div class="label">store products<div class="path">/products</div></div>
     </div>
   </div>
-</section>
-
-<section id="presets">
-  <h2>Preset Marketplace</h2>
-  <p class="desc">Browse and install specialized agent presets — each with its own Docker workspace and custom UI</p>
-  <div class="grid">
-    <div class="card">
-      <img src="admin-presets.png" alt="Preset Marketplace" loading="lazy" />
-      <div class="info"><span class="title">Preset Marketplace</span><span class="badge new">NEW</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="workspaces">
-  <h2>Agent Workspaces</h2>
-  <p class="desc">Launch isolated Docker workspaces from presets — each with live preview and dedicated chat</p>
-  <div class="grid">
-    <div class="card">
-      <img src="admin-workspaces.png" alt="Workspaces" loading="lazy" />
-      <div class="info"><span class="title">Workspace Manager</span><span class="badge new">NEW</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="approvals">
-  <h2>Approval Workflow</h2>
-  <p class="desc">Human-in-the-loop approval for sensitive agent actions — publish pages, create promos, modify orders</p>
-  <div class="grid">
-    <div class="card">
-      <img src="admin-approvals.png" alt="Approvals" loading="lazy" />
-      <div class="info"><span class="title">Approval Queue</span><span class="badge new">NEW</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="memory">
-  <h2>Agent Memory</h2>
-  <p class="desc">Persistent knowledge base — brand guidelines, product insights, and past decisions the agent remembers</p>
-  <div class="grid">
-    <div class="card">
-      <img src="admin-agent-memory.png" alt="Agent Memory" loading="lazy" />
-      <div class="info"><span class="title">Knowledge Base</span><span class="badge new">NEW</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="triggers">
-  <h2>Agent Triggers</h2>
-  <p class="desc">Automated agent actions fired by store events — low stock alerts, welcome emails, cart recovery</p>
-  <div class="grid">
-    <div class="card">
-      <img src="admin-agent-triggers.png" alt="Agent Triggers" loading="lazy" />
-      <div class="info"><span class="title">Event Triggers</span><span class="badge new">NEW</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="dashboard">
-  <h2>Dashboard & Analytics</h2>
-  <p class="desc">Sales overview, revenue trends, and reporting</p>
-  <div class="grid">
-    <div class="card">
-      <img src="admin-dashboard.png" alt="Dashboard" loading="lazy" />
-      <div class="info"><span class="title">Dashboard</span><span class="badge">Overview</span></div>
-    </div>
-    <div class="card">
-      <img src="admin-reporting.png" alt="Reporting" loading="lazy" />
-      <div class="info"><span class="title">Reporting</span><span class="badge">Analytics</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="commerce">
-  <h2>Commerce</h2>
-  <p class="desc">Products, orders, customers, payments, shipping, and promotions</p>
-  <div class="grid">
-    <div class="card">
-      <img src="admin-products.png" alt="Products" loading="lazy" />
-      <div class="info"><span class="title">Products</span><span class="badge">CRUD</span></div>
-    </div>
-    <div class="card">
-      <img src="admin-orders.png" alt="Orders" loading="lazy" />
-      <div class="info"><span class="title">Orders</span><span class="badge">Management</span></div>
-    </div>
-    <div class="card">
-      <img src="admin-customers.png" alt="Customers" loading="lazy" />
-      <div class="info"><span class="title">Customers</span><span class="badge">CRM</span></div>
-    </div>
-    <div class="card">
-      <img src="admin-promos.png" alt="Promotions" loading="lazy" />
-      <div class="info"><span class="title">Promotions</span><span class="badge">Discounts</span></div>
-    </div>
-    <div class="card">
-      <img src="admin-payments.png" alt="Payments" loading="lazy" />
-      <div class="info"><span class="title">Payments</span><span class="badge">Processing</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="catalog">
-  <h2>Catalog</h2>
-  <p class="desc">Categories, collections, and product organization</p>
-  <div class="grid">
-    <div class="card">
-      <img src="admin-catalog.png" alt="Catalog" loading="lazy" />
-      <div class="info"><span class="title">Catalog</span><span class="badge">Categories</span></div>
-    </div>
-    <div class="card">
-      <img src="admin-collections.png" alt="Collections" loading="lazy" />
-      <div class="info"><span class="title">Collections</span><span class="badge">Curation</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="content">
-  <h2>Content & Media</h2>
-  <p class="desc">CMS pages, media assets, translations, and marketplace</p>
-  <div class="grid">
-    <div class="card">
-      <img src="admin-pages.png" alt="Pages" loading="lazy" />
-      <div class="info"><span class="title">CMS Pages</span><span class="badge">Content</span></div>
-    </div>
-    <div class="card">
-      <img src="admin-media.png" alt="Media" loading="lazy" />
-      <div class="info"><span class="title">Media Library</span><span class="badge">Assets</span></div>
-    </div>
-    <div class="card">
-      <img src="admin-translations.png" alt="Translations" loading="lazy" />
-      <div class="info"><span class="title">Translations</span><span class="badge">i18n</span></div>
-    </div>
-    <div class="card">
-      <img src="admin-marketplace.png" alt="Marketplace" loading="lazy" />
-      <div class="info"><span class="title">Marketplace</span><span class="badge">Plugins</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="storefront">
-  <h2>Storefront & Settings</h2>
-  <p class="desc">Theme editor, import/export, and store configuration</p>
-  <div class="grid">
-    <div class="card">
-      <img src="admin-theme.png" alt="Theme Editor" loading="lazy" />
-      <div class="info"><span class="title">Theme Editor</span><span class="badge">Design</span></div>
-    </div>
-    <div class="card">
-      <img src="admin-settings.png" alt="Settings" loading="lazy" />
-      <div class="info"><span class="title">Settings</span><span class="badge">Config</span></div>
-    </div>
-    <div class="card">
-      <img src="admin-import-export.png" alt="Import/Export" loading="lazy" />
-      <div class="info"><span class="title">Import / Export</span><span class="badge">Data</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="public">
-  <h2>Public Storefront</h2>
-  <p class="desc">Customer-facing store pages</p>
-  <div class="grid">
-    <div class="card">
-      <img src="store-home.png" alt="Store Home" loading="lazy" />
-      <div class="info"><span class="title">Store Home</span><span class="badge">Public</span></div>
-    </div>
-    <div class="card">
-      <img src="store-products.png" alt="Store Products" loading="lazy" />
-      <div class="info"><span class="title">Product Catalog</span><span class="badge">Public</span></div>
-    </div>
-    <div class="card">
-      <img src="store-cart.png" alt="Cart" loading="lazy" />
-      <div class="info"><span class="title">Shopping Cart</span><span class="badge">Public</span></div>
-    </div>
-    <div class="card">
-      <img src="store-checkout.png" alt="Checkout" loading="lazy" />
-      <div class="info"><span class="title">Checkout</span><span class="badge">Public</span></div>
-    </div>
-    <div class="card">
-      <img src="auth-login.png" alt="Login" loading="lazy" />
-      <div class="info"><span class="title">Login</span><span class="badge">Auth</span></div>
-    </div>
-  </div>
-</section>
-
-<footer>
-  Hada Commerce &mdash; 57+ DDD domains, 92+ agent tools, 45 admin pages &mdash; Built with Go + React + harness
-</footer>
-
 </body>
 </html>

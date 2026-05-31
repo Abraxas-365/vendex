@@ -21,7 +21,8 @@ import {
 
 const COLORS = ['#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe']
 
-function formatMoney(cents: number, currency = 'USD') {
+function formatMoney(cents: number | undefined | null, currency = 'USD') {
+  if (cents == null || isNaN(cents)) return '$0'
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(cents / 100)
 }
 
@@ -95,22 +96,22 @@ export default function Reporting() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <StatCard
               label="Total Revenue"
-              value={sales ? formatMoney(sales.total_revenue.amount, sales.total_revenue.currency) : '—'}
+              value={sales?.total_revenue ? formatMoney(sales.total_revenue.amount, sales.total_revenue.currency) : '—'}
               icon={DollarSign}
             />
             <StatCard
               label="Orders"
-              value={sales ? sales.total_orders.toString() : '—'}
+              value={sales?.total_orders != null ? sales.total_orders.toString() : '—'}
               icon={ShoppingCart}
             />
             <StatCard
               label="Avg Order Value"
-              value={sales ? formatMoney(sales.average_order_value.amount, sales.average_order_value.currency) : '—'}
+              value={sales?.average_order_value ? formatMoney(sales.average_order_value.amount, sales.average_order_value.currency) : '—'}
               icon={TrendingUp}
             />
             <StatCard
               label="New Customers"
-              value={customers ? customers.new_customers.toString() : '—'}
+              value={customers?.new_customers != null ? customers.new_customers.toString() : '—'}
               icon={Users}
             />
           </div>
@@ -179,20 +180,20 @@ export default function Reporting() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-lg bg-gray-50 p-3 text-center">
                       <p className="text-xs text-gray-500">Total</p>
-                      <p className="text-xl font-bold text-gray-900">{customers.total_customers}</p>
+                      <p className="text-xl font-bold text-gray-900">{customers.total_customers ?? 0}</p>
                     </div>
                     <div className="rounded-lg bg-gray-50 p-3 text-center">
                       <p className="text-xs text-gray-500">New</p>
-                      <p className="text-xl font-bold text-indigo-600">{customers.new_customers}</p>
+                      <p className="text-xl font-bold text-indigo-600">{customers.new_customers ?? 0}</p>
                     </div>
                     <div className="rounded-lg bg-gray-50 p-3 text-center">
                       <p className="text-xs text-gray-500">Returning</p>
-                      <p className="text-xl font-bold text-purple-600">{customers.returning_customers}</p>
+                      <p className="text-xl font-bold text-purple-600">{customers.returning_customers ?? 0}</p>
                     </div>
                     <div className="rounded-lg bg-gray-50 p-3 text-center">
                       <p className="text-xs text-gray-500">Avg LTV</p>
                       <p className="text-xl font-bold text-gray-900">
-                        {formatMoney(customers.average_lifetime_value.amount, customers.average_lifetime_value.currency)}
+                        {customers.average_lifetime_value ? formatMoney(customers.average_lifetime_value.amount, customers.average_lifetime_value.currency) : '—'}
                       </p>
                     </div>
                   </div>
@@ -216,10 +217,10 @@ export default function Reporting() {
                           />
                         </div>
                         <span className="w-10 text-right text-xs font-medium text-gray-700">
-                          {step.conversion_rate.toFixed(1)}%
+                          {(step.conversion_rate ?? 0).toFixed(1)}%
                         </span>
                         <span className="w-14 text-right text-xs text-gray-400">
-                          {step.count.toLocaleString()}
+                          {(step.count ?? 0).toLocaleString()}
                         </span>
                       </div>
                     ))}
