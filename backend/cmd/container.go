@@ -14,6 +14,8 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/agentsession"
 	"github.com/Abraxas-365/hada-commerce/internal/agentsession/agentsessioncontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/marketplace/marketplacesrv"
+	"github.com/Abraxas-365/hada-commerce/internal/agentsession/agentsessionsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/containerx"
 	"github.com/Abraxas-365/hada-commerce/internal/containerxdocker"
 	"github.com/Abraxas-365/hada-commerce/internal/abtest/abtestcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
@@ -325,31 +327,41 @@ func (c *Container) initModules() {
 	emailHandler.RegisterSubscriptions(bus)
 	logx.Info("  Email notifications wired to event bus")
 
-	// AI Agent — optional, only initialized when API key is configured.
-	if c.Config.Agent.APIKey != "" {
-		agentSvc := c.BuildAgentServices()
-		c.Agent = agentapi.NewHandler(
-			c.Config.Agent.APIKey,
-			c.Config.Agent.Model,
-			"", // use default system prompt
-			agentSvc,
-			&presetProviderAdapter{svc: c.Marketplace.PresetService},
-			&chatPersisterAdapter{repo: c.AgentSession.ChatRepo},
-		)
-		logx.Info("  AI Agent chat handler initialized")
-	}
-
 	// Agent Sessions — workspace management via Docker containers.
-	containerMgr, err := containerxdocker.New()
-	if err != nil {
+	// Initialized before the AI Agent so the workspace provider can be passed in.
+	var containerMgr containerx.Manager
+	if mgr, err := containerxdocker.New(); err != nil {
 		logx.Warnf("Docker unavailable, agent sessions disabled: %v", err)
 	} else {
+		containerMgr = mgr
 		c.AgentSession = agentsessioncontainer.New(agentsessioncontainer.Deps{
 			DB:        c.DB,
 			Manager:   containerMgr,
 			PresetSvc: c.Marketplace.PresetService,
 		})
 		logx.Info("  Agent session manager initialized")
+	}
+
+	// AI Agent — optional, only initialized when API key is configured.
+	if c.Config.Agent.APIKey != "" {
+		agentSvc := c.BuildAgentServices()
+		var wp agentapi.WorkspaceProvider
+		var cp agentapi.ChatPersister
+		if c.AgentSession != nil {
+			wp = &workspaceProviderAdapter{svc: c.AgentSession.Service}
+			cp = &chatPersisterAdapter{repo: c.AgentSession.ChatRepo}
+		}
+		c.Agent = agentapi.NewHandler(
+			c.Config.Agent.APIKey,
+			c.Config.Agent.Model,
+			"", // use default system prompt
+			agentSvc,
+			&presetProviderAdapter{svc: c.Marketplace.PresetService},
+			cp,
+			wp,
+			containerMgr,
+		)
+		logx.Info("  AI Agent chat handler initialized")
 	}
 
 	logx.Info("All modules initialized")
@@ -588,6 +600,22 @@ func (a *chatPersisterAdapter) SaveMessage(ctx context.Context, sessionID, role,
 		CreatedAt: time.Now(),
 	}
 	return a.repo.SaveMessage(ctx, msg)
+}
+
+// workspaceProviderAdapter adapts agentsessionsrv.Service to agentapi.WorkspaceProvider.
+type workspaceProviderAdapter struct {
+	svc *agentsessionsrv.Service
+}
+
+func (a *workspaceProviderAdapter) GetActiveWorkspace(ctx context.Context, tenantID, sessionID string) (string, string, error) {
+	sess, err := a.svc.GetSession(ctx, kernel.TenantID(tenantID), kernel.AgentSessionID(sessionID))
+	if err != nil {
+		return "", "", err
+	}
+	if sess.Status != agentsession.SessionStatusRunning || sess.ContainerID == "" {
+		return "", "", nil
+	}
+	return sess.ContainerID, sess.FrontendURL, nil
 }
 
 // ---------------------------------------------------------------------------
