@@ -6,10 +6,14 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/Abraxas-365/hada-commerce/internal/abtest/abtestsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/audit/auditsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/blog/blogsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/bulkops/bulkopssrv"
 	"github.com/Abraxas-365/hada-commerce/internal/bundle/bundlesrv"
 	"github.com/Abraxas-365/hada-commerce/internal/cartrecovery/cartrecoverysrv"
 	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/collection/collectionsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/currency/currencysrv"
 	"github.com/Abraxas-365/hada-commerce/internal/customergroup/customergroupsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/dashboard/dashboardsrv"
@@ -18,10 +22,12 @@ import (
 	"github.com/Abraxas-365/hada-commerce/internal/inventory/inventorysrv"
 	"github.com/Abraxas-365/hada-commerce/internal/kernel"
 	"github.com/Abraxas-365/hada-commerce/internal/loyalty/loyaltysrv"
+	"github.com/Abraxas-365/hada-commerce/internal/multistore/multistoresrv"
 	"github.com/Abraxas-365/hada-commerce/internal/notification/notificationsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/order/ordersrv"
 	"github.com/Abraxas-365/hada-commerce/internal/payment/paymentsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/product/productsrv"
+	"github.com/Abraxas-365/hada-commerce/internal/recommendation/recommendationsrv"
 	"github.com/Abraxas-365/hada-commerce/internal/promo/promosrv"
 	"github.com/Abraxas-365/hada-commerce/internal/returns/returnssrv"
 	"github.com/Abraxas-365/hada-commerce/internal/review/reviewsrv"
@@ -75,7 +81,13 @@ type Services struct {
 	Loyalty        *loyaltysrv.Service
 	Bundles        *bundlesrv.Service
 	Dashboard      *dashboardsrv.Service
-	Notifications  *notificationsrv.Service
+	Notifications   *notificationsrv.Service
+	MultiStore      *multistoresrv.Service
+	BulkOps         *bulkopssrv.Service
+	Blog            *blogsrv.Service
+	Collections     *collectionsrv.Service
+	ABTest          *abtestsrv.Service
+	Recommendations *recommendationsrv.Service
 }
 
 // Setup constructs and returns all agent tools wired to the given services.
@@ -210,5 +222,32 @@ func Setup(tenantID kernel.TenantID, svc Services) []Tool {
 		// Notifications
 		&GetUnreadNotificationCountTool{notifications: svc.Notifications, tenantID: tenantID},
 		&MarkAllNotificationsReadTool{notifications: svc.Notifications, tenantID: tenantID},
+
+		// Multi-storefront
+		&ListStorefrontsTool{multistore: svc.MultiStore, tenantID: tenantID},
+		&CreateStorefrontTool{multistore: svc.MultiStore, tenantID: tenantID},
+
+		// Bulk operations
+		&ListBulkOperationsTool{bulkops: svc.BulkOps, tenantID: tenantID},
+		&CreateBulkOperationTool{bulkops: svc.BulkOps, tenantID: tenantID},
+
+		// Blog
+		&ListBlogPostsTool{blog: svc.Blog, tenantID: tenantID},
+		&CreateBlogPostTool{blog: svc.Blog, tenantID: tenantID},
+		&PublishBlogPostTool{blog: svc.Blog, tenantID: tenantID},
+
+		// Collections
+		&ListCollectionsTool{collections: svc.Collections, tenantID: tenantID},
+		&CreateCollectionTool{collections: svc.Collections, tenantID: tenantID},
+		&AddCollectionProductTool{collections: svc.Collections, tenantID: tenantID},
+
+		// A/B Testing
+		&ListExperimentsTool{abtest: svc.ABTest, tenantID: tenantID},
+		&CreateExperimentTool{abtest: svc.ABTest, tenantID: tenantID},
+		&GetExperimentResultsTool{abtest: svc.ABTest, tenantID: tenantID},
+
+		// Recommendations
+		&ListRecommendationRulesTool{recs: svc.Recommendations, tenantID: tenantID},
+		&GetTrendingProductsTool{recs: svc.Recommendations, tenantID: tenantID},
 	}
 }
