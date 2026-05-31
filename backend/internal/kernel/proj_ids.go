@@ -408,3 +408,11 @@ type AgentSessionID string
 func NewAgentSessionID(id string) AgentSessionID { return AgentSessionID(id) }
 func (a AgentSessionID) String() string          { return string(a) }
 func (a AgentSessionID) IsEmpty() bool           { return string(a) == "" }
+
+// Approval workflow IDs
+
+type ApprovalRequestID string
+
+func NewApprovalRequestID(id string) ApprovalRequestID { return ApprovalRequestID(id) }
+func (a ApprovalRequestID) String() string             { return string(a) }
+func (a ApprovalRequestID) IsEmpty() bool              { return string(a) == "" }
