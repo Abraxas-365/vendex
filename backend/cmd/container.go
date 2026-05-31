@@ -5,11 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/Abraxas-365/hada-commerce/internal/agent"
 	"github.com/Abraxas-365/hada-commerce/internal/agent/agentapi"
-	"github.com/Abraxas-365/hada-commerce/internal/marketplace/marketplacesrv"
+	"github.com/Abraxas-365/hada-commerce/internal/agentsession"
 	"github.com/Abraxas-365/hada-commerce/internal/agentsession/agentsessioncontainer"
+	"github.com/Abraxas-365/hada-commerce/internal/marketplace/marketplacesrv"
 	"github.com/Abraxas-365/hada-commerce/internal/containerxdocker"
 	"github.com/Abraxas-365/hada-commerce/internal/abtest/abtestcontainer"
 	"github.com/Abraxas-365/hada-commerce/internal/analytics/analyticscontainer"
@@ -330,6 +334,7 @@ func (c *Container) initModules() {
 			"", // use default system prompt
 			agentSvc,
 			&presetProviderAdapter{svc: c.Marketplace.PresetService},
+			&chatPersisterAdapter{repo: c.AgentSession.ChatRepo},
 		)
 		logx.Info("  AI Agent chat handler initialized")
 	}
@@ -567,6 +572,22 @@ func (a *presetProviderAdapter) GetPresetToolsManifest(ctx context.Context, pres
 		return nil, err
 	}
 	return p.ToolsManifest, nil
+}
+
+// chatPersisterAdapter adapts agentsession.ChatRepository to agentapi.ChatPersister.
+type chatPersisterAdapter struct {
+	repo agentsession.ChatRepository
+}
+
+func (a *chatPersisterAdapter) SaveMessage(ctx context.Context, sessionID, role, content string, toolCalls json.RawMessage) error {
+	msg := agentsession.ChatMessage{
+		ID:        uuid.New().String(),
+		SessionID: kernel.AgentSessionID(sessionID),
+		Role:      role,
+		Content:   content,
+		CreatedAt: time.Now(),
+	}
+	return a.repo.SaveMessage(ctx, msg)
 }
 
 // ---------------------------------------------------------------------------

@@ -35,3 +35,23 @@ migrate:
 		echo "Running $$f..."; \
 		psql "$(DATABASE_URL)" -f "$$f"; \
 	done
+
+# Agent Presets
+PRESET_REGISTRY ?= ghcr.io/abraxas-365/hada-presets
+PRESET_TAG ?= latest
+
+preset-build-base:
+	docker build -t hada-preset-base:$(PRESET_TAG) deploy/presets/base/
+
+preset-build-webdev: preset-build-base
+	docker build -t $(PRESET_REGISTRY)/webdev:$(PRESET_TAG) deploy/presets/webdev/
+
+preset-build-researcher: preset-build-base
+	docker build -t $(PRESET_REGISTRY)/researcher:$(PRESET_TAG) deploy/presets/researcher/
+
+preset-build: preset-build-webdev preset-build-researcher
+	@echo "All preset images built."
+
+preset-push:
+	docker push $(PRESET_REGISTRY)/webdev:$(PRESET_TAG)
+	docker push $(PRESET_REGISTRY)/researcher:$(PRESET_TAG)

@@ -38,6 +38,12 @@ type PresetProvider interface {
 	GetPresetToolsManifest(ctx context.Context, presetID string) (json.RawMessage, error)
 }
 
+// ChatPersister saves chat messages to persistent storage.
+// This allows conversation history to survive server restarts.
+type ChatPersister interface {
+	SaveMessage(ctx context.Context, sessionID, role, content string, toolCalls json.RawMessage) error
+}
+
 // ChatRequest is the JSON body accepted by the POST /agent/chat endpoint.
 type ChatRequest struct {
 	Message   string `json:"message"`
@@ -56,6 +62,7 @@ type Handler struct {
 	systemPrompt   string
 	services       agent.Services
 	presetProvider PresetProvider // may be nil — presets disabled
+	chatPersister  ChatPersister  // may be nil — persistence disabled
 
 	mu       sync.RWMutex
 	sessions map[string]*sessionEntry // key = tenantID + ":" + presetID + ":" + sessionID
@@ -73,7 +80,7 @@ type sessionEntry struct {
 //   - systemPrompt: override the default store-assistant system prompt (pass "" for default)
 //   - services: domain services used to create tenant-scoped tools per session
 //   - presetProvider: optional preset config provider (pass nil to disable presets)
-func NewHandler(apiKey, model, systemPrompt string, services agent.Services, presetProvider PresetProvider) *Handler {
+func NewHandler(apiKey, model, systemPrompt string, services agent.Services, presetProvider PresetProvider, chatPersister ChatPersister) *Handler {
 	if systemPrompt == "" {
 		systemPrompt = defaultSystemPrompt
 	}
@@ -83,6 +90,7 @@ func NewHandler(apiKey, model, systemPrompt string, services agent.Services, pre
 		systemPrompt:   systemPrompt,
 		services:       services,
 		presetProvider: presetProvider,
+		chatPersister:  chatPersister,
 		sessions:       make(map[string]*sessionEntry),
 	}
 }
@@ -148,6 +156,11 @@ func (h *Handler) Chat(c *fiber.Ctx) error {
 		})
 	}
 
+	// Persist user message to DB.
+	if h.chatPersister != nil {
+		_ = h.chatPersister.SaveMessage(c.Context(), sessionID, "user", req.Message, nil)
+	}
+
 	// Set SSE headers before streaming.
 	c.Set("Content-Type", "text/event-stream")
 	c.Set("Cache-Control", "no-cache")
@@ -184,8 +197,15 @@ func (h *Handler) Chat(c *fiber.Ctx) error {
 			done <- sess.Send(context.WithoutCancel(ctx), message)
 		}()
 
+		// Accumulate assistant response for persistence.
+		var assistantText strings.Builder
+
 		// writeEvent serialises an agent.Event and writes it as an SSE line.
 		writeEvent := func(e agent.Event) {
+			// Collect text deltas for persistence.
+			if e.Kind == agent.EventTextDelta && e.Text != "" {
+				assistantText.WriteString(e.Text)
+			}
 			data, err := json.Marshal(e)
 			if err != nil {
 				return
@@ -193,6 +213,13 @@ func (h *Handler) Chat(c *fiber.Ctx) error {
 			fmt.Fprintf(w, "data: %s\n\n", data)
 			if err := w.Flush(); err != nil {
 				log.Printf("[agentapi] flush error session=%q err=%v", sessionKey, err)
+			}
+		}
+
+		// persistAssistant saves the accumulated assistant response to the database.
+		persistAssistant := func() {
+			if h.chatPersister != nil && assistantText.Len() > 0 {
+				_ = h.chatPersister.SaveMessage(context.Background(), sessionID, "assistant", assistantText.String(), nil)
 			}
 		}
 
@@ -208,6 +235,7 @@ func (h *Handler) Chat(c *fiber.Ctx) error {
 						case remaining := <-eventCh:
 							writeEvent(remaining)
 						default:
+							persistAssistant()
 							return
 						}
 					}
@@ -223,6 +251,7 @@ func (h *Handler) Chat(c *fiber.Ctx) error {
 					case remaining := <-eventCh:
 						writeEvent(remaining)
 					default:
+						persistAssistant()
 						return
 					}
 				}

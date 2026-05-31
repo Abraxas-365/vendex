@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
+	"github.com/Abraxas-365/hada-commerce/internal/agentsession"
 	"github.com/Abraxas-365/hada-commerce/internal/agentsession/agentsessionapi"
 	"github.com/Abraxas-365/hada-commerce/internal/agentsession/agentsessioninfra"
 	"github.com/Abraxas-365/hada-commerce/internal/agentsession/agentsessionsrv"
@@ -14,8 +15,9 @@ import (
 
 // Container holds the wired agentsession domain components.
 type Container struct {
-	Service *agentsessionsrv.Service
-	Handler *agentsessionapi.Handler
+	Service  *agentsessionsrv.Service
+	Handler  *agentsessionapi.Handler
+	ChatRepo agentsession.ChatRepository
 }
 
 // Deps holds external dependencies needed by the agent session domain.
@@ -34,8 +36,9 @@ func New(deps Deps) *Container {
 	handler := agentsessionapi.NewHandler(svc)
 
 	return &Container{
-		Service: svc,
-		Handler: handler,
+		Service:  svc,
+		Handler:  handler,
+		ChatRepo: chatRepo,
 	}
 }
 
