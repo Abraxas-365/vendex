@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { SlidersHorizontal, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useStoreProducts, useStoreInfo, useStoreCategories } from '../../lib/store-hooks'
 import type { Category } from '../../lib/store-api'
@@ -42,6 +43,12 @@ export default function ProductList() {
     sort: 'newest',
   })
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const navigate = useNavigate()
+
+  const handleProductClick = useCallback(
+    (id: string) => void navigate({ to: '/products/$id', params: { id } }),
+    [navigate],
+  )
 
   const { data: storeInfo } = useStoreInfo()
   const accent = storeInfo?.accent_color ?? '#6366f1'
@@ -290,7 +297,7 @@ export default function ProductList() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} accent={accent} />
+                  <ProductCard key={product.id} product={product} accent={accent} onNavigate={handleProductClick} />
                 ))}
               </div>
             )}

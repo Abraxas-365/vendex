@@ -1,4 +1,5 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { useCallback } from 'react'
 import { ArrowRight, Sparkles, Truck, ShieldCheck, Package, Leaf, Gem, RefreshCw, Headphones } from 'lucide-react'
 import { useStoreProducts, useStoreInfo } from '../../lib/store-hooks'
 import ProductCard from '../../components/store/ProductCard'
@@ -19,9 +20,15 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function Home() {
+  const navigate = useNavigate()
   const { data: productsPage } = useStoreProducts({ page: 1, page_size: 6 })
   const { data: info } = useStoreInfo()
   const products = productsPage?.items ?? []
+
+  const handleProductClick = useCallback(
+    (id: string) => void navigate({ to: '/products/$id', params: { id } }),
+    [navigate],
+  )
 
   const accent = info?.accent_color ?? '#6366f1'
   const isMinimal = info?.bg_style === 'minimal'
@@ -169,7 +176,7 @@ export default function Home() {
         {products.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} accent={accent} />
+              <ProductCard key={product.id} product={product} accent={accent} onNavigate={handleProductClick} />
             ))}
           </div>
         ) : (
