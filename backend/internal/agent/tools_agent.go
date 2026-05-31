@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Abraxas-365/hada-commerce/internal/agentmemory"
-	"github.com/Abraxas-365/hada-commerce/internal/agentmemory/agentmemorysrv"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/agentmemory"
+	"github.com/Abraxas-365/vendex/internal/agentmemory/agentmemorysrv"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // ──────────────────────────────────────────────────────────────────────────────

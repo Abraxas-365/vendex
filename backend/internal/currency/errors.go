@@ -1,6 +1,6 @@
 package currency
 
-import "github.com/Abraxas-365/hada-commerce/internal/errx"
+import "github.com/Abraxas-365/vendex/internal/errx"
 
 // Domain errors for the currency bounded context.
 var (

@@ -1,10 +1,10 @@
 package blogcontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/blog/blogapi"
-	"github.com/Abraxas-365/hada-commerce/internal/blog/bloginfra"
-	"github.com/Abraxas-365/hada-commerce/internal/blog/blogsrv"
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/blog/blogapi"
+	"github.com/Abraxas-365/vendex/internal/blog/bloginfra"
+	"github.com/Abraxas-365/vendex/internal/blog/blogsrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

@@ -5,10 +5,10 @@ package renderer
 import (
 	"context"
 
-	"github.com/Abraxas-365/hada-commerce/internal/catalog"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/product"
-	"github.com/Abraxas-365/hada-commerce/internal/settings"
+	"github.com/Abraxas-365/vendex/internal/catalog"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/product"
+	"github.com/Abraxas-365/vendex/internal/settings"
 )
 
 // ──────────────────────────────────────────────────────────────────────────────

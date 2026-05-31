@@ -4,9 +4,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/cartrecovery/cartrecoveryapi"
-	"github.com/Abraxas-365/hada-commerce/internal/cartrecovery/cartrecoveryinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/cartrecovery/cartrecoverysrv"
+	"github.com/Abraxas-365/vendex/internal/cartrecovery/cartrecoveryapi"
+	"github.com/Abraxas-365/vendex/internal/cartrecovery/cartrecoveryinfra"
+	"github.com/Abraxas-365/vendex/internal/cartrecovery/cartrecoverysrv"
 )
 
 // Container wires together all cart recovery domain dependencies.

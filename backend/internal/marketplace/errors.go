@@ -1,6 +1,6 @@
 package marketplace
 
-import "github.com/Abraxas-365/hada-commerce/internal/errx"
+import "github.com/Abraxas-365/vendex/internal/errx"
 
 var (
 	ErrVendorNotFound        = errx.New("vendor not found", errx.TypeNotFound)

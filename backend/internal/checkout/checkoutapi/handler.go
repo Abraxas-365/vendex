@@ -1,11 +1,11 @@
 package checkoutapi
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/checkout"
-	"github.com/Abraxas-365/hada-commerce/internal/checkout/checkoutsrv"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/order"
+	"github.com/Abraxas-365/vendex/internal/checkout"
+	"github.com/Abraxas-365/vendex/internal/checkout/checkoutsrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/order"
 	"github.com/gofiber/fiber/v2"
 )
 

@@ -3,7 +3,7 @@ package abtest
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // ExperimentStatus represents the lifecycle state of an experiment.

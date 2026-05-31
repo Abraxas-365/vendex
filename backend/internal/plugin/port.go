@@ -3,7 +3,7 @@ package plugin
 import (
 	"context"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // PluginRepository defines persistence operations for plugins (global catalogue).

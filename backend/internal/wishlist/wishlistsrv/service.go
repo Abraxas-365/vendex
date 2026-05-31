@@ -6,9 +6,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/wishlist"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/wishlist"
 )
 
 // Service handles wishlist business logic.

@@ -1,9 +1,9 @@
 package currencycontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/currency/currencyapi"
-	"github.com/Abraxas-365/hada-commerce/internal/currency/currencyinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/currency/currencysrv"
+	"github.com/Abraxas-365/vendex/internal/currency/currencyapi"
+	"github.com/Abraxas-365/vendex/internal/currency/currencyinfra"
+	"github.com/Abraxas-365/vendex/internal/currency/currencysrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

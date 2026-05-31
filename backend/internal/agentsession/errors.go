@@ -1,6 +1,6 @@
 package agentsession
 
-import "github.com/Abraxas-365/hada-commerce/internal/errx"
+import "github.com/Abraxas-365/vendex/internal/errx"
 
 var (
 	ErrSessionNotFound    = errx.New("agent session not found", errx.TypeNotFound)

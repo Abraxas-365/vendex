@@ -3,10 +3,10 @@ package productapi
 import (
 	"strconv"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/product"
-	"github.com/Abraxas-365/hada-commerce/internal/product/productsrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/product"
+	"github.com/Abraxas-365/vendex/internal/product/productsrv"
 	"github.com/gofiber/fiber/v2"
 )
 

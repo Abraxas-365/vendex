@@ -1,10 +1,10 @@
 package taxcontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/tax/taxapi"
-	"github.com/Abraxas-365/hada-commerce/internal/tax/taxinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/tax/taxsrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/tax/taxapi"
+	"github.com/Abraxas-365/vendex/internal/tax/taxinfra"
+	"github.com/Abraxas-365/vendex/internal/tax/taxsrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

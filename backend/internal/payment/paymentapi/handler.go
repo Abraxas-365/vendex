@@ -1,9 +1,9 @@
 package paymentapi
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/payment/paymentsrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/payment/paymentsrv"
 	"github.com/gofiber/fiber/v2"
 )
 

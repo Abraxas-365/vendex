@@ -3,7 +3,7 @@ package shipping
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // RateType represents how the shipping rate price is determined.

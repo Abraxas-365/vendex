@@ -3,8 +3,8 @@ package tax
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // TaxRate represents a tax rate configuration for a jurisdiction.

@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/iam/auth"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/iam/auth"
 	"github.com/jmoiron/sqlx"
 )
 

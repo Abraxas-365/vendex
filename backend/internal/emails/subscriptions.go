@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/logx"
-	"github.com/Abraxas-365/hada-commerce/internal/notifx"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/logx"
+	"github.com/Abraxas-365/vendex/internal/notifx"
 )
 
 // RegisterSubscriptions wires all transactional email handlers to the event bus.

@@ -3,7 +3,7 @@ package agentsession
 import (
 	"context"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // SessionRepository defines persistence operations for Session records.

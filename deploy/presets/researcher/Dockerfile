@@ -1,7 +1,7 @@
-# hada-preset-researcher — Competitor Research preset for hada-commerce agent.
+# vendex-preset-researcher — Competitor Research preset for vendex agent.
 # Extends base with Python for data analysis and Playwright for web scraping.
 
-FROM hada-preset-base:latest
+FROM vendex-preset-base:latest
 
 # Install Python for data analysis scripts
 RUN apk add --no-cache python3 py3-pip

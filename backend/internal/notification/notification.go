@@ -3,7 +3,7 @@ package notification
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Type represents the severity/kind of a notification.

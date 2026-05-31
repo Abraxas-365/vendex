@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Abraxas-365/hada-commerce/internal/customergroup"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/customergroup"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Service handles business logic for the customer group domain.

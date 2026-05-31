@@ -1,10 +1,10 @@
 package returnscontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/returns/returnsapi"
-	"github.com/Abraxas-365/hada-commerce/internal/returns/returnsinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/returns/returnssrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/returns/returnsapi"
+	"github.com/Abraxas-365/vendex/internal/returns/returnsinfra"
+	"github.com/Abraxas-365/vendex/internal/returns/returnssrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

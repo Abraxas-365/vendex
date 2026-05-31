@@ -10,19 +10,19 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
-      - hada
+      - vendex
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
     networks:
-      - hada
+      - vendex
 
 volumes:
   pgdata:
 
 networks:
-  hada:
-    name: hada
+  vendex:
+    name: vendex
     driver: bridge

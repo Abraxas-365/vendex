@@ -1,9 +1,9 @@
 package socialauthcontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/socialauth/socialauthapi"
-	"github.com/Abraxas-365/hada-commerce/internal/socialauth/socialauthinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/socialauth/socialauthsrv"
+	"github.com/Abraxas-365/vendex/internal/socialauth/socialauthapi"
+	"github.com/Abraxas-365/vendex/internal/socialauth/socialauthinfra"
+	"github.com/Abraxas-365/vendex/internal/socialauth/socialauthsrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

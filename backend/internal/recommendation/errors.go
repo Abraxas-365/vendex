@@ -1,6 +1,6 @@
 package recommendation
 
-import "github.com/Abraxas-365/hada-commerce/internal/errx"
+import "github.com/Abraxas-365/vendex/internal/errx"
 
 var (
 	ErrRuleNotFound  = errx.NotFound("recommendation rule not found")

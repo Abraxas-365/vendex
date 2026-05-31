@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // CredentialsRepository defines persistence operations for customer credentials.

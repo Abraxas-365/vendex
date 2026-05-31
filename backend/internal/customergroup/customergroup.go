@@ -3,7 +3,7 @@ package customergroup
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // GroupRules defines the automatic assignment rules for a customer group.

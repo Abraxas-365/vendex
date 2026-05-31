@@ -1,10 +1,10 @@
 package productcontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/product/productapi"
-	"github.com/Abraxas-365/hada-commerce/internal/product/productinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/product/productsrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/product/productapi"
+	"github.com/Abraxas-365/vendex/internal/product/productinfra"
+	"github.com/Abraxas-365/vendex/internal/product/productsrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

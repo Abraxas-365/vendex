@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Abraxas-365/hada-commerce/internal/notifx"
+	"github.com/Abraxas-365/vendex/internal/notifx"
 )
 
 // EmailResolver resolves a customer's email address by customer ID and tenant ID.

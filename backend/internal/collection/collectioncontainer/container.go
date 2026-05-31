@@ -4,10 +4,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/collection/collectionapi"
-	"github.com/Abraxas-365/hada-commerce/internal/collection/collectioninfra"
-	"github.com/Abraxas-365/hada-commerce/internal/collection/collectionsrv"
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/collection/collectionapi"
+	"github.com/Abraxas-365/vendex/internal/collection/collectioninfra"
+	"github.com/Abraxas-365/vendex/internal/collection/collectionsrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
 )
 
 // Container wires the collection domain dependencies together.

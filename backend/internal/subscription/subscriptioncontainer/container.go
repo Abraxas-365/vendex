@@ -1,10 +1,10 @@
 package subscriptioncontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/subscription/subscriptionapi"
-	"github.com/Abraxas-365/hada-commerce/internal/subscription/subscriptioninfra"
-	"github.com/Abraxas-365/hada-commerce/internal/subscription/subscriptionsrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/subscription/subscriptionapi"
+	"github.com/Abraxas-365/vendex/internal/subscription/subscriptioninfra"
+	"github.com/Abraxas-365/vendex/internal/subscription/subscriptionsrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

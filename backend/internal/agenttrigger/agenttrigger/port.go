@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // TriggerRepository defines persistence operations for Trigger records.

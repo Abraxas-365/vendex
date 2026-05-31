@@ -1,7 +1,7 @@
 package authinfra
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/iam/user"
+	"github.com/Abraxas-365/vendex/internal/iam/user"
 	"golang.org/x/crypto/bcrypt"
 )
 

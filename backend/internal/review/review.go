@@ -3,7 +3,7 @@ package review
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // ReviewStatus represents the moderation state of a review.

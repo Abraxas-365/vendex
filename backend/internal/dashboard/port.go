@@ -3,7 +3,7 @@ package dashboard
 import (
 	"context"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Repository defines the read-only queries needed by the dashboard domain.

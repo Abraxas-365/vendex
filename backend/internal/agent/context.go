@@ -5,8 +5,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/dashboard"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/dashboard"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // StoreContext holds dynamic store statistics that are injected into the agent

@@ -3,10 +3,10 @@ package themeapi
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/theme"
-	"github.com/Abraxas-365/hada-commerce/internal/theme/themesrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/theme"
+	"github.com/Abraxas-365/vendex/internal/theme/themesrv"
 )
 
 // Handler exposes HTTP endpoints for the theme domain.

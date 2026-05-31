@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/logx"
-	"github.com/Abraxas-365/hada-commerce/internal/webhook/webhookapi"
-	"github.com/Abraxas-365/hada-commerce/internal/webhook/webhookinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/webhook/webhooksrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/logx"
+	"github.com/Abraxas-365/vendex/internal/webhook/webhookapi"
+	"github.com/Abraxas-365/vendex/internal/webhook/webhookinfra"
+	"github.com/Abraxas-365/vendex/internal/webhook/webhooksrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

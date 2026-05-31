@@ -3,10 +3,10 @@ package multistoreapi
 import (
 	"strconv"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/multistore"
-	"github.com/Abraxas-365/hada-commerce/internal/multistore/multistoresrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/multistore"
+	"github.com/Abraxas-365/vendex/internal/multistore/multistoresrv"
 	"github.com/gofiber/fiber/v2"
 )
 

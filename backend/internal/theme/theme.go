@@ -3,7 +3,7 @@ package theme
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Theme represents a design token set for a tenant's storefront.

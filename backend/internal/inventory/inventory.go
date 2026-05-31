@@ -3,7 +3,7 @@ package inventory
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // MovementType categorizes stock movement direction/cause.

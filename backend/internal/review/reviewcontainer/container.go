@@ -1,10 +1,10 @@
 package reviewcontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/review/reviewapi"
-	"github.com/Abraxas-365/hada-commerce/internal/review/reviewinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/review/reviewsrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/review/reviewapi"
+	"github.com/Abraxas-365/vendex/internal/review/reviewinfra"
+	"github.com/Abraxas-365/vendex/internal/review/reviewsrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

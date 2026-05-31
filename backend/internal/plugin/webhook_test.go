@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/plugin"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/plugin"
 )
 
 // ── mock repositories ─────────────────────────────────────────────────────────

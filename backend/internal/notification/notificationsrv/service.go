@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/notification"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/notification"
 	"github.com/google/uuid"
 )
 

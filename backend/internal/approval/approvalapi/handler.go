@@ -6,9 +6,9 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Abraxas-365/hada-commerce/internal/approval/approvalsrv"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/approval/approvalsrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // tenantID extracts the tenant ID from Fiber context (set by auth middleware).

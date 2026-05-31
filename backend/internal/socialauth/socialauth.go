@@ -3,7 +3,7 @@ package socialauth
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Provider constants for supported OAuth providers.

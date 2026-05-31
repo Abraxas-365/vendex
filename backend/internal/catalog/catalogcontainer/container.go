@@ -4,10 +4,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogapi"
-	"github.com/Abraxas-365/hada-commerce/internal/catalog/cataloginfra"
-	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogsrv"
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/catalog/catalogapi"
+	"github.com/Abraxas-365/vendex/internal/catalog/cataloginfra"
+	"github.com/Abraxas-365/vendex/internal/catalog/catalogsrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
 )
 
 // Container wires together all catalog domain dependencies.

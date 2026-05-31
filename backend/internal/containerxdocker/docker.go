@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/containerx"
+	"github.com/Abraxas-365/vendex/internal/containerx"
 	"github.com/docker/docker/api/types"
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"

@@ -1,8 +1,8 @@
 package agent
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/agent/workspace"
-	"github.com/Abraxas-365/hada-commerce/internal/containerx"
+	"github.com/Abraxas-365/vendex/internal/agent/workspace"
+	"github.com/Abraxas-365/vendex/internal/containerx"
 )
 
 // WorkspaceTools returns all workspace tools as a slice of agent.Tool.

@@ -207,7 +207,7 @@ function AdminLayout() {
         <div className="flex h-16 items-center border-b border-slate-200 px-4">
           <Store size={22} className="text-indigo-600" />
           <span className="ml-2 text-base font-semibold text-slate-800 tracking-tight">
-            Hada Commerce
+            Vendex
           </span>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">
@@ -254,7 +254,7 @@ function AdminLayout() {
       </aside>
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6">
-          <h1 className="text-sm font-medium text-slate-500">Hada Commerce Admin</h1>
+          <h1 className="text-sm font-medium text-slate-500">Vendex Admin</h1>
           {user && (
             <div className="flex items-center gap-3">
               {user.picture ? (

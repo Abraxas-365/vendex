@@ -12,7 +12,7 @@ backend:
 	cd backend && go run ./cmd/...
 
 backend-build:
-	cd backend && go build -o ../bin/hada-commerce ./cmd/...
+	cd backend && go build -o ../bin/vendex ./cmd/...
 
 backend-test:
 	cd backend && go test ./...
@@ -37,11 +37,11 @@ migrate:
 	done
 
 # Agent Presets
-PRESET_REGISTRY ?= ghcr.io/abraxas-365/hada-presets
+PRESET_REGISTRY ?= ghcr.io/abraxas-365/vendex-presets
 PRESET_TAG ?= latest
 
 preset-build-base:
-	docker build -t hada-preset-base:$(PRESET_TAG) deploy/presets/base/
+	docker build -t vendex-preset-base:$(PRESET_TAG) deploy/presets/base/
 
 preset-build-webdev: preset-build-base
 	docker build -t $(PRESET_REGISTRY)/webdev:$(PRESET_TAG) deploy/presets/webdev/

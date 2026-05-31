@@ -1,10 +1,10 @@
 package checkout
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/order"
-	"github.com/Abraxas-365/hada-commerce/internal/payment"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/order"
+	"github.com/Abraxas-365/vendex/internal/payment"
 )
 
 // CheckoutInput holds all data needed to process a checkout.

@@ -5,10 +5,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Abraxas-365/hada-commerce/internal/bundle"
-	"github.com/Abraxas-365/hada-commerce/internal/bundle/bundlesrv"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/bundle"
+	"github.com/Abraxas-365/vendex/internal/bundle/bundlesrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Handler exposes HTTP endpoints for the bundle domain.

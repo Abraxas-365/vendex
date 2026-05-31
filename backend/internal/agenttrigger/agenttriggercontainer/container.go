@@ -5,9 +5,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/agenttrigger/agenttriggerapi"
-	"github.com/Abraxas-365/hada-commerce/internal/agenttrigger/agenttriggerinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/agenttrigger/agenttriggersrv"
+	"github.com/Abraxas-365/vendex/internal/agenttrigger/agenttriggerapi"
+	"github.com/Abraxas-365/vendex/internal/agenttrigger/agenttriggerinfra"
+	"github.com/Abraxas-365/vendex/internal/agenttrigger/agenttriggersrv"
 )
 
 // Container holds the wired agenttrigger domain components.

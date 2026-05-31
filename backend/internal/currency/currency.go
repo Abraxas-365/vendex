@@ -3,7 +3,7 @@ package currency
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // CurrencyRate represents an exchange rate between two currencies for a tenant.

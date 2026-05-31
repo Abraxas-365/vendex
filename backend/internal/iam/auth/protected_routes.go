@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 	"github.com/gofiber/fiber/v2"
 )
 

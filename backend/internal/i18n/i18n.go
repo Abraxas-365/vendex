@@ -3,7 +3,7 @@ package i18n
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Translation represents a single translated field value for an entity in a specific locale.

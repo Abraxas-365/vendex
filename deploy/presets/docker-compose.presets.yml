@@ -8,14 +8,14 @@ services:
     build:
       context: ./base
       dockerfile: Dockerfile
-    image: hada-preset-base:latest
+    image: vendex-preset-base:latest
 
   # Web Designer preset (for development/testing)
   preset-webdev:
     build:
       context: ./webdev
       dockerfile: Dockerfile
-    image: hada-preset-webdev:latest
+    image: vendex-preset-webdev:latest
     depends_on:
       - preset-base
     ports:
@@ -24,8 +24,8 @@ services:
     volumes:
       - webdev-workspace:/workspace
     labels:
-      hada.preset: "webdev"
-      hada.preset.version: "1.0.0"
+      vendex.preset: "webdev"
+      vendex.preset.version: "1.0.0"
 
 volumes:
   webdev-workspace:

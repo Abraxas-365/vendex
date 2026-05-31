@@ -6,17 +6,17 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/catalog/catalogsrv"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/order/ordersrv"
-	"github.com/Abraxas-365/hada-commerce/internal/product/productsrv"
-	"github.com/Abraxas-365/hada-commerce/internal/promo"
-	"github.com/Abraxas-365/hada-commerce/internal/promo/promosrv"
-	"github.com/Abraxas-365/hada-commerce/internal/storefront"
-	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontsrv"
-	"github.com/Abraxas-365/hada-commerce/internal/theme"
-	"github.com/Abraxas-365/hada-commerce/internal/theme/themesrv"
+	"github.com/Abraxas-365/vendex/internal/catalog/catalogsrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/order/ordersrv"
+	"github.com/Abraxas-365/vendex/internal/product/productsrv"
+	"github.com/Abraxas-365/vendex/internal/promo"
+	"github.com/Abraxas-365/vendex/internal/promo/promosrv"
+	"github.com/Abraxas-365/vendex/internal/storefront"
+	"github.com/Abraxas-365/vendex/internal/storefront/storefrontsrv"
+	"github.com/Abraxas-365/vendex/internal/theme"
+	"github.com/Abraxas-365/vendex/internal/theme/themesrv"
 )
 
 // ─── CreatePageTool ──────────────────────────────────────────────────────────

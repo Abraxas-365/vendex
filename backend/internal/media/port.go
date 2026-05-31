@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // MediaRepository defines persistence operations for Media metadata.

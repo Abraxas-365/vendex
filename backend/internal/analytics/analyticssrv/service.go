@@ -3,8 +3,8 @@ package analyticssrv
 import (
 	"context"
 
-	"github.com/Abraxas-365/hada-commerce/internal/analytics"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/analytics"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Service handles analytics query orchestration.

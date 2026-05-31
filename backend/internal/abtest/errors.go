@@ -1,6 +1,6 @@
 package abtest
 
-import "github.com/Abraxas-365/hada-commerce/internal/errx"
+import "github.com/Abraxas-365/vendex/internal/errx"
 
 var (
 	ErrNotFound              = errx.New("experiment not found", errx.TypeNotFound)

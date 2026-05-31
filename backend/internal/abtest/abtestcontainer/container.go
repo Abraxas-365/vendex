@@ -1,10 +1,10 @@
 package abtestcontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/abtest/abtestapi"
-	"github.com/Abraxas-365/hada-commerce/internal/abtest/abtestinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/abtest/abtestsrv"
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/abtest/abtestapi"
+	"github.com/Abraxas-365/vendex/internal/abtest/abtestinfra"
+	"github.com/Abraxas-365/vendex/internal/abtest/abtestsrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

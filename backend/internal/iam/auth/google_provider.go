@@ -8,9 +8,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/Abraxas-365/hada-commerce/internal/config"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/iam"
+	"github.com/Abraxas-365/vendex/internal/config"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/iam"
 )
 
 const (

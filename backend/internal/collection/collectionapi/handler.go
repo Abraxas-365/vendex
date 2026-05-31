@@ -6,10 +6,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Abraxas-365/hada-commerce/internal/collection"
-	"github.com/Abraxas-365/hada-commerce/internal/collection/collectionsrv"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/collection"
+	"github.com/Abraxas-365/vendex/internal/collection/collectionsrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Handler exposes HTTP endpoints for the collection domain.

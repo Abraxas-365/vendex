@@ -3,10 +3,10 @@ package abtestapi
 import (
 	"strconv"
 
-	"github.com/Abraxas-365/hada-commerce/internal/abtest"
-	"github.com/Abraxas-365/hada-commerce/internal/abtest/abtestsrv"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/abtest"
+	"github.com/Abraxas-365/vendex/internal/abtest/abtestsrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 	"github.com/gofiber/fiber/v2"
 )
 

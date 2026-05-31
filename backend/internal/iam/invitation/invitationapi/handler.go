@@ -1,10 +1,10 @@
 package invitationapi
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/iam"
-	"github.com/Abraxas-365/hada-commerce/internal/iam/auth"
-	"github.com/Abraxas-365/hada-commerce/internal/iam/invitation"
-	"github.com/Abraxas-365/hada-commerce/internal/iam/invitation/invitationsrv"
+	"github.com/Abraxas-365/vendex/internal/iam"
+	"github.com/Abraxas-365/vendex/internal/iam/auth"
+	"github.com/Abraxas-365/vendex/internal/iam/invitation"
+	"github.com/Abraxas-365/vendex/internal/iam/invitation/invitationsrv"
 	"github.com/gofiber/fiber/v2"
 )
 

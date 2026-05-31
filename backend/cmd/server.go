@@ -7,9 +7,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/Abraxas-365/hada-commerce/internal/config"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/logx"
+	"github.com/Abraxas-365/vendex/internal/config"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/logx"
 	// manifesto:server-imports
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -37,7 +37,7 @@ func main() {
 		logx.SetLevel(logx.LevelInfo)
 	}
 
-	logx.Info("Starting hada-commerce API Server...")
+	logx.Info("Starting vendex API Server...")
 	logx.Infof("Environment: %s", cfg.Server.Environment)
 
 	// 3. Initialize Dependency Container
@@ -51,7 +51,7 @@ func main() {
 
 	// 5. Create Fiber App
 	app := fiber.New(fiber.Config{
-		AppName:               "hada-commerce API",
+		AppName:               "vendex API",
 		DisableStartupMessage: true,
 		ErrorHandler:          globalErrorHandler(cfg),
 		BodyLimit:             10 * 1024 * 1024, // 10MB
@@ -276,7 +276,7 @@ func healthCheckHandler(container *Container) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		health := fiber.Map{
 			"status":      "healthy",
-			"service":     "hada-commerce",
+			"service":     "vendex",
 			"environment": container.Config.Server.Environment,
 			"timestamp":   fmt.Sprintf("%d", c.Context().Time().Unix()),
 		}
@@ -311,7 +311,7 @@ func healthCheckHandler(container *Container) fiber.Handler {
 func infoHandler(cfg *config.Config) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"service":     "hada-commerce",
+			"service":     "vendex",
 			"version":     "1.0.0",
 			"environment": cfg.Server.Environment,
 			"endpoints": fiber.Map{

@@ -8,7 +8,7 @@
       "icon": "palette",
       "tags": ["design", "storefront", "html", "css"],
       "builtin": true,
-      "image": "hada-preset-webdev:latest"
+      "image": "vendex-preset-webdev:latest"
     },
     {
       "slug": "researcher",
@@ -17,7 +17,7 @@
       "icon": "search",
       "tags": ["research", "competitors", "seo", "pricing"],
       "builtin": true,
-      "image": "hada-preset-researcher:latest"
+      "image": "vendex-preset-researcher:latest"
     },
     {
       "slug": "store-manager",
@@ -35,7 +35,7 @@
       "icon": "pencil",
       "tags": ["content", "blog", "seo", "copywriting"],
       "builtin": true,
-      "image": "hada-preset-content:latest"
+      "image": "vendex-preset-content:latest"
     },
     {
       "slug": "data-analyst",
@@ -44,7 +44,7 @@
       "icon": "chart",
       "tags": ["analytics", "reports", "data", "trends"],
       "builtin": true,
-      "image": "hada-preset-analyst:latest"
+      "image": "vendex-preset-analyst:latest"
     }
   ]
 }

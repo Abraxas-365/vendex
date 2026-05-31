@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/errx"
 )
 
 // Config configuración completa del módulo de autenticación

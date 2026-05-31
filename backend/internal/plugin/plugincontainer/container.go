@@ -3,11 +3,11 @@ package plugincontainer
 import (
 	"net/http"
 
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/plugin"
-	"github.com/Abraxas-365/hada-commerce/internal/plugin/pluginapi"
-	"github.com/Abraxas-365/hada-commerce/internal/plugin/plugininfra"
-	"github.com/Abraxas-365/hada-commerce/internal/plugin/pluginsrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/plugin"
+	"github.com/Abraxas-365/vendex/internal/plugin/pluginapi"
+	"github.com/Abraxas-365/vendex/internal/plugin/plugininfra"
+	"github.com/Abraxas-365/vendex/internal/plugin/pluginsrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

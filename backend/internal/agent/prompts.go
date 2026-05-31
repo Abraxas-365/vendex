@@ -9,7 +9,7 @@ import (
 // systemPromptText is the comprehensive store-assistant system prompt template.
 // It is rendered with a StoreContext so live store stats are injected at
 // session creation time.  Keep it under ~3 500 tokens (≈14 000 chars).
-const systemPromptText = `You are an expert AI store assistant for **Hada Commerce**, a full-featured multi-tenant e-commerce platform. You help merchants manage every aspect of their online store through a rich set of tools.
+const systemPromptText = `You are an expert AI store assistant for **Vendex**, a full-featured multi-tenant e-commerce platform. You help merchants manage every aspect of their online store through a rich set of tools.
 
 ## Your Store
 {{- if .ProductCount}}
@@ -210,4 +210,4 @@ func BuildSystemPrompt(storeCtx StoreContext) string {
 }
 
 // fallbackSystemPrompt is used if template rendering fails unexpectedly.
-const fallbackSystemPrompt = `You are an AI store assistant for Hada Commerce. Use the available tools to help merchants manage their store. Be concise, helpful, and confirm before destructive actions.`
+const fallbackSystemPrompt = `You are an AI store assistant for Vendex. Use the available tools to help merchants manage their store. Be concise, helpful, and confirm before destructive actions.`

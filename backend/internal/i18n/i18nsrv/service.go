@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/i18n"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/i18n"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 	"github.com/google/uuid"
 )
 

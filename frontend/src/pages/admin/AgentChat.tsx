@@ -22,7 +22,7 @@ type AgentStatus = 'idle' | 'thinking' | 'tool_use'
 const welcomeMessage: ChatMsg = {
   role: 'assistant',
   content:
-    "Hello! I'm the Hada Commerce assistant. I can help you create product pages, write descriptions, generate promo campaigns, and more. What would you like to do?",
+    "Hello! I'm the Vendex assistant. I can help you create product pages, write descriptions, generate promo campaigns, and more. What would you like to do?",
   timestamp: new Date(Date.now() - 60000).toISOString(),
 }
 

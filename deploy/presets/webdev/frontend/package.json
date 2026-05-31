@@ -1,5 +1,5 @@
 {
-  "name": "hada-preset-webdev-frontend",
+  "name": "vendex-preset-webdev-frontend",
   "version": "1.0.0",
   "private": true,
   "type": "module",

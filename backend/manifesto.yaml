@@ -1,6 +1,6 @@
 project:
     name: hada-test
-    go_module: github.com/Abraxas-365/hada-commerce
+    go_module: github.com/Abraxas-365/vendex
     manifesto_version: main
 modules:
     asyncx:

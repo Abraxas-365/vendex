@@ -3,7 +3,7 @@ package notifxses
 import (
 	"context"
 
-	"github.com/Abraxas-365/hada-commerce/internal/notifx"
+	"github.com/Abraxas-365/vendex/internal/notifx"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/aws/aws-sdk-go-v2/service/ses/types"

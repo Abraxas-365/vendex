@@ -4,9 +4,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/marketplace/marketplaceapi"
-	"github.com/Abraxas-365/hada-commerce/internal/marketplace/marketplaceinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/marketplace/marketplacesrv"
+	"github.com/Abraxas-365/vendex/internal/marketplace/marketplaceapi"
+	"github.com/Abraxas-365/vendex/internal/marketplace/marketplaceinfra"
+	"github.com/Abraxas-365/vendex/internal/marketplace/marketplacesrv"
 )
 
 // Container wires together all marketplace domain dependencies.

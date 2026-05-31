@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/settings"
-	"github.com/Abraxas-365/hada-commerce/internal/storefront"
-	"github.com/Abraxas-365/hada-commerce/internal/theme"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/settings"
+	"github.com/Abraxas-365/vendex/internal/storefront"
+	"github.com/Abraxas-365/vendex/internal/theme"
 )
 
 // ThemeGetter resolves the active theme for a tenant.

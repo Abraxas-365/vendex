@@ -1,6 +1,6 @@
 package notifx
 
-import "github.com/Abraxas-365/hada-commerce/internal/errx"
+import "github.com/Abraxas-365/vendex/internal/errx"
 
 var notifxErrors = errx.NewRegistry("NOTIFX")
 

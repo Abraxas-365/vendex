@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Abraxas-365/hada-commerce/internal/theme"
+	"github.com/Abraxas-365/vendex/internal/theme"
 )
 
 // TokensToCSS converts a ThemeTokens struct into a CSS :root block containing

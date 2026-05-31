@@ -1,10 +1,10 @@
 package ordercontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/order/orderapi"
-	"github.com/Abraxas-365/hada-commerce/internal/order/orderinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/order/ordersrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/order/orderapi"
+	"github.com/Abraxas-365/vendex/internal/order/orderinfra"
+	"github.com/Abraxas-365/vendex/internal/order/ordersrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

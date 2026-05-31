@@ -3,10 +3,10 @@ package bulkopsapi
 import (
 	"strconv"
 
-	"github.com/Abraxas-365/hada-commerce/internal/bulkops"
-	"github.com/Abraxas-365/hada-commerce/internal/bulkops/bulkopssrv"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/bulkops"
+	"github.com/Abraxas-365/vendex/internal/bulkops/bulkopssrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 	"github.com/gofiber/fiber/v2"
 )
 

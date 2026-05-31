@@ -1,9 +1,9 @@
 package wishlistcontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/wishlist/wishlistapi"
-	"github.com/Abraxas-365/hada-commerce/internal/wishlist/wishlistinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/wishlist/wishlistsrv"
+	"github.com/Abraxas-365/vendex/internal/wishlist/wishlistapi"
+	"github.com/Abraxas-365/vendex/internal/wishlist/wishlistinfra"
+	"github.com/Abraxas-365/vendex/internal/wishlist/wishlistsrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

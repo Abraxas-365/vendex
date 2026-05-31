@@ -3,13 +3,13 @@ package customercontainer
 import (
 	"context"
 
-	customerauth "github.com/Abraxas-365/hada-commerce/internal/customer/auth"
-	"github.com/Abraxas-365/hada-commerce/internal/customer/customerapi"
-	"github.com/Abraxas-365/hada-commerce/internal/customer/customerinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/customer/customersrv"
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/order"
+	customerauth "github.com/Abraxas-365/vendex/internal/customer/auth"
+	"github.com/Abraxas-365/vendex/internal/customer/customerapi"
+	"github.com/Abraxas-365/vendex/internal/customer/customerinfra"
+	"github.com/Abraxas-365/vendex/internal/customer/customersrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/order"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

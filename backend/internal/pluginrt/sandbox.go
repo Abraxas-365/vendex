@@ -3,7 +3,7 @@ package pluginrt
 import (
 	"database/sql"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Sandbox provides a plugin with scoped access to platform resources.

@@ -1,6 +1,6 @@
 package theme
 
-import "github.com/Abraxas-365/hada-commerce/internal/errx"
+import "github.com/Abraxas-365/vendex/internal/errx"
 
 var (
 	// ErrThemeNotFound is returned when a theme cannot be found.

@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/iam/auth"
+	"github.com/Abraxas-365/vendex/internal/iam/auth"
 )
 
 // CleanupService servicio de limpieza en background

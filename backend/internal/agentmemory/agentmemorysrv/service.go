@@ -9,8 +9,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Abraxas-365/hada-commerce/internal/agentmemory"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/agentmemory"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Service manages agent memory lifecycle.

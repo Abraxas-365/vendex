@@ -4,11 +4,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/storefront/renderer"
-	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontapi"
-	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/storefront/storefrontsrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/storefront/renderer"
+	"github.com/Abraxas-365/vendex/internal/storefront/storefrontapi"
+	"github.com/Abraxas-365/vendex/internal/storefront/storefrontinfra"
+	"github.com/Abraxas-365/vendex/internal/storefront/storefrontsrv"
 )
 
 // Container wires together all storefront domain dependencies.

@@ -4,9 +4,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/giftcard/giftcardapi"
-	"github.com/Abraxas-365/hada-commerce/internal/giftcard/giftcardinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/giftcard/giftcardsrv"
+	"github.com/Abraxas-365/vendex/internal/giftcard/giftcardapi"
+	"github.com/Abraxas-365/vendex/internal/giftcard/giftcardinfra"
+	"github.com/Abraxas-365/vendex/internal/giftcard/giftcardsrv"
 )
 
 // Container wires together the gift card domain's repository, service, and handler.

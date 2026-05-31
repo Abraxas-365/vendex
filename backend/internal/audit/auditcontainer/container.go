@@ -4,9 +4,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/audit/auditapi"
-	"github.com/Abraxas-365/hada-commerce/internal/audit/auditinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/audit/auditsrv"
+	"github.com/Abraxas-365/vendex/internal/audit/auditapi"
+	"github.com/Abraxas-365/vendex/internal/audit/auditinfra"
+	"github.com/Abraxas-365/vendex/internal/audit/auditsrv"
 )
 
 // Container wires together all audit domain dependencies.

@@ -4,10 +4,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/recommendation"
-	"github.com/Abraxas-365/hada-commerce/internal/recommendation/recommendationsrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/recommendation"
+	"github.com/Abraxas-365/vendex/internal/recommendation/recommendationsrv"
 	"github.com/gofiber/fiber/v2"
 )
 

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/catalog"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/product"
-	"github.com/Abraxas-365/hada-commerce/internal/storefront"
+	"github.com/Abraxas-365/vendex/internal/catalog"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/product"
+	"github.com/Abraxas-365/vendex/internal/storefront"
 )
 
 // ProductLister is the subset of productsrv.Service needed by the sitemap service.

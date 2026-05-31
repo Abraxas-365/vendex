@@ -1,6 +1,6 @@
 package approval
 
-import "github.com/Abraxas-365/hada-commerce/internal/errx"
+import "github.com/Abraxas-365/vendex/internal/errx"
 
 var (
 	// ErrNotFound is returned when an approval request does not exist for the tenant.

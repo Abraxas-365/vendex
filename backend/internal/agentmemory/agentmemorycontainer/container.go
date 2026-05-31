@@ -5,9 +5,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/agentmemory/agentmemoryapi"
-	"github.com/Abraxas-365/hada-commerce/internal/agentmemory/agentmemoryinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/agentmemory/agentmemorysrv"
+	"github.com/Abraxas-365/vendex/internal/agentmemory/agentmemoryapi"
+	"github.com/Abraxas-365/vendex/internal/agentmemory/agentmemoryinfra"
+	"github.com/Abraxas-365/vendex/internal/agentmemory/agentmemorysrv"
 )
 
 // Container holds the wired agent memory domain components.

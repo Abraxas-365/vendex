@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/errx"
 )
 
 // LocalStorageProvider implements media.StorageProvider using the local filesystem.

@@ -3,7 +3,7 @@ package loyalty
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Tier constants represent loyalty membership levels.

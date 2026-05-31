@@ -4,10 +4,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/bundle/bundleapi"
-	"github.com/Abraxas-365/hada-commerce/internal/bundle/bundleinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/bundle/bundlesrv"
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/bundle/bundleapi"
+	"github.com/Abraxas-365/vendex/internal/bundle/bundleinfra"
+	"github.com/Abraxas-365/vendex/internal/bundle/bundlesrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
 )
 
 // Container wires together all bundle domain dependencies.

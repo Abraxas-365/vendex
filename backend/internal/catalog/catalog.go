@@ -3,7 +3,7 @@ package catalog
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Category represents a product category in a tenant's catalog.

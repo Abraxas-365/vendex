@@ -71,7 +71,7 @@ export default function Login() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
               <Store className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-white tracking-tight">Hada Commerce</span>
+            <span className="text-xl font-bold text-white tracking-tight">Vendex</span>
           </div>
 
           <div className="mt-16">
@@ -121,7 +121,7 @@ export default function Login() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600">
               <Store className="h-4.5 w-4.5 text-white" />
             </div>
-            <span className="text-lg font-bold text-gray-900 tracking-tight">Hada Commerce</span>
+            <span className="text-lg font-bold text-gray-900 tracking-tight">Vendex</span>
           </div>
 
           <div className="mb-8">
@@ -170,7 +170,7 @@ export default function Login() {
         </div>
 
         <p className="mt-12 text-xs text-gray-300">
-          Hada Commerce v1.0
+          Vendex v1.0
         </p>
       </div>
     </div>

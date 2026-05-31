@@ -4,10 +4,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/media"
-	"github.com/Abraxas-365/hada-commerce/internal/media/mediaapi"
-	"github.com/Abraxas-365/hada-commerce/internal/media/mediainfra"
-	"github.com/Abraxas-365/hada-commerce/internal/media/mediasrv"
+	"github.com/Abraxas-365/vendex/internal/media"
+	"github.com/Abraxas-365/vendex/internal/media/mediaapi"
+	"github.com/Abraxas-365/vendex/internal/media/mediainfra"
+	"github.com/Abraxas-365/vendex/internal/media/mediasrv"
 )
 
 // Container wires together all media domain dependencies.

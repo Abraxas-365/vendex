@@ -1,10 +1,10 @@
 package multistorecontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/multistore/multistoreapi"
-	"github.com/Abraxas-365/hada-commerce/internal/multistore/multistoreinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/multistore/multistoresrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/multistore/multistoreapi"
+	"github.com/Abraxas-365/vendex/internal/multistore/multistoreinfra"
+	"github.com/Abraxas-365/vendex/internal/multistore/multistoresrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

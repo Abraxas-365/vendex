@@ -4,7 +4,7 @@ package auth
 import (
 	"context"
 
-	"github.com/Abraxas-365/hada-commerce/internal/iam"
+	"github.com/Abraxas-365/vendex/internal/iam"
 )
 
 // ============================================================================

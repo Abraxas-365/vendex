@@ -3,7 +3,7 @@ package i18n
 import (
 	"context"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Repository defines the persistence interface for the i18n domain.

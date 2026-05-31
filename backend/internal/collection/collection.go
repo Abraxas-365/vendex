@@ -3,7 +3,7 @@ package collection
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // CollectionType distinguishes manual (curated) from automatic (rule-based) collections.

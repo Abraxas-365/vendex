@@ -1,10 +1,10 @@
 package wishlistapi
 
 import (
-	customerauth "github.com/Abraxas-365/hada-commerce/internal/customer/auth"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/wishlist/wishlistsrv"
+	customerauth "github.com/Abraxas-365/vendex/internal/customer/auth"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/wishlist/wishlistsrv"
 	"github.com/gofiber/fiber/v2"
 )
 

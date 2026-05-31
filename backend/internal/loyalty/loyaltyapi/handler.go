@@ -5,10 +5,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/loyalty"
-	"github.com/Abraxas-365/hada-commerce/internal/loyalty/loyaltysrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/loyalty"
+	"github.com/Abraxas-365/vendex/internal/loyalty/loyaltysrv"
 )
 
 // Handler exposes loyalty HTTP endpoints via Fiber v2.

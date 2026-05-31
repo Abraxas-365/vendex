@@ -3,7 +3,7 @@ package audit
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // AuditEntry records a single admin action performed within a tenant.

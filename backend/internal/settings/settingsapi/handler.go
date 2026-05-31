@@ -3,10 +3,10 @@ package settingsapi
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/settings"
-	"github.com/Abraxas-365/hada-commerce/internal/settings/settingssrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/settings"
+	"github.com/Abraxas-365/vendex/internal/settings/settingssrv"
 )
 
 // Handler exposes HTTP endpoints for the settings domain.

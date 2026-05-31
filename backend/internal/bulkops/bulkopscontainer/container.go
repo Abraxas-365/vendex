@@ -1,10 +1,10 @@
 package bulkopscontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/bulkops/bulkopsapi"
-	"github.com/Abraxas-365/hada-commerce/internal/bulkops/bulkopsinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/bulkops/bulkopssrv"
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/bulkops/bulkopsapi"
+	"github.com/Abraxas-365/vendex/internal/bulkops/bulkopsinfra"
+	"github.com/Abraxas-365/vendex/internal/bulkops/bulkopssrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

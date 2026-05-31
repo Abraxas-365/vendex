@@ -4,16 +4,16 @@ import (
 	"context"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/cart"
-	"github.com/Abraxas-365/hada-commerce/internal/checkout"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/order"
-	"github.com/Abraxas-365/hada-commerce/internal/order/ordersrv"
-	"github.com/Abraxas-365/hada-commerce/internal/payment"
-	"github.com/Abraxas-365/hada-commerce/internal/shipping"
-	"github.com/Abraxas-365/hada-commerce/internal/tax"
+	"github.com/Abraxas-365/vendex/internal/cart"
+	"github.com/Abraxas-365/vendex/internal/checkout"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/order"
+	"github.com/Abraxas-365/vendex/internal/order/ordersrv"
+	"github.com/Abraxas-365/vendex/internal/payment"
+	"github.com/Abraxas-365/vendex/internal/shipping"
+	"github.com/Abraxas-365/vendex/internal/tax"
 )
 
 // ---------------------------------------------------------------------------

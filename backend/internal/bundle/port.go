@@ -3,7 +3,7 @@ package bundle
 import (
 	"context"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Repository defines persistence operations for the bundle domain.

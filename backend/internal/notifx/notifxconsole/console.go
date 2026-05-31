@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/Abraxas-365/hada-commerce/internal/logx"
-	"github.com/Abraxas-365/hada-commerce/internal/notifx"
+	"github.com/Abraxas-365/vendex/internal/logx"
+	"github.com/Abraxas-365/vendex/internal/notifx"
 )
 
 // ConsoleProvider prints emails to the terminal via logx. Intended for development and testing.

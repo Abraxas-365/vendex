@@ -3,11 +3,11 @@ package reviewapi
 import (
 	"strconv"
 
-	customerauth "github.com/Abraxas-365/hada-commerce/internal/customer/auth"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/review"
-	"github.com/Abraxas-365/hada-commerce/internal/review/reviewsrv"
+	customerauth "github.com/Abraxas-365/vendex/internal/customer/auth"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/review"
+	"github.com/Abraxas-365/vendex/internal/review/reviewsrv"
 	"github.com/gofiber/fiber/v2"
 )
 

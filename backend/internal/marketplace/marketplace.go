@@ -3,7 +3,7 @@ package marketplace
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // VendorStatus represents the approval state of a vendor.

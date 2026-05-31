@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/storefront"
-	"github.com/Abraxas-365/hada-commerce/internal/storefront/renderer"
-	"github.com/Abraxas-365/hada-commerce/internal/theme"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/storefront"
+	"github.com/Abraxas-365/vendex/internal/storefront/renderer"
+	"github.com/Abraxas-365/vendex/internal/theme"
 )
 
 // ── mock ThemeGetter ──────────────────────────────────────────────────────────

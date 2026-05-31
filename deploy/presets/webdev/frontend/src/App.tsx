@@ -7,7 +7,7 @@ interface FileEntry {
 }
 
 // The workspace file server runs on :9091 inside the container.
-// In production, this is proxied through the hada backend.
+// In production, this is proxied through the vendex backend.
 const WORKSPACE_URL = window.location.port === "5173"
   ? "http://localhost:9091"  // dev mode
   : `${window.location.origin}/workspace`;
@@ -38,7 +38,7 @@ export function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Listen for refresh messages from parent (hada admin)
+  // Listen for refresh messages from parent (vendex admin)
   useEffect(() => {
     const handler = (event: MessageEvent) => {
       if (event.data?.type === "refresh-preview") {

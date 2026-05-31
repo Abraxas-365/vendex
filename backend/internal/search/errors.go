@@ -1,6 +1,6 @@
 package search
 
-import "github.com/Abraxas-365/hada-commerce/internal/errx"
+import "github.com/Abraxas-365/vendex/internal/errx"
 
 var (
 	ErrInvalidQuery = errx.New("invalid search query", errx.TypeValidation)

@@ -10,8 +10,8 @@ import (
 	"html/template"
 	"strings"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/product"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/product"
 )
 
 // ── product_grid ──────────────────────────────────────────────────────────────

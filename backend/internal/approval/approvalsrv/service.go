@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Abraxas-365/hada-commerce/internal/approval"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/approval"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Service handles approval request lifecycle.

@@ -1,6 +1,6 @@
 package shipping
 
-import "github.com/Abraxas-365/hada-commerce/internal/errx"
+import "github.com/Abraxas-365/vendex/internal/errx"
 
 var (
 	ErrZoneNotFound     = errx.New("shipping zone not found", errx.TypeNotFound)

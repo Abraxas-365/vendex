@@ -4,10 +4,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/settings/settingsapi"
-	"github.com/Abraxas-365/hada-commerce/internal/settings/settingsinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/settings/settingssrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/settings/settingsapi"
+	"github.com/Abraxas-365/vendex/internal/settings/settingsinfra"
+	"github.com/Abraxas-365/vendex/internal/settings/settingssrv"
 )
 
 // Container wires together all settings domain dependencies.

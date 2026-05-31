@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Abraxas-365/hada-commerce/internal/storefront/renderer"
-	"github.com/Abraxas-365/hada-commerce/internal/theme"
+	"github.com/Abraxas-365/vendex/internal/storefront/renderer"
+	"github.com/Abraxas-365/vendex/internal/theme"
 )
 
 // ── helpers ───────────────────────────────────────────────────────────────────

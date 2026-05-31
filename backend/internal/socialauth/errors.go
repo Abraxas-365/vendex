@@ -3,7 +3,7 @@ package socialauth
 import (
 	"net/http"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/errx"
 )
 
 var ErrRegistry = errx.NewRegistry("SOCIAL_AUTH")

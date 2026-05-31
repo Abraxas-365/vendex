@@ -3,7 +3,7 @@ package eventbus
 import (
 	"context"
 
-	"github.com/Abraxas-365/hada-commerce/internal/logx"
+	"github.com/Abraxas-365/vendex/internal/logx"
 )
 
 // NewLoggingHandler returns a Handler that logs every event via logx.

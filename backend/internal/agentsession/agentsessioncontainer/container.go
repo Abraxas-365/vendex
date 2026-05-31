@@ -5,12 +5,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/agentsession"
-	"github.com/Abraxas-365/hada-commerce/internal/agentsession/agentsessionapi"
-	"github.com/Abraxas-365/hada-commerce/internal/agentsession/agentsessioninfra"
-	"github.com/Abraxas-365/hada-commerce/internal/agentsession/agentsessionsrv"
-	"github.com/Abraxas-365/hada-commerce/internal/containerx"
-	"github.com/Abraxas-365/hada-commerce/internal/marketplace/marketplacesrv"
+	"github.com/Abraxas-365/vendex/internal/agentsession"
+	"github.com/Abraxas-365/vendex/internal/agentsession/agentsessionapi"
+	"github.com/Abraxas-365/vendex/internal/agentsession/agentsessioninfra"
+	"github.com/Abraxas-365/vendex/internal/agentsession/agentsessionsrv"
+	"github.com/Abraxas-365/vendex/internal/containerx"
+	"github.com/Abraxas-365/vendex/internal/marketplace/marketplacesrv"
 )
 
 // Container holds the wired agentsession domain components.

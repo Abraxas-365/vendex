@@ -5,9 +5,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/approval/approvalapi"
-	"github.com/Abraxas-365/hada-commerce/internal/approval/approvalinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/approval/approvalsrv"
+	"github.com/Abraxas-365/vendex/internal/approval/approvalapi"
+	"github.com/Abraxas-365/vendex/internal/approval/approvalinfra"
+	"github.com/Abraxas-365/vendex/internal/approval/approvalsrv"
 )
 
 // Container holds the wired approval domain components.

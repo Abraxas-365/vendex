@@ -1,10 +1,10 @@
 package shippingcontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/shipping/shippingapi"
-	"github.com/Abraxas-365/hada-commerce/internal/shipping/shippinginfra"
-	"github.com/Abraxas-365/hada-commerce/internal/shipping/shippingsrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/shipping/shippingapi"
+	"github.com/Abraxas-365/vendex/internal/shipping/shippinginfra"
+	"github.com/Abraxas-365/vendex/internal/shipping/shippingsrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

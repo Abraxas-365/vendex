@@ -8,7 +8,7 @@ import (
 )
 
 // HarnessTool wraps an agent.Tool to implement the harness tools.Tool interface.
-// This bridge converts the hada-commerce Tool interface (map[string]any InputSchema,
+// This bridge converts the vendex Tool interface (map[string]any InputSchema,
 // string Execute result) into the harness-compatible interface (json.RawMessage
 // InputSchema, *tools.Result Execute result).
 type HarnessTool struct {

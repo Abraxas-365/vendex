@@ -1,9 +1,9 @@
 package searchcontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/search/searchapi"
-	"github.com/Abraxas-365/hada-commerce/internal/search/searchinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/search/searchsrv"
+	"github.com/Abraxas-365/vendex/internal/search/searchapi"
+	"github.com/Abraxas-365/vendex/internal/search/searchinfra"
+	"github.com/Abraxas-365/vendex/internal/search/searchsrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

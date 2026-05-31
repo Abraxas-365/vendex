@@ -258,7 +258,7 @@ test.beforeEach(async ({ page }) => {
     localStorage.setItem(
       'auth_user',
       JSON.stringify({
-        id: 'usr_mock', tenant_id: 'tnt_mock', email: 'demo@hada.commerce',
+        id: 'usr_mock', tenant_id: 'tnt_mock', email: 'demo@vendex.ai',
         name: 'Demo User', status: 'active', scopes: ['admin'],
       }),
     )
@@ -283,7 +283,7 @@ test.beforeEach(async ({ page }) => {
     // Auth
     if (url.includes('/auth/me')) {
       return json({
-        user: { id: 'usr_mock', tenant_id: 'tnt_mock', email: 'demo@hada.commerce', name: 'Demo User', status: 'active', scopes: ['admin'] },
+        user: { id: 'usr_mock', tenant_id: 'tnt_mock', email: 'demo@vendex.ai', name: 'Demo User', status: 'active', scopes: ['admin'] },
         tenant: { id: 'tnt_mock', name: 'Hada Beauty', slug: 'hada-beauty', plan: 'pro', is_active: true },
       })
     }
@@ -761,7 +761,7 @@ test.afterAll(() => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hada Commerce - UI Screenshots</title>
+  <title>Vendex - UI Screenshots</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e5e5e5; padding: 2rem; }
@@ -776,7 +776,7 @@ test.afterAll(() => {
   </style>
 </head>
 <body>
-  <h1>Hada Commerce</h1>
+  <h1>Vendex</h1>
   <p class="subtitle">UI Screenshots &mdash; ${new Date().toLocaleDateString()}</p>
   <div class="grid">
 ${files

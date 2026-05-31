@@ -1,12 +1,12 @@
 package paymentcontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/payment"
-	"github.com/Abraxas-365/hada-commerce/internal/payment/paymentapi"
-	"github.com/Abraxas-365/hada-commerce/internal/payment/paymentinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/payment/paymentsrv"
-	"github.com/Abraxas-365/hada-commerce/internal/payment/provider"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/payment"
+	"github.com/Abraxas-365/vendex/internal/payment/paymentapi"
+	"github.com/Abraxas-365/vendex/internal/payment/paymentinfra"
+	"github.com/Abraxas-365/vendex/internal/payment/paymentsrv"
+	"github.com/Abraxas-365/vendex/internal/payment/provider"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

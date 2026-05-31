@@ -3,9 +3,9 @@ package notificationapi
 import (
 	"strconv"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/notification/notificationsrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/notification/notificationsrv"
 	"github.com/gofiber/fiber/v2"
 )
 

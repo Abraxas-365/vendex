@@ -5,10 +5,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/marketplace"
-	"github.com/Abraxas-365/hada-commerce/internal/marketplace/marketplacesrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/marketplace"
+	"github.com/Abraxas-365/vendex/internal/marketplace/marketplacesrv"
 )
 
 // Handler exposes HTTP endpoints for the marketplace domain.

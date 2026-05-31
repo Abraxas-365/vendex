@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/customer"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/customer"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 	"github.com/golang-jwt/jwt/v5"
 )
 

@@ -9,10 +9,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Abraxas-365/hada-commerce/internal/agentsession"
-	"github.com/Abraxas-365/hada-commerce/internal/containerx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/marketplace/marketplacesrv"
+	"github.com/Abraxas-365/vendex/internal/agentsession"
+	"github.com/Abraxas-365/vendex/internal/containerx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/marketplace/marketplacesrv"
 )
 
 // Service manages agent session lifecycle.

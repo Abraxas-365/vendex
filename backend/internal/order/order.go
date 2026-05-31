@@ -3,7 +3,7 @@ package order
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // OrderStatus represents the lifecycle of an order.

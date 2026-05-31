@@ -4,9 +4,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/promo/promoapi"
-	"github.com/Abraxas-365/hada-commerce/internal/promo/promoinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/promo/promosrv"
+	"github.com/Abraxas-365/vendex/internal/promo/promoapi"
+	"github.com/Abraxas-365/vendex/internal/promo/promoinfra"
+	"github.com/Abraxas-365/vendex/internal/promo/promosrv"
 )
 
 // Container wires together the promo domain's repository, service, and handler.

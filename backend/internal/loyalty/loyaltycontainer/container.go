@@ -4,10 +4,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/loyalty/loyaltyapi"
-	"github.com/Abraxas-365/hada-commerce/internal/loyalty/loyaltyinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/loyalty/loyaltysrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/loyalty/loyaltyapi"
+	"github.com/Abraxas-365/vendex/internal/loyalty/loyaltyinfra"
+	"github.com/Abraxas-365/vendex/internal/loyalty/loyaltysrv"
 )
 
 // Container wires together the loyalty domain's repository, service, and handler.

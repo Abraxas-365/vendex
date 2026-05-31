@@ -3,8 +3,8 @@ package searchsrv
 import (
 	"context"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/search"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/search"
 )
 
 // Service implements business logic for the search domain.

@@ -3,7 +3,7 @@ package collection
 import (
 	"context"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Repository defines all persistence operations for the collection domain.

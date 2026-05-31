@@ -1,10 +1,10 @@
 package cartcontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/cart/cartapi"
-	"github.com/Abraxas-365/hada-commerce/internal/cart/cartinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/cart/cartsrv"
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/cart/cartapi"
+	"github.com/Abraxas-365/vendex/internal/cart/cartinfra"
+	"github.com/Abraxas-365/vendex/internal/cart/cartsrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

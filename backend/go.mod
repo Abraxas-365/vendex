@@ -1,4 +1,4 @@
-module github.com/Abraxas-365/hada-commerce
+module github.com/Abraxas-365/vendex
 
 go 1.25.4
 

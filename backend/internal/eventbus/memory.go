@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/Abraxas-365/hada-commerce/internal/logx"
+	"github.com/Abraxas-365/vendex/internal/logx"
 )
 
 // compile-time check: InMemoryBus must satisfy Bus.

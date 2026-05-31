@@ -1,4 +1,4 @@
-# hada-preset-base — Base image for all hada agent preset containers.
+# vendex-preset-base — Base image for all vendex agent preset containers.
 # Provides: Node.js runtime, lightweight HTTP server (sirv), workspace structure.
 # Preset images extend this with their own frontend build and workspace content.
 

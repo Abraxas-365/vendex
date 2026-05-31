@@ -1,9 +1,9 @@
 package customergroupcontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/customergroup/customergroupapi"
-	"github.com/Abraxas-365/hada-commerce/internal/customergroup/customergroupinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/customergroup/customergroupsrv"
+	"github.com/Abraxas-365/vendex/internal/customergroup/customergroupapi"
+	"github.com/Abraxas-365/vendex/internal/customergroup/customergroupinfra"
+	"github.com/Abraxas-365/vendex/internal/customergroup/customergroupsrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

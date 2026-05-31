@@ -7,14 +7,14 @@ import (
 	"io"
 	"strings"
 
-	"github.com/Abraxas-365/hada-commerce/internal/customer"
-	"github.com/Abraxas-365/hada-commerce/internal/customer/customersrv"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/order"
-	"github.com/Abraxas-365/hada-commerce/internal/order/ordersrv"
-	"github.com/Abraxas-365/hada-commerce/internal/product"
-	"github.com/Abraxas-365/hada-commerce/internal/product/productsrv"
+	"github.com/Abraxas-365/vendex/internal/customer"
+	"github.com/Abraxas-365/vendex/internal/customer/customersrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/order"
+	"github.com/Abraxas-365/vendex/internal/order/ordersrv"
+	"github.com/Abraxas-365/vendex/internal/product"
+	"github.com/Abraxas-365/vendex/internal/product/productsrv"
 )
 
 // ProductLister is the minimal interface needed to list products for export.

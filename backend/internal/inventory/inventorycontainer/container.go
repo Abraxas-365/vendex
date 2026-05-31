@@ -1,10 +1,10 @@
 package inventorycontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/inventory/inventoryapi"
-	"github.com/Abraxas-365/hada-commerce/internal/inventory/inventoryinfra"
-	"github.com/Abraxas-365/hada-commerce/internal/inventory/inventorysrv"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/inventory/inventoryapi"
+	"github.com/Abraxas-365/vendex/internal/inventory/inventoryinfra"
+	"github.com/Abraxas-365/vendex/internal/inventory/inventorysrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

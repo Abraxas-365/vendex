@@ -7,10 +7,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Abraxas-365/hada-commerce/internal/agentmemory"
-	"github.com/Abraxas-365/hada-commerce/internal/agentmemory/agentmemorysrv"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/agentmemory"
+	"github.com/Abraxas-365/vendex/internal/agentmemory/agentmemorysrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Handler exposes agent memory CRUD and search over HTTP.

@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Abraxas-365/hada-commerce/internal/cartrecovery"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/cartrecovery"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Service implements business logic for the cart recovery domain.

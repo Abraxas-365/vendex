@@ -1,6 +1,6 @@
 package order
 
-import "github.com/Abraxas-365/hada-commerce/internal/errx"
+import "github.com/Abraxas-365/vendex/internal/errx"
 
 var (
 	ErrNotFound          = errx.New("order not found", errx.TypeNotFound)

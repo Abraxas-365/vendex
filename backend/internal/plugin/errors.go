@@ -1,6 +1,6 @@
 package plugin
 
-import "github.com/Abraxas-365/hada-commerce/internal/errx"
+import "github.com/Abraxas-365/vendex/internal/errx"
 
 var (
 	ErrPluginNotFound       = errx.New("plugin not found", errx.TypeNotFound)

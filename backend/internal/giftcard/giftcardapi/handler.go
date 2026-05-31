@@ -6,10 +6,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/giftcard"
-	"github.com/Abraxas-365/hada-commerce/internal/giftcard/giftcardsrv"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/giftcard"
+	"github.com/Abraxas-365/vendex/internal/giftcard/giftcardsrv"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Handler exposes gift card HTTP endpoints.

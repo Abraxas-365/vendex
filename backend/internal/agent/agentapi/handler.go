@@ -11,9 +11,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Abraxas-365/hada-commerce/internal/agent"
-	"github.com/Abraxas-365/hada-commerce/internal/containerx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/agent"
+	"github.com/Abraxas-365/vendex/internal/containerx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 	"github.com/Abraxas-365/harness"
 	"github.com/Abraxas-365/harness/tools"
 	"github.com/gofiber/fiber/v2"

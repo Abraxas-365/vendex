@@ -3,7 +3,7 @@ package promo
 import (
 	"context"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // PromoRepository defines persistence operations for Promo entities.

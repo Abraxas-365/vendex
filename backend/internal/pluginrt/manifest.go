@@ -3,7 +3,7 @@ package pluginrt
 import (
 	"encoding/json"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/errx"
 )
 
 // Manifest describes a plugin's capabilities.

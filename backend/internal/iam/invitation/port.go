@@ -3,7 +3,7 @@ package invitation
 import (
 	"context"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // NotificationService is a generic interface for sending invitation emails.

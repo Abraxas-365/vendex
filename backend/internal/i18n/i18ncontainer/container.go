@@ -1,9 +1,9 @@
 package i18ncontainer
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/i18n/i18napi"
-	"github.com/Abraxas-365/hada-commerce/internal/i18n/i18ninfra"
-	"github.com/Abraxas-365/hada-commerce/internal/i18n/i18nsrv"
+	"github.com/Abraxas-365/vendex/internal/i18n/i18napi"
+	"github.com/Abraxas-365/vendex/internal/i18n/i18ninfra"
+	"github.com/Abraxas-365/vendex/internal/i18n/i18nsrv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )

@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/logx"
+	"github.com/Abraxas-365/vendex/internal/logx"
 )
 
 // HandlerFunc processes a job. Return nil on success, an error to trigger retry/fail.

@@ -5,7 +5,7 @@ package agentmemory
 import (
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/kernel"
 )
 
 // Memory represents a persistent knowledge entry for a tenant.

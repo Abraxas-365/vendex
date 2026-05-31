@@ -3,10 +3,10 @@ package orderapi
 import (
 	"strconv"
 
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/order"
-	"github.com/Abraxas-365/hada-commerce/internal/order/ordersrv"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/order"
+	"github.com/Abraxas-365/vendex/internal/order/ordersrv"
 	"github.com/gofiber/fiber/v2"
 )
 

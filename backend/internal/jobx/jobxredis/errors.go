@@ -1,6 +1,6 @@
 package jobxredis
 
-import "github.com/Abraxas-365/hada-commerce/internal/errx"
+import "github.com/Abraxas-365/vendex/internal/errx"
 
 var redisErrors = errx.NewRegistry("JOBX_REDIS")
 

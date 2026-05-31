@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Abraxas-365/hada-commerce/internal/containerx"
+	"github.com/Abraxas-365/vendex/internal/containerx"
 )
 
 // ContainerAccessor provides access to the running workspace container for a session.

@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Abraxas-365/hada-commerce/internal/eventbus"
-	"github.com/Abraxas-365/hada-commerce/internal/logx"
+	"github.com/Abraxas-365/vendex/internal/eventbus"
+	"github.com/Abraxas-365/vendex/internal/logx"
 )
 
 // WebhookDispatcher calls plugin backend_entry URLs when domain events occur.

@@ -3,11 +3,11 @@ package socialauthapi
 import (
 	"strconv"
 
-	customerauth "github.com/Abraxas-365/hada-commerce/internal/customer/auth"
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
-	"github.com/Abraxas-365/hada-commerce/internal/kernel"
-	"github.com/Abraxas-365/hada-commerce/internal/socialauth"
-	"github.com/Abraxas-365/hada-commerce/internal/socialauth/socialauthsrv"
+	customerauth "github.com/Abraxas-365/vendex/internal/customer/auth"
+	"github.com/Abraxas-365/vendex/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/kernel"
+	"github.com/Abraxas-365/vendex/internal/socialauth"
+	"github.com/Abraxas-365/vendex/internal/socialauth/socialauthsrv"
 	"github.com/gofiber/fiber/v2"
 )
 

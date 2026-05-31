@@ -1,7 +1,7 @@
 package otp
 
 import (
-	"github.com/Abraxas-365/hada-commerce/internal/errx"
+	"github.com/Abraxas-365/vendex/internal/errx"
 	"net/http"
 )
 
