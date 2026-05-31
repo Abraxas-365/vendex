@@ -11,7 +11,7 @@ function formatPrice(price: unknown): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: p.currency ?? 'USD',
-    }).format(p.amount)
+    }).format(p.amount / 100)
   }
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
