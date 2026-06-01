@@ -25,10 +25,10 @@ func (p *ConsoleProvider) SendEmail(_ context.Context, msg notifx.EmailMessage, 
 	}).Info("notifx/console: email sent (dev mode)")
 
 	if msg.TextBody != "" {
-		logx.Debugf("notifx/console: text body:\n%s", msg.TextBody)
+		logx.Infof("notifx/console: text body:\n%s", msg.TextBody)
 	}
 	if msg.HTMLBody != "" {
-		logx.Debugf("notifx/console: html body:\n%s", msg.HTMLBody)
+		logx.Infof("notifx/console: html body:\n%s", msg.HTMLBody)
 	}
 
 	return nil
