@@ -10,6 +10,9 @@ export default defineConfig({
       '/api/v1': {
         target: 'http://localhost:8080',
       },
+      '/auth': {
+        target: 'http://localhost:8080',
+      },
       '/store': {
         target: 'http://localhost:8080',
         // Preserve the original Host header (e.g. fashion.localhost:5174)
