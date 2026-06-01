@@ -336,12 +336,10 @@ INSERT INTO subscriptions (id, tenant_id, customer_id, product_id, price_amount,
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
--- Agent Presets (3 built-in)
+-- Agent Presets (single workspace preset)
 -- ============================================================
 INSERT INTO presets (id, tenant_id, name, slug, description, version, image, system_prompt, status, visibility, icon, tags, install_count) VALUES
-  ('preset_webdev',    'tnt_demo', 'Web Designer',       'web-designer',       'Build and preview custom store pages with HTML, CSS, and JS.', '1.0.0', 'vendex-preset-webdev:latest',      'You are a web designer assistant. Help the merchant build beautiful store pages.', 'active', 'public', 'palette',   '["design","web","html"]', 42),
-  ('preset_research',  'tnt_demo', 'Market Researcher',  'market-researcher',  'Analyze competitors, trends, and market opportunities.',       '1.0.0', 'vendex-preset-researcher:latest',  'You are a market research assistant. Help the merchant understand their market.', 'active', 'public', 'search',    '["research","analysis","competitors"]', 28),
-  ('preset_content',   'tnt_demo', 'Content Writer',     'content-writer',     'Generate product descriptions, blog posts, and marketing copy.','1.0.0', 'vendex-preset-content:latest',     'You are a content writing assistant. Help the merchant create compelling copy.',  'active', 'public', 'pen-tool',  '["writing","content","seo"]', 35)
+  ('preset_webdev', 'tnt_demo', 'Vendex Workspace', 'workspace', 'Full workspace with HTML/CSS editor, live preview, and Chromium screenshots.', '1.0.0', 'vendex-preset:latest', 'You are a web designer assistant. Help the merchant build beautiful store pages.', 'active', 'public', 'palette', '["design","web","html"]', 0)
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
