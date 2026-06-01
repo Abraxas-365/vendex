@@ -39,5 +39,11 @@ export default defineConfig({
       testMatch: 'agent-edit.spec.ts',
       timeout: 300_000, // 5 min — LLM inference + Docker provisioning
     },
+    {
+      name: 'admin-features',
+      use: { browserName: 'chromium' },
+      testMatch: 'admin-features.spec.ts',
+      timeout: 60_000,
+    },
   ],
 })
