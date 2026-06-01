@@ -152,8 +152,9 @@ export default function ProductDetail() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-200">
-                  <Package size={96} strokeWidth={1} />
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                  <Package size={80} strokeWidth={1} className="text-gray-300 mb-3" />
+                  <span className="text-xs font-medium text-gray-300 uppercase tracking-wider">No image available</span>
                 </div>
               )}
             </div>

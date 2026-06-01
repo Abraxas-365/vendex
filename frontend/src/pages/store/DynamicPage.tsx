@@ -99,8 +99,8 @@ export default function DynamicPage() {
   // ── Render CMS page ──────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-white">
-      {/* Page header */}
-      {page.title && (
+      {/* Page header — only show when there is no HTML content (CMS HTML includes its own headings) */}
+      {page.title && !page.html && (
         <header className="border-b border-gray-100 py-6 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{page.title}</h1>

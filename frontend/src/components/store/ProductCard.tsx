@@ -54,8 +54,9 @@ export default function ProductCard({ product, accent = '#6366f1', onNavigate }:
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">
-            <Package size={64} strokeWidth={1} />
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+            <Package size={48} strokeWidth={1} className="text-gray-300 mb-2" />
+            <span className="text-[10px] font-medium text-gray-300 uppercase tracking-wider">No image</span>
           </div>
         )}
 
@@ -72,10 +73,6 @@ export default function ProductCard({ product, accent = '#6366f1', onNavigate }:
         <h3 className="font-medium text-gray-900 text-sm leading-snug line-clamp-2 mb-1 transition-colors group-hover:opacity-80">
           {product.name}
         </h3>
-
-        {product.sku && (
-          <p className="text-xs text-gray-400 mb-2">SKU: {product.sku}</p>
-        )}
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-3">
           <span className="text-lg font-semibold text-gray-900">
