@@ -279,7 +279,7 @@ export async function del(path: string): Promise<void> {
 export async function initiateLogin(provider: 'GOOGLE' | 'MICROSOFT', invitationToken?: string): Promise<LoginResponse> {
   const body: { provider: string; invitation_token?: string } = { provider }
   if (invitationToken) body.invitation_token = invitationToken
-  const res = await fetch(`${BASE_URL}/auth/login`, {
+  const res = await fetch(`/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -288,7 +288,7 @@ export async function initiateLogin(provider: 'GOOGLE' | 'MICROSOFT', invitation
 }
 
 export async function handleAuthCallback(provider: string, code: string, state: string): Promise<TokenResponse> {
-  const url = new URL(`${BASE_URL}/auth/callback/${provider}`, window.location.origin)
+  const url = new URL(`/auth/callback/${provider}`, window.location.origin)
   url.searchParams.set('code', code)
   url.searchParams.set('state', state)
   const res = await fetch(url.toString(), {
@@ -300,7 +300,7 @@ export async function handleAuthCallback(provider: string, code: string, state: 
 
 // Internal helper used only by withRefreshRetry — returns new access token
 async function refreshTokenApi(refreshToken: string): Promise<string> {
-  const res = await fetch(`${BASE_URL}/auth/refresh`, {
+  const res = await fetch(`/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refresh_token: refreshToken }),
@@ -311,7 +311,7 @@ async function refreshTokenApi(refreshToken: string): Promise<string> {
 
 // Exported refresh function for explicit use
 export async function refreshToken(token: string): Promise<RefreshResponse> {
-  const res = await fetch(`${BASE_URL}/auth/refresh`, {
+  const res = await fetch(`/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refresh_token: token }),
@@ -320,7 +320,7 @@ export async function refreshToken(token: string): Promise<RefreshResponse> {
 }
 
 export async function logout(): Promise<{ message: string }> {
-  const res = await fetch(`${BASE_URL}/auth/logout`, {
+  const res = await fetch(`/auth/logout`, {
     method: 'POST',
     headers: buildHeaders(),
   })
@@ -328,7 +328,7 @@ export async function logout(): Promise<{ message: string }> {
 }
 
 export async function getMe(): Promise<MeResponse> {
-  const res = await fetch(`${BASE_URL}/auth/me`, {
+  const res = await fetch(`/auth/me`, {
     method: 'GET',
     headers: buildHeaders(),
   })
@@ -340,7 +340,7 @@ export async function getMe(): Promise<MeResponse> {
 // ---------------------------------------------------------------------------
 
 export async function getPasswordlessTenants(email: string): Promise<PasswordlessTenantsResponse> {
-  const res = await fetch(`${BASE_URL}/auth/passwordless/tenants`, {
+  const res = await fetch(`/auth/passwordless/tenants`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
@@ -352,7 +352,7 @@ export async function initiatePasswordlessLogin(
   email: string,
   tenantId: string,
 ): Promise<PasswordlessInitiateResponse> {
-  const res = await fetch(`${BASE_URL}/auth/passwordless/login/initiate`, {
+  const res = await fetch(`/auth/passwordless/login/initiate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, tenant_id: tenantId }),
@@ -365,7 +365,7 @@ export async function verifyPasswordlessLogin(
   code: string,
   tenantId: string,
 ): Promise<PasswordlessVerifyResponse> {
-  const res = await fetch(`${BASE_URL}/auth/passwordless/login/verify`, {
+  const res = await fetch(`/auth/passwordless/login/verify`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, code, tenant_id: tenantId }),
@@ -374,7 +374,7 @@ export async function verifyPasswordlessLogin(
 }
 
 export async function resendOTP(email: string, tenantId: string): Promise<PasswordlessResendResponse> {
-  const res = await fetch(`${BASE_URL}/auth/passwordless/resend-otp`, {
+  const res = await fetch(`/auth/passwordless/resend-otp`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, tenant_id: tenantId, purpose: 'login' }),
