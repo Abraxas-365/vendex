@@ -14,7 +14,7 @@ import {
 // ---------------------------------------------------------------------------
 
 function formatMoney(amount: number, currency: string): string {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount / 100)
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(amount / 100)
 }
 
 function formatDate(dateStr: string | null): string {

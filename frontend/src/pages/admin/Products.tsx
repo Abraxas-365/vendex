@@ -272,7 +272,7 @@ export default function Products() {
                     </td>
                     <td className="px-6 py-4 text-sm font-mono text-gray-600">{product.sku}</td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      ${product.price.amount.toFixed(2)}
+                      ${(product.price.amount / 100).toFixed(2)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       <span className={product.stock <= 5 ? 'font-medium text-red-600' : ''}>
