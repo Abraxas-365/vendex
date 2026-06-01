@@ -352,10 +352,8 @@ func (h *Handler) getOrCreateSession(key string, presetID string) (*harness.Sess
 	// Detect OAuth tokens (sk-ant-oat prefix) vs static API keys.
 	var authOpt harness.Option
 	if strings.HasPrefix(h.apiKey, "sk-ant-oat") {
-		log.Printf("[agent] Using OAuth Bearer auth (token prefix: %s...)", h.apiKey[:20])
 		authOpt = harness.WithOAuthToken(h.apiKey)
 	} else {
-		log.Printf("[agent] Using static API key auth (prefix: %s...)", h.apiKey[:10])
 		authOpt = harness.WithAPIKey(h.apiKey)
 	}
 
