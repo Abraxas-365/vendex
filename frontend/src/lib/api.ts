@@ -458,19 +458,19 @@ export function listOrdersByCustomer(customerId: string, params?: PaginationPara
 // ---------------------------------------------------------------------------
 
 export function listCategories(params?: PaginationParams): Promise<PaginatedResult<Category>> {
-  return get<PaginatedResult<Category>>('/catalog/categories', params as Record<string, string | number | undefined>)
+  return get<PaginatedResult<Category>>('/categories', params as Record<string, string | number | undefined>)
 }
 
 export function getCategory(id: string): Promise<Category> {
-  return get<Category>(`/catalog/categories/${id}`)
+  return get<Category>(`/categories/${id}`)
 }
 
 export function createCategory(data: Partial<Category>): Promise<Category> {
-  return post<Category>('/catalog/categories', data)
+  return post<Category>('/categories', data)
 }
 
 export function deleteCategory(id: string): Promise<void> {
-  return del(`/catalog/categories/${id}`)
+  return del(`/categories/${id}`)
 }
 
 // ---------------------------------------------------------------------------
@@ -478,19 +478,19 @@ export function deleteCategory(id: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export function listCollections(params?: PaginationParams): Promise<PaginatedResult<Collection>> {
-  return get<PaginatedResult<Collection>>('/catalog/collections', params as Record<string, string | number | undefined>)
+  return get<PaginatedResult<Collection>>('/collections', params as Record<string, string | number | undefined>)
 }
 
 export function getCollection(id: string): Promise<Collection> {
-  return get<Collection>(`/catalog/collections/${id}`)
+  return get<Collection>(`/collections/${id}`)
 }
 
 export function createCollection(data: Partial<Collection>): Promise<Collection> {
-  return post<Collection>('/catalog/collections', data)
+  return post<Collection>('/collections', data)
 }
 
 export function deleteCollection(id: string): Promise<void> {
-  return del(`/catalog/collections/${id}`)
+  return del(`/collections/${id}`)
 }
 
 // ---------------------------------------------------------------------------
@@ -506,7 +506,7 @@ export function getPage(id: string): Promise<Page> {
 }
 
 export function getPageBySlug(slug: string): Promise<Page> {
-  return get<Page>(`/storefront/pages/by-slug/${slug}`)
+  return get<Page>(`/storefront/pages/slug/${slug}`)
 }
 
 export function createPage(data: Partial<Page>): Promise<Page> {
@@ -542,11 +542,11 @@ export function getPageVersions(id: string): Promise<PageVersion[]> {
 // ---------------------------------------------------------------------------
 
 export function listPromos(params?: PaginationParams): Promise<PaginatedResult<Promo>> {
-  return get<PaginatedResult<Promo>>('/promos', params as Record<string, string | number | undefined>)
+  return get<PaginatedResult<Promo>>('/admin/promos', params as Record<string, string | number | undefined>)
 }
 
 export function createPromo(data: Partial<Promo>): Promise<Promo> {
-  return post<Promo>('/promos', data)
+  return post<Promo>('/admin/promos', data)
 }
 
 export function validatePromo(code: string, orderAmount: number): Promise<{ valid: boolean; discount: number }> {
@@ -554,11 +554,11 @@ export function validatePromo(code: string, orderAmount: number): Promise<{ vali
 }
 
 export function updatePromo(id: string, data: Partial<Promo>): Promise<Promo> {
-  return put<Promo>(`/promos/${id}`, data)
+  return put<Promo>(`/admin/promos/${id}`, data)
 }
 
 export function deactivatePromo(id: string): Promise<Promo> {
-  return post<Promo>(`/promos/${id}/deactivate`)
+  return post<Promo>(`/admin/promos/${id}/deactivate`)
 }
 
 // ---------------------------------------------------------------------------
@@ -582,7 +582,7 @@ export async function uploadMedia(file: File, alt?: string): Promise<Media> {
     headers['Authorization'] = `Bearer ${token}`
   }
 
-  const res = await fetch(`${BASE_URL}/media`, {
+  const res = await fetch(`${BASE_URL}/media/upload`, {
     method: 'POST',
     headers,
     body: formData,
@@ -675,23 +675,23 @@ export function updateSettings(data: Partial<StoreSettings>): Promise<StoreSetti
 // ---------------------------------------------------------------------------
 
 export function listBlockTypes(category?: string): Promise<BlockType[]> {
-  return get<BlockType[]>('/block-types', category ? { category } : undefined)
+  return get<BlockType[]>('/storefront/block-types', category ? { category } : undefined)
 }
 
 export function getBlockType(id: string): Promise<BlockType> {
-  return get<BlockType>(`/block-types/${id}`)
+  return get<BlockType>(`/storefront/block-types/${id}`)
 }
 
 export function createBlockType(data: Partial<BlockType>): Promise<BlockType> {
-  return post<BlockType>('/block-types', data)
+  return post<BlockType>('/storefront/block-types', data)
 }
 
 export function updateBlockType(id: string, data: Partial<BlockType>): Promise<BlockType> {
-  return put<BlockType>(`/block-types/${id}`, data)
+  return put<BlockType>(`/storefront/block-types/${id}`, data)
 }
 
 export function deleteBlockType(id: string): Promise<void> {
-  return del(`/block-types/${id}`)
+  return del(`/storefront/block-types/${id}`)
 }
 
 // ---------------------------------------------------------------------------
@@ -1289,31 +1289,31 @@ export function getAuditStats(): Promise<AuditStats> {
 // ---------------------------------------------------------------------------
 
 export function listLoyaltyRewards(): Promise<LoyaltyReward[]> {
-  return get<LoyaltyReward[]>('/loyalty/rewards')
+  return get<LoyaltyReward[]>('/admin/loyalty/rewards')
 }
 
 export function createLoyaltyReward(data: Partial<LoyaltyReward>): Promise<LoyaltyReward> {
-  return post<LoyaltyReward>('/loyalty/rewards', data)
+  return post<LoyaltyReward>('/admin/loyalty/rewards', data)
 }
 
 export function updateLoyaltyReward(id: string, data: Partial<LoyaltyReward>): Promise<LoyaltyReward> {
-  return put<LoyaltyReward>(`/loyalty/rewards/${id}`, data)
+  return put<LoyaltyReward>(`/admin/loyalty/rewards/${id}`, data)
 }
 
 export function listLoyaltyAccounts(params?: PaginationParams): Promise<PaginatedResult<LoyaltyAccount>> {
-  return get<PaginatedResult<LoyaltyAccount>>('/loyalty/accounts', params as Record<string, string | number | undefined>)
+  return get<PaginatedResult<LoyaltyAccount>>('/admin/loyalty/accounts', params as Record<string, string | number | undefined>)
 }
 
 export function getLoyaltyAccount(id: string): Promise<LoyaltyAccount> {
-  return get<LoyaltyAccount>(`/loyalty/accounts/${id}`)
+  return get<LoyaltyAccount>(`/admin/loyalty/accounts/${id}`)
 }
 
 export function adjustLoyaltyPoints(id: string, data: { points: number; note: string }): Promise<LoyaltyAccount> {
-  return post<LoyaltyAccount>(`/loyalty/accounts/${id}/adjust`, data)
+  return post<LoyaltyAccount>(`/admin/loyalty/accounts/${id}/adjust`, data)
 }
 
 export function getLoyaltyTransactions(id: string): Promise<LoyaltyTransaction[]> {
-  return get<LoyaltyTransaction[]>(`/loyalty/accounts/${id}/transactions`)
+  return get<LoyaltyTransaction[]>(`/admin/loyalty/accounts/${id}/transactions`)
 }
 
 // ---------------------------------------------------------------------------
@@ -1484,31 +1484,31 @@ export function cancelBulkOperation(id: string): Promise<BulkOperation> {
 // ---------------------------------------------------------------------------
 
 export function listBlogPosts(params?: PaginationParams): Promise<PaginatedResult<BlogPost>> {
-  return get<PaginatedResult<BlogPost>>('/blog', params as Record<string, string | number | undefined>)
+  return get<PaginatedResult<BlogPost>>('/blog/posts', params as Record<string, string | number | undefined>)
 }
 
 export function getBlogPost(id: string): Promise<BlogPost> {
-  return get<BlogPost>(`/blog/${id}`)
+  return get<BlogPost>(`/blog/posts/${id}`)
 }
 
 export function createBlogPost(data: Partial<BlogPost>): Promise<BlogPost> {
-  return post<BlogPost>('/blog', data)
+  return post<BlogPost>('/blog/posts', data)
 }
 
 export function updateBlogPost(id: string, data: Partial<BlogPost>): Promise<BlogPost> {
-  return put<BlogPost>(`/blog/${id}`, data)
+  return put<BlogPost>(`/blog/posts/${id}`, data)
 }
 
 export function deleteBlogPost(id: string): Promise<void> {
-  return del(`/blog/${id}`)
+  return del(`/blog/posts/${id}`)
 }
 
 export function publishBlogPost(id: string): Promise<BlogPost> {
-  return put<BlogPost>(`/blog/${id}/publish`)
+  return put<BlogPost>(`/blog/posts/${id}/publish`)
 }
 
 export function archiveBlogPost(id: string): Promise<BlogPost> {
-  return put<BlogPost>(`/blog/${id}/archive`)
+  return put<BlogPost>(`/blog/posts/${id}/archive`)
 }
 
 export function listBlogCategories(): Promise<BlogCategory[]> {
@@ -1616,23 +1616,23 @@ export function deleteExperimentVariant(id: string, variantId: string): Promise<
 // ---------------------------------------------------------------------------
 
 export function listRecommendationRules(params?: PaginationParams): Promise<PaginatedResult<RecommendationRule>> {
-  return get<PaginatedResult<RecommendationRule>>('/recommendations', params as Record<string, string | number | undefined>)
+  return get<PaginatedResult<RecommendationRule>>('/recommendations/rules', params as Record<string, string | number | undefined>)
 }
 
 export function createRecommendationRule(data: Partial<RecommendationRule>): Promise<RecommendationRule> {
-  return post<RecommendationRule>('/recommendations', data)
+  return post<RecommendationRule>('/recommendations/rules', data)
 }
 
 export function updateRecommendationRule(id: string, data: Partial<RecommendationRule>): Promise<RecommendationRule> {
-  return put<RecommendationRule>(`/recommendations/${id}`, data)
+  return put<RecommendationRule>(`/recommendations/rules/${id}`, data)
 }
 
 export function deleteRecommendationRule(id: string): Promise<void> {
-  return del(`/recommendations/${id}`)
+  return del(`/recommendations/rules/${id}`)
 }
 
 export function getRecommendations(productId: string): Promise<RecommendedProduct[]> {
-  return get<RecommendedProduct[]>(`/recommendations/products/${productId}`)
+  return get<RecommendedProduct[]>(`/recommendations/product/${productId}`)
 }
 
 // ---------------------------------------------------------------------------
@@ -1640,23 +1640,23 @@ export function getRecommendations(productId: string): Promise<RecommendedProduc
 // ---------------------------------------------------------------------------
 
 export function listMarketplacePresets(params?: { category?: string; search?: string }): Promise<PaginatedResult<Preset>> {
-  return get<PaginatedResult<Preset>>('/presets/marketplace', params as Record<string, string | undefined>)
+  return get<PaginatedResult<Preset>>('/marketplace/presets', params as Record<string, string | undefined>)
 }
 
 export function getMarketplacePreset(id: string): Promise<Preset> {
-  return get<Preset>(`/presets/marketplace/${id}`)
+  return get<Preset>(`/marketplace/presets/${id}`)
 }
 
 export function fetchInstalledPresets(): Promise<PaginatedResult<PresetInstall>> {
-  return get<PaginatedResult<PresetInstall>>('/presets/installed')
+  return get<PaginatedResult<PresetInstall>>('/marketplace/installations')
 }
 
 export function installPreset(id: string): Promise<PresetInstall> {
-  return post<PresetInstall>(`/presets/install/${id}`)
+  return post<PresetInstall>('/marketplace/installations', { preset_id: id })
 }
 
 export function uninstallPreset(id: string): Promise<void> {
-  return del(`/presets/uninstall/${id}`)
+  return del(`/marketplace/installations/${id}`)
 }
 
 // ---------------------------------------------------------------------------
@@ -1680,11 +1680,11 @@ export function stopAgentSession(id: string): Promise<void> {
 }
 
 export function fetchSessionHistory(id: string): Promise<ChatMessage[]> {
-  return get<ChatMessage[]>(`/agent/sessions/${id}/history`)
+  return get<ChatMessage[]>(`/agent/sessions/${id}/messages`)
 }
 
 export function sendSessionMessage(id: string, message: string): Promise<ChatMessage> {
-  return post<ChatMessage>(`/agent/sessions/${id}/message`, { message })
+  return post<ChatMessage>(`/agent/sessions/${id}/messages`, { message })
 }
 
 // ---------------------------------------------------------------------------
