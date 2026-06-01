@@ -96,7 +96,7 @@ func (r *PostgresRepository) List(ctx context.Context, tenantID kernel.TenantID,
 	}
 	defer rows.Close()
 
-	var items []giftcard.GiftCard
+	items := make([]giftcard.GiftCard, 0)
 	for rows.Next() {
 		gc, err := scanGiftCardRow(rows)
 		if err != nil {
@@ -183,7 +183,7 @@ func (r *PostgresRepository) ListTransactions(ctx context.Context, tenantID kern
 	}
 	defer rows.Close()
 
-	var txs []giftcard.GiftCardTransaction
+	txs := make([]giftcard.GiftCardTransaction, 0)
 	for rows.Next() {
 		tx, err := scanTransactionRow(rows)
 		if err != nil {

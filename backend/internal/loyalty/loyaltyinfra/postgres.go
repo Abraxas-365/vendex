@@ -110,7 +110,7 @@ func (r *PostgresRepository) ListAccounts(ctx context.Context, tenantID kernel.T
 	}
 	defer rows.Close()
 
-	var items []loyalty.LoyaltyAccount
+	items := make([]loyalty.LoyaltyAccount, 0)
 	for rows.Next() {
 		acc, err := scanAccountRow(rows)
 		if err != nil {
@@ -166,7 +166,7 @@ func (r *PostgresRepository) ListTransactions(ctx context.Context, tenantID kern
 	}
 	defer rows.Close()
 
-	var items []loyalty.LoyaltyTransaction
+	items := make([]loyalty.LoyaltyTransaction, 0)
 	for rows.Next() {
 		tx, err := scanTransactionRow(rows)
 		if err != nil {
@@ -249,7 +249,7 @@ func (r *PostgresRepository) ListRewards(ctx context.Context, tenantID kernel.Te
 	}
 	defer rows.Close()
 
-	var items []loyalty.LoyaltyReward
+	items := make([]loyalty.LoyaltyReward, 0)
 	for rows.Next() {
 		reward, err := scanRewardRow(rows)
 		if err != nil {

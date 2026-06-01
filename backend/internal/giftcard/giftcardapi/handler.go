@@ -270,5 +270,5 @@ func (h *Handler) redeem(c *fiber.Ctx) error {
 func paginationFromCtx(c *fiber.Ctx) kernel.PaginationOptions {
 	page, _ := strconv.Atoi(c.Query("page"))
 	size, _ := strconv.Atoi(c.Query("page_size"))
-	return kernel.PaginationOptions{Page: page, PageSize: size}
+	return kernel.NewPaginationOptions(page, size)
 }
