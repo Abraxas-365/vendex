@@ -142,7 +142,7 @@ func (r *CategoryPostgresRepo) List(ctx context.Context, tenantID kernel.TenantI
 	}
 	defer rows.Close()
 
-	var categories []catalog.Category
+	categories := make([]catalog.Category, 0)
 	for rows.Next() {
 		c, err := scanCategoryFields(rows)
 		if err != nil {
@@ -201,7 +201,7 @@ func (r *CategoryPostgresRepo) ListByParent(ctx context.Context, tenantID kernel
 	}
 	defer rows.Close()
 
-	var categories []catalog.Category
+	categories := make([]catalog.Category, 0)
 	for rows.Next() {
 		c, err := scanCategoryFields(rows)
 		if err != nil {
@@ -397,7 +397,7 @@ func (r *CollectionPostgresRepo) List(ctx context.Context, tenantID kernel.Tenan
 	}
 	defer rows.Close()
 
-	var collections []catalog.Collection
+	collections := make([]catalog.Collection, 0)
 	for rows.Next() {
 		c, err := scanCollectionFields(rows)
 		if err != nil {

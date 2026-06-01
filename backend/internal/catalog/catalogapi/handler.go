@@ -250,5 +250,5 @@ func (h *Handler) GetCollectionPublic(c *fiber.Ctx) error {
 func paginationFromCtx(c *fiber.Ctx) kernel.PaginationOptions {
 	page, _ := strconv.Atoi(c.Query("page"))
 	pageSize, _ := strconv.Atoi(c.Query("page_size"))
-	return kernel.PaginationOptions{Page: page, PageSize: pageSize}
+	return kernel.NewPaginationOptions(page, pageSize)
 }
