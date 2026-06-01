@@ -245,22 +245,16 @@ func (h *Handler) Chat(c *fiber.Ctx) error {
 			}
 		}
 
-		// Drain events until the turn ends or an error is received.
+		// Drain events until the agent loop completes (sess.Send returns).
+		// The harness fires turn_end after each model turn, including intermediate
+		// tool-use turns. We must NOT exit on turn_end — only when done fires.
 		for {
 			select {
 			case evt := <-eventCh:
 				writeEvent(evt)
-				if evt.Kind == agent.EventTurnEnd || evt.Kind == agent.EventError {
-					// Drain any remaining queued events before returning.
-					for {
-						select {
-						case remaining := <-eventCh:
-							writeEvent(remaining)
-						default:
-							persistAssistant()
-							return
-						}
-					}
+				if evt.Kind == agent.EventError {
+					persistAssistant()
+					return
 				}
 			case err := <-done:
 				if err != nil {
@@ -355,8 +349,18 @@ func (h *Handler) getOrCreateSession(key string, presetID string) (*harness.Sess
 	}
 	allTools := append(builtinTools, domainTools...)
 
+	// Detect OAuth tokens (sk-ant-oat prefix) vs static API keys.
+	var authOpt harness.Option
+	if strings.HasPrefix(h.apiKey, "sk-ant-oat") {
+		log.Printf("[agent] Using OAuth Bearer auth (token prefix: %s...)", h.apiKey[:20])
+		authOpt = harness.WithOAuthToken(h.apiKey)
+	} else {
+		log.Printf("[agent] Using static API key auth (prefix: %s...)", h.apiKey[:10])
+		authOpt = harness.WithAPIKey(h.apiKey)
+	}
+
 	opts := []harness.Option{
-		harness.WithAPIKey(h.apiKey),
+		authOpt,
 		harness.WithModel(h.model),
 		harness.WithSystemPrompt(sysPrompt),
 		harness.WithPermissionMode("headless"),

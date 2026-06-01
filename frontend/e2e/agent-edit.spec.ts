@@ -98,9 +98,10 @@ async function loginAsAdmin(): Promise<string> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: ADMIN_EMAIL, code: otpCode, tenant_id: TENANT_ID }),
   })
-  expect(verifyRes.ok, `Login verify failed: HTTP ${verifyRes.status} — ${await verifyRes.text()}`).toBeTruthy()
+  const verifyBody = await verifyRes.text()
+  expect(verifyRes.ok, `Login verify failed: HTTP ${verifyRes.status} — ${verifyBody}`).toBeTruthy()
 
-  const tokens = await verifyRes.json()
+  const tokens = JSON.parse(verifyBody)
   expect(tokens.access_token, 'No access_token in login response').toBeTruthy()
   console.log('[auth] Login successful — JWT obtained')
 
@@ -140,7 +141,10 @@ async function sendAgentMessage(
       session_id: `e2e-test-${Date.now()}`,
     }),
   })
-  expect(res.ok, `Agent chat failed: HTTP ${res.status} — ${await res.text()}`).toBeTruthy()
+  if (!res.ok) {
+    const errBody = await res.text()
+    throw new Error(`Agent chat failed: HTTP ${res.status} — ${errBody}`)
+  }
 
   // Parse the SSE stream
   const reader = res.body!.getReader()
@@ -148,9 +152,8 @@ async function sendAgentMessage(
   let fullText = ''
   const toolCalls: string[] = []
   const events: any[] = []
-  let done = false
 
-  while (!done) {
+  while (true) {
     const { value, done: streamDone } = await reader.read()
     if (streamDone) break
 
@@ -177,7 +180,9 @@ async function sendAgentMessage(
             break
           case 'turn_end':
             console.log('[agent] Turn complete')
-            done = true
+            // Don't set done=true here — the agent emits turn_end after each
+            // model turn, including intermediate tool-use turns. The stream
+            // closes when the server finishes the full agentic loop.
             break
           case 'error':
             console.error('[agent] ERROR:', evt.error)
