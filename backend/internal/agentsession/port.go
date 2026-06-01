@@ -13,6 +13,7 @@ type SessionRepository interface {
 	Update(ctx context.Context, s Session) (Session, error)
 	ListByTenant(ctx context.Context, tenantID kernel.TenantID, p kernel.PaginationOptions) (kernel.Paginated[Session], error)
 	ListActive(ctx context.Context, tenantID kernel.TenantID) ([]Session, error)
+	Delete(ctx context.Context, tenantID kernel.TenantID, id kernel.AgentSessionID) error
 }
 
 // ChatRepository defines persistence operations for ChatMessage records.

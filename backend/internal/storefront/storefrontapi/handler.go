@@ -44,6 +44,8 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 	pages.Post("/:id/archive", h.Archive)
 	pages.Get("/:id/versions", h.ListVersions)
 	pages.Get("/:id/versions/:version", h.GetVersion)
+	pages.Delete("/:id", h.DeletePage)
+	pages.Get("/by-slug/:slug", h.GetPageBySlug)
 
 	// Block type routes (admin)
 	blockTypes := router.Group("/storefront/block-types")
@@ -297,6 +299,31 @@ func (h *Handler) GetVersion(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(v)
+}
+
+// DeletePage handles DELETE /pages/:id.
+func (h *Handler) DeletePage(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	id := kernel.PageID(c.Params("id"))
+
+	if err := h.svc.DeletePage(c.Context(), authCtx.TenantID, id); err != nil {
+		return err
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
+// GetPageBySlug handles GET /pages/by-slug/:slug — admin version (any status).
+func (h *Handler) GetPageBySlug(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	slug := c.Params("slug")
+
+	page, err := h.svc.GetPageBySlug(c.Context(), authCtx.TenantID, slug)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(page)
 }
 
 // --- Block Type handlers ---

@@ -268,6 +268,11 @@ func (s *Service) GetPageBySlug(ctx context.Context, tenantID kernel.TenantID, s
 	return s.pages.GetBySlug(ctx, tenantID, slug)
 }
 
+// DeletePage permanently deletes a page and its version history.
+func (s *Service) DeletePage(ctx context.Context, tenantID kernel.TenantID, id kernel.PageID) error {
+	return s.pages.Delete(ctx, tenantID, id)
+}
+
 // ListPages returns pages with optional status filter.
 func (s *Service) ListPages(ctx context.Context, tenantID kernel.TenantID, status *storefront.PageStatus, p kernel.PaginationOptions) (kernel.Paginated[storefront.Page], error) {
 	if status != nil {
