@@ -45,5 +45,11 @@ export default defineConfig({
       testMatch: 'admin-features.spec.ts',
       timeout: 60_000,
     },
+    {
+      name: 'ux-review',
+      use: { browserName: 'chromium' },
+      testMatch: 'ux-review.spec.ts',
+      timeout: 90_000,
+    },
   ],
 })
