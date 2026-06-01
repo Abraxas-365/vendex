@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { SlidersHorizontal, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useStoreProducts, useStoreInfo, useStoreCategories, useStorePageBySlug } from '../../lib/store-hooks'
-import type { Category } from '../../lib/store-api'
 import ProductCard from '../../components/store/ProductCard'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -24,13 +23,6 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 ]
 
 const PAGE_SIZE = 12
-
-// Normalize categories API response — backend may return `{items:[]}` or `[]`
-function normalizeCategories(data: { items: Category[] } | Category[] | undefined): Category[] {
-  if (!data) return []
-  if (Array.isArray(data)) return data
-  return data.items ?? []
-}
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -54,8 +46,7 @@ export default function ProductList() {
   const accent = storeInfo?.accent_color ?? '#6366f1'
   const { data: plpTemplate } = useStorePageBySlug('_plp')
 
-  const { data: categoriesRaw } = useStoreCategories()
-  const categories = normalizeCategories(categoriesRaw)
+  const { data: categories = [] } = useStoreCategories()
 
   const { data, isLoading, isError } = useStoreProducts({
     page,

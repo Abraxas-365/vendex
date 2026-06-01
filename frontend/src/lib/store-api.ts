@@ -109,8 +109,9 @@ export interface Category {
   description?: string
 }
 
-export function listCategories(): Promise<{ items: Category[] } | Category[]> {
-  return storeGet<{ items: Category[] } | Category[]>('/categories')
+export async function listCategories(): Promise<Category[]> {
+  const result = await storeGet<{ items: Category[] }>('/categories')
+  return result.items
 }
 
 // ---------------------------------------------------------------------------

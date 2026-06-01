@@ -38,7 +38,7 @@ export function useStorePageBySlug(slug: string): UseQueryResult<storeApi.StoreP
   })
 }
 
-export function useStoreCategories(): UseQueryResult<{ items: Category[] } | Category[]> {
+export function useStoreCategories(): UseQueryResult<Category[]> {
   return useQuery({
     queryKey: ['store', 'categories'],
     queryFn: () => storeApi.listCategories(),

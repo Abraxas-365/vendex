@@ -1382,8 +1382,16 @@ export function getDashboardCustomers(params?: { from?: string; to?: string }): 
   return get<CustomerStats>('/dashboard/customers', params as Record<string, string | undefined>)
 }
 
-export function getDashboardFunnel(params?: { from?: string; to?: string }): Promise<FunnelStep[]> {
-  return get<FunnelStep[]>('/dashboard/funnel', params as Record<string, string | undefined>)
+export async function getDashboardFunnel(params?: { from?: string; to?: string }): Promise<FunnelStep[]> {
+  const raw = await get<{ visitors: number; carts_created: number; checkouts_started: number; orders_completed: number }>('/dashboard/funnel', params as Record<string, string | undefined>)
+  const steps = [
+    { step: 'Visitors', count: raw.visitors },
+    { step: 'Carts Created', count: raw.carts_created },
+    { step: 'Checkouts Started', count: raw.checkouts_started },
+    { step: 'Orders Completed', count: raw.orders_completed },
+  ]
+  const maxCount = Math.max(...steps.map(s => s.count), 1)
+  return steps.map(s => ({ ...s, conversion_rate: Math.round((s.count / maxCount) * 100) }))
 }
 
 // ---------------------------------------------------------------------------
@@ -1482,8 +1490,9 @@ export function createBulkOperation(data: Partial<BulkOperation>): Promise<BulkO
   return post<BulkOperation>('/bulk-operations', data)
 }
 
-export function getBulkOperationItems(id: string): Promise<BulkOperationItem[]> {
-  return get<BulkOperationItem[]>(`/bulk-operations/${id}/items`)
+export async function getBulkOperationItems(id: string): Promise<BulkOperationItem[]> {
+  const result = await get<PaginatedResult<BulkOperationItem>>(`/bulk-operations/${id}/items`)
+  return result.items
 }
 
 export function processBulkOperation(id: string): Promise<BulkOperation> {
@@ -1566,8 +1575,9 @@ export function deleteAdminCollection(id: string): Promise<void> {
   return del(`/collections/${id}`)
 }
 
-export function getCollectionProducts(id: string): Promise<CollectionProduct[]> {
-  return get<CollectionProduct[]>(`/collections/${id}/products`)
+export async function getCollectionProducts(id: string): Promise<CollectionProduct[]> {
+  const result = await get<PaginatedResult<CollectionProduct>>(`/collections/${id}/products`)
+  return result.items
 }
 
 export function addCollectionProduct(id: string, data: { product_id: string; sort_order?: number }): Promise<CollectionProduct> {
@@ -1646,8 +1656,9 @@ export function deleteRecommendationRule(id: string): Promise<void> {
   return del(`/recommendations/rules/${id}`)
 }
 
-export function getRecommendations(productId: string): Promise<RecommendedProduct[]> {
-  return get<RecommendedProduct[]>(`/recommendations/product/${productId}`)
+export async function getRecommendations(productId: string): Promise<RecommendedProduct[]> {
+  const result = await get<{ items: RecommendedProduct[] }>(`/recommendations/product/${productId}`)
+  return result.items
 }
 
 // ---------------------------------------------------------------------------
@@ -1694,8 +1705,9 @@ export function stopAgentSession(id: string): Promise<void> {
   return del(`/agent/sessions/${id}`)
 }
 
-export function fetchSessionHistory(id: string): Promise<ChatMessage[]> {
-  return get<ChatMessage[]>(`/agent/sessions/${id}/messages`)
+export async function fetchSessionHistory(id: string): Promise<ChatMessage[]> {
+  const result = await get<PaginatedResult<ChatMessage>>(`/agent/sessions/${id}/messages`)
+  return result.items
 }
 
 export function sendSessionMessage(id: string, message: string): Promise<ChatMessage> {

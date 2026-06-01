@@ -188,7 +188,7 @@ export default function ProductDetail() {
           <div className="flex flex-col">
             {/* Category badge */}
             {product.category_id && (() => {
-              const cats = Array.isArray(categoriesData) ? categoriesData : categoriesData?.items ?? []
+              const cats = categoriesData ?? []
               const cat = cats.find((c) => c.id === product.category_id)
               return (
                 <span className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: accent }}>
