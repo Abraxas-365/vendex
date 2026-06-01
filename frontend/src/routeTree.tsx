@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   createRootRoute,
   createRoute,
@@ -49,6 +50,7 @@ import {
   MonitorPlay,
   ShieldCheck,
   Brain,
+  ChevronDown,
 } from 'lucide-react'
 
 // Store pages
@@ -148,51 +150,172 @@ interface NavItem {
   icon: React.ComponentType<{ size?: number; className?: string }>
 }
 
-const adminNavItems: NavItem[] = [
-  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/admin/products', label: 'Products', icon: Package },
-  { to: '/admin/catalog', label: 'Catalog', icon: Tags },
-  { to: '/admin/orders', label: 'Orders', icon: ShoppingCart },
-  { to: '/admin/customers', label: 'Customers', icon: Users },
-  { to: '/admin/pages', label: 'Pages', icon: FileText },
-  { to: '/admin/promos', label: 'Promos', icon: Tag },
-  { to: '/admin/shipping', label: 'Shipping', icon: Truck },
-  { to: '/admin/tax', label: 'Tax', icon: Receipt },
-  { to: '/admin/payments', label: 'Payments', icon: CreditCard },
-  { to: '/admin/customer-groups', label: 'Customer Groups', icon: UsersRound },
-  { to: '/admin/import-export', label: 'Import / Export', icon: ArrowUpDown },
-  { to: '/admin/gift-cards', label: 'Gift Cards', icon: Gift },
-  { to: '/admin/cart-recovery', label: 'Cart Recovery', icon: MailQuestion },
-  { to: '/admin/currency-rates', label: 'Currency Rates', icon: DollarSign },
-  { to: '/admin/translations', label: 'Translations', icon: Languages },
-  { to: '/admin/subscriptions', label: 'Subscriptions', icon: RefreshCw },
-  { to: '/admin/inventory', label: 'Inventory', icon: Warehouse },
-  { to: '/admin/reviews', label: 'Reviews', icon: Star },
-  { to: '/admin/returns', label: 'Returns', icon: RotateCcw },
-  { to: '/admin/webhooks', label: 'Webhooks', icon: Webhook },
-  { to: '/admin/audit-logs', label: 'Audit Logs', icon: ClipboardList },
-  { to: '/admin/loyalty', label: 'Loyalty', icon: Award },
-  { to: '/admin/bundles', label: 'Bundles', icon: Layers },
-  { to: '/admin/reporting', label: 'Reporting', icon: BarChart2 },
-  { to: '/admin/social-accounts', label: 'Social Accounts', icon: Share2 },
-  { to: '/admin/notifications', label: 'Notifications', icon: Bell },
-  { to: '/admin/storefronts', label: 'Storefronts', icon: Globe2 },
-  { to: '/admin/blog', label: 'Blog', icon: Newspaper },
-  { to: '/admin/collections', label: 'Collections', icon: FolderTree },
-  { to: '/admin/ab-testing', label: 'A/B Testing', icon: FlaskConical },
-  { to: '/admin/recommendations', label: 'Recommendations', icon: Sparkles },
-  { to: '/admin/bulk-operations', label: 'Bulk Ops', icon: Zap },
-  { to: '/admin/media', label: 'Media', icon: Image },
-  { to: '/admin/agent', label: 'Agent Chat', icon: Bot },
-  { to: '/admin/presets', label: 'Preset Marketplace', icon: Sparkles },
-  { to: '/admin/workspaces', label: 'Workspaces', icon: MonitorPlay },
-  { to: '/admin/approvals', label: 'Approvals', icon: ShieldCheck },
-  { to: '/admin/agent-memory', label: 'Agent Memory', icon: Brain },
-  { to: '/admin/agent-triggers', label: 'Triggers', icon: Zap },
-  { to: '/admin/marketplace', label: 'Marketplace', icon: Puzzle },
-  { to: '/admin/theme', label: 'Theme', icon: Palette },
-  { to: '/admin/settings', label: 'Settings', icon: Settings2 },
+interface NavSection {
+  id: string
+  label: string
+  items: NavItem[]
+}
+
+const adminNavSections: NavSection[] = [
+  {
+    id: 'commerce',
+    label: 'Commerce',
+    items: [
+      { to: '/admin/products', label: 'Products', icon: Package },
+      { to: '/admin/catalog', label: 'Catalog', icon: Tags },
+      { to: '/admin/collections', label: 'Collections', icon: FolderTree },
+      { to: '/admin/orders', label: 'Orders', icon: ShoppingCart },
+      { to: '/admin/inventory', label: 'Inventory', icon: Warehouse },
+      { to: '/admin/bundles', label: 'Bundles', icon: Layers },
+      { to: '/admin/subscriptions', label: 'Subscriptions', icon: RefreshCw },
+    ],
+  },
+  {
+    id: 'customers',
+    label: 'Customers',
+    items: [
+      { to: '/admin/customers', label: 'Customers', icon: Users },
+      { to: '/admin/customer-groups', label: 'Customer Groups', icon: UsersRound },
+      { to: '/admin/reviews', label: 'Reviews', icon: Star },
+      { to: '/admin/loyalty', label: 'Loyalty', icon: Award },
+      { to: '/admin/cart-recovery', label: 'Cart Recovery', icon: MailQuestion },
+    ],
+  },
+  {
+    id: 'content',
+    label: 'Content',
+    items: [
+      { to: '/admin/pages', label: 'Pages', icon: FileText },
+      { to: '/admin/blog', label: 'Blog', icon: Newspaper },
+      { to: '/admin/media', label: 'Media', icon: Image },
+      { to: '/admin/translations', label: 'Translations', icon: Languages },
+    ],
+  },
+  {
+    id: 'marketing',
+    label: 'Marketing',
+    items: [
+      { to: '/admin/promos', label: 'Promos', icon: Tag },
+      { to: '/admin/gift-cards', label: 'Gift Cards', icon: Gift },
+      { to: '/admin/recommendations', label: 'Recommendations', icon: Sparkles },
+      { to: '/admin/ab-testing', label: 'A/B Testing', icon: FlaskConical },
+      { to: '/admin/social-accounts', label: 'Social Accounts', icon: Share2 },
+    ],
+  },
+  {
+    id: 'operations',
+    label: 'Operations',
+    items: [
+      { to: '/admin/shipping', label: 'Shipping', icon: Truck },
+      { to: '/admin/tax', label: 'Tax', icon: Receipt },
+      { to: '/admin/payments', label: 'Payments', icon: CreditCard },
+      { to: '/admin/currency-rates', label: 'Currency Rates', icon: DollarSign },
+      { to: '/admin/import-export', label: 'Import / Export', icon: ArrowUpDown },
+      { to: '/admin/returns', label: 'Returns', icon: RotateCcw },
+      { to: '/admin/bulk-operations', label: 'Bulk Ops', icon: Zap },
+    ],
+  },
+  {
+    id: 'ai-automation',
+    label: 'AI & Automation',
+    items: [
+      { to: '/admin/agent', label: 'Agent Chat', icon: Bot },
+      { to: '/admin/agent-memory', label: 'Agent Memory', icon: Brain },
+      { to: '/admin/agent-triggers', label: 'Triggers', icon: Zap },
+      { to: '/admin/workspaces', label: 'Workspaces', icon: MonitorPlay },
+      { to: '/admin/approvals', label: 'Approvals', icon: ShieldCheck },
+      { to: '/admin/notifications', label: 'Notifications', icon: Bell },
+      { to: '/admin/webhooks', label: 'Webhooks', icon: Webhook },
+    ],
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    items: [
+      { to: '/admin/theme', label: 'Theme', icon: Palette },
+      { to: '/admin/settings', label: 'Settings', icon: Settings2 },
+      { to: '/admin/storefronts', label: 'Storefronts', icon: Globe2 },
+      { to: '/admin/presets', label: 'Preset Marketplace', icon: Sparkles },
+      { to: '/admin/audit-logs', label: 'Audit Logs', icon: ClipboardList },
+      { to: '/admin/marketplace', label: 'Marketplace', icon: Puzzle },
+      { to: '/admin/reporting', label: 'Reporting', icon: BarChart2 },
+    ],
+  },
 ]
+
+const COLLAPSED_STORAGE_KEY = 'admin-nav-collapsed-sections'
+
+function loadCollapsedSections(): Set<string> {
+  try {
+    const stored = localStorage.getItem(COLLAPSED_STORAGE_KEY)
+    if (stored) return new Set(JSON.parse(stored) as string[])
+  } catch {
+    // ignore parse errors
+  }
+  return new Set()
+}
+
+function saveCollapsedSections(collapsed: Set<string>): void {
+  try {
+    localStorage.setItem(COLLAPSED_STORAGE_KEY, JSON.stringify([...collapsed]))
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function NavSectionGroup({ section }: { section: NavSection }) {
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    const stored = loadCollapsedSections()
+    return stored.has(section.id)
+  })
+
+  function toggleCollapsed() {
+    setCollapsed((prev) => {
+      const next = !prev
+      const stored = loadCollapsedSections()
+      if (next) {
+        stored.add(section.id)
+      } else {
+        stored.delete(section.id)
+      }
+      saveCollapsedSections(stored)
+      return next
+    })
+  }
+
+  return (
+    <div className="mb-1">
+      <button
+        onClick={toggleCollapsed}
+        className="flex w-full items-center justify-between px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors rounded-md hover:bg-slate-50"
+      >
+        <span>{section.label}</span>
+        <ChevronDown
+          size={13}
+          className={`shrink-0 transition-transform duration-200 ${collapsed ? '-rotate-90' : ''}`}
+        />
+      </button>
+      {!collapsed && (
+        <ul className="space-y-0.5 mt-0.5">
+          {section.items.map((item) => {
+            const Icon = item.icon
+            return (
+              <li key={item.to}>
+                <Link
+                  to={item.to}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 [&.active]:bg-indigo-50 [&.active]:text-indigo-700"
+                >
+                  <Icon size={18} className="shrink-0" />
+                  {item.label}
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
 
 function AdminLayout() {
   const { user, logout, isLoading } = useAuth()
@@ -208,25 +331,24 @@ function AdminLayout() {
           </span>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
-            Admin
-          </p>
-          <ul className="space-y-0.5">
-            {adminNavItems.map((item) => {
-              const Icon = item.icon
-              return (
-                <li key={item.to}>
-                  <Link
-                    to={item.to}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 [&.active]:bg-indigo-50 [&.active]:text-indigo-700"
-                  >
-                    <Icon size={18} className="shrink-0" />
-                    {item.label}
-                  </Link>
-                </li>
-              )
-            })}
+          {/* Dashboard — always visible, ungrouped */}
+          <ul className="mb-3 space-y-0.5">
+            <li>
+              <Link
+                to="/admin"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 [&.active]:bg-indigo-50 [&.active]:text-indigo-700"
+              >
+                <LayoutDashboard size={18} className="shrink-0" />
+                Dashboard
+              </Link>
+            </li>
           </ul>
+          {/* Grouped sections */}
+          <div className="space-y-2">
+            {adminNavSections.map((section) => (
+              <NavSectionGroup key={section.id} section={section} />
+            ))}
+          </div>
         </nav>
         <div className="border-t border-slate-200 px-3 py-4 space-y-1">
           <a

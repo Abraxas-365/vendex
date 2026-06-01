@@ -179,10 +179,10 @@ export default function Orders() {
                                         {item.quantity}
                                       </td>
                                       <td className="px-4 py-2 text-sm text-gray-600">
-                                        ${item.unit_price.amount.toFixed(2)}
+                                        ${(item.unit_price.amount / 100).toFixed(2)}
                                       </td>
                                       <td className="px-4 py-2 text-sm font-medium text-gray-900">
-                                        ${item.total.amount.toFixed(2)}
+                                        ${(item.total.amount / 100).toFixed(2)}
                                       </td>
                                     </tr>
                                   ))}

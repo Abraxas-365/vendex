@@ -207,7 +207,7 @@ export default function CustomerDetail() {
                       {order.items.length} item{order.items.length !== 1 && 's'}
                     </td>
                     <td className="px-6 py-3 text-sm font-medium text-gray-900">
-                      ${order.total_amount.amount.toFixed(2)}
+                      ${(order.total_amount.amount / 100).toFixed(2)}
                     </td>
                     <td className="px-6 py-3">
                       <span
