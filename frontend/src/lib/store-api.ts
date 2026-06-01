@@ -111,7 +111,7 @@ export interface Category {
 
 export async function listCategories(): Promise<Category[]> {
   const result = await storeGet<{ items: Category[] }>('/categories')
-  return result.items
+  return result.items ?? []
 }
 
 // ---------------------------------------------------------------------------
