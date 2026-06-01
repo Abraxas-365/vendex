@@ -734,8 +734,9 @@ export function deleteTheme(id: string): Promise<void> {
 // Shipping — Zones
 // ---------------------------------------------------------------------------
 
-export function listShippingZones(): Promise<ShippingZone[]> {
-  return get<ShippingZone[]>('/shipping/zones')
+export async function listShippingZones(): Promise<ShippingZone[]> {
+  const result = await get<{ items: ShippingZone[] }>('/shipping/zones')
+  return result.items
 }
 
 export function getShippingZone(id: string): Promise<ShippingZone> {
@@ -758,8 +759,9 @@ export function deleteShippingZone(id: string): Promise<void> {
 // Shipping — Rates
 // ---------------------------------------------------------------------------
 
-export function listShippingRates(zoneId: string): Promise<ShippingRate[]> {
-  return get<ShippingRate[]>(`/shipping/zones/${zoneId}/rates`)
+export async function listShippingRates(zoneId: string): Promise<ShippingRate[]> {
+  const result = await get<{ items: ShippingRate[] }>(`/shipping/zones/${zoneId}/rates`)
+  return result.items
 }
 
 export function createShippingRate(zoneId: string, data: Partial<ShippingRate>): Promise<ShippingRate> {
@@ -942,8 +944,9 @@ export interface CustomerGroupInput {
   rules: GroupRules
 }
 
-export function listCustomerGroups(): Promise<CustomerGroup[]> {
-  return get<CustomerGroup[]>('/customer-groups/')
+export async function listCustomerGroups(): Promise<CustomerGroup[]> {
+  const result = await get<{ items: CustomerGroup[] }>('/customer-groups/')
+  return result.items
 }
 
 export function getCustomerGroup(id: string): Promise<CustomerGroup> {
@@ -962,8 +965,9 @@ export function deleteCustomerGroup(id: string): Promise<void> {
   return del(`/customer-groups/${id}`)
 }
 
-export function listGroupMembers(groupId: string): Promise<GroupMembership[]> {
-  return get<GroupMembership[]>(`/customer-groups/${groupId}/members`)
+export async function listGroupMembers(groupId: string): Promise<GroupMembership[]> {
+  const result = await get<{ items: GroupMembership[] }>(`/customer-groups/${groupId}/members`)
+  return result.items
 }
 
 export function addGroupMember(groupId: string, customerId: string): Promise<GroupMembership> {
@@ -1077,8 +1081,9 @@ export function setTranslations(
   return put<TranslationBundle>(`/i18n/${entityType}/${entityId}/${locale}`, { fields })
 }
 
-export function listEntityLocales(entityType: string, entityId: string): Promise<string[]> {
-  return get<string[]>(`/i18n/${entityType}/${entityId}/locales`)
+export async function listEntityLocales(entityType: string, entityId: string): Promise<string[]> {
+  const result = await get<{ locales: string[] }>(`/i18n/${entityType}/${entityId}/locales`)
+  return result.locales
 }
 
 export function deleteTranslationField(entityType: string, entityId: string, locale: string, field: string): Promise<void> {
@@ -1110,8 +1115,9 @@ export function listSubscriptions(params?: PaginationParams): Promise<PaginatedR
   return get<PaginatedResult<Subscription>>('/subscriptions/', params as Record<string, string | number | undefined>)
 }
 
-export function listDueSubscriptions(): Promise<Subscription[]> {
-  return get<Subscription[]>('/subscriptions/due')
+export async function listDueSubscriptions(): Promise<Subscription[]> {
+  const result = await get<{ items: Subscription[] }>('/subscriptions/due')
+  return result.items
 }
 
 export function getSubscription(id: string): Promise<Subscription> {
@@ -1142,8 +1148,9 @@ export function listBillingRecords(subscriptionId: string, params?: PaginationPa
 // Inventory — Warehouses (027)
 // ---------------------------------------------------------------------------
 
-export function listWarehouses(): Promise<Warehouse[]> {
-  return get<Warehouse[]>('/inventory/warehouses')
+export async function listWarehouses(): Promise<Warehouse[]> {
+  const result = await get<PaginatedResult<Warehouse>>('/inventory/warehouses')
+  return result.items
 }
 
 export function createWarehouse(data: Partial<Warehouse>): Promise<Warehouse> {
@@ -1158,20 +1165,23 @@ export function deleteWarehouse(id: string): Promise<void> {
   return del(`/inventory/warehouses/${id}`)
 }
 
-export function getStockLevels(productId: string): Promise<StockLevel[]> {
-  return get<StockLevel[]>(`/inventory/stock/${productId}`)
+export async function getStockLevels(productId: string): Promise<StockLevel[]> {
+  const result = await get<{ items: StockLevel[] }>(`/inventory/stock/${productId}`)
+  return result.items
 }
 
 export function adjustStock(data: { product_id: string; warehouse_id: string; quantity: number; note?: string }): Promise<StockMovement> {
   return post<StockMovement>('/inventory/stock/adjust', data)
 }
 
-export function getLowStockAlerts(): Promise<LowStockAlert[]> {
-  return get<LowStockAlert[]>('/inventory/stock/low')
+export async function getLowStockAlerts(): Promise<LowStockAlert[]> {
+  const result = await get<{ items: LowStockAlert[] }>('/inventory/stock/low')
+  return result.items
 }
 
-export function getStockMovements(productId: string): Promise<StockMovement[]> {
-  return get<StockMovement[]>(`/inventory/movements/${productId}`)
+export async function getStockMovements(productId: string): Promise<StockMovement[]> {
+  const result = await get<PaginatedResult<StockMovement>>(`/inventory/movements/${productId}`)
+  return result.items
 }
 
 // ---------------------------------------------------------------------------
@@ -1234,8 +1244,9 @@ export function closeReturn(id: string): Promise<ReturnRequest> {
 // Webhooks (030)
 // ---------------------------------------------------------------------------
 
-export function listWebhooks(): Promise<Webhook[]> {
-  return get<Webhook[]>('/webhooks')
+export async function listWebhooks(): Promise<Webhook[]> {
+  const result = await get<PaginatedResult<Webhook>>('/webhooks')
+  return result.items
 }
 
 export function createWebhook(data: Partial<Webhook>): Promise<Webhook> {
@@ -1254,8 +1265,9 @@ export function toggleWebhook(id: string): Promise<Webhook> {
   return put<Webhook>(`/webhooks/${id}/toggle`)
 }
 
-export function listWebhookDeliveries(webhookId: string): Promise<WebhookDelivery[]> {
-  return get<WebhookDelivery[]>(`/webhooks/${webhookId}/deliveries`)
+export async function listWebhookDeliveries(webhookId: string): Promise<WebhookDelivery[]> {
+  const result = await get<PaginatedResult<WebhookDelivery>>(`/webhooks/${webhookId}/deliveries`)
+  return result.items
 }
 
 export function retryWebhookDelivery(deliveryId: string): Promise<WebhookDelivery> {
@@ -1288,8 +1300,9 @@ export function getAuditStats(): Promise<AuditStats> {
 // Loyalty (032)
 // ---------------------------------------------------------------------------
 
-export function listLoyaltyRewards(): Promise<LoyaltyReward[]> {
-  return get<LoyaltyReward[]>('/admin/loyalty/rewards')
+export async function listLoyaltyRewards(): Promise<LoyaltyReward[]> {
+  const result = await get<PaginatedResult<LoyaltyReward>>('/admin/loyalty/rewards')
+  return result.items
 }
 
 export function createLoyaltyReward(data: Partial<LoyaltyReward>): Promise<LoyaltyReward> {
@@ -1312,8 +1325,9 @@ export function adjustLoyaltyPoints(id: string, data: { points: number; note: st
   return post<LoyaltyAccount>(`/admin/loyalty/accounts/${id}/adjust`, data)
 }
 
-export function getLoyaltyTransactions(id: string): Promise<LoyaltyTransaction[]> {
-  return get<LoyaltyTransaction[]>(`/admin/loyalty/accounts/${id}/transactions`)
+export async function getLoyaltyTransactions(id: string): Promise<LoyaltyTransaction[]> {
+  const result = await get<PaginatedResult<LoyaltyTransaction>>(`/admin/loyalty/accounts/${id}/transactions`)
+  return result.items
 }
 
 // ---------------------------------------------------------------------------
@@ -1380,8 +1394,9 @@ export function listSocialAccounts(params?: PaginationParams & { provider?: Soci
   return get<PaginatedResult<SocialAccount>>('/social-accounts', params as Record<string, string | number | undefined>)
 }
 
-export function listCustomerSocialAccounts(customerId: string): Promise<SocialAccount[]> {
-  return get<SocialAccount[]>(`/social-accounts/customer/${customerId}`)
+export async function listCustomerSocialAccounts(customerId: string): Promise<SocialAccount[]> {
+  const result = await get<{ accounts: SocialAccount[] }>(`/social-accounts/customer/${customerId}`)
+  return result.accounts
 }
 
 // ---------------------------------------------------------------------------
