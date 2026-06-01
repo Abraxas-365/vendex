@@ -34,6 +34,7 @@ func (h *Handler) RegisterRoutes(r fiber.Router) {
 	r.Get("/", h.ListSessions)
 	r.Get("/:id", h.GetSession)
 	r.Post("/:id/stop", h.StopSession)
+	r.Delete("/:id", h.DeleteSession)
 	r.Post("/:id/messages", h.SendMessage)
 	r.Get("/:id/messages", h.GetHistory)
 }
@@ -74,6 +75,16 @@ func (h *Handler) GetSession(c *fiber.Ctx) error {
 		return err
 	}
 	return c.JSON(sess)
+}
+
+// DeleteSession deletes a session record (stopping its container first if running).
+func (h *Handler) DeleteSession(c *fiber.Ctx) error {
+	id := kernel.AgentSessionID(c.Params("id"))
+
+	if err := h.svc.DeleteSession(c.Context(), tenantID(c), id); err != nil {
+		return err
+	}
+	return c.SendStatus(fiber.StatusNoContent)
 }
 
 // StopSession stops a running session's container.

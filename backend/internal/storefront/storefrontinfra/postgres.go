@@ -229,6 +229,24 @@ func scanPageRows(rows *sql.Rows) ([]storefront.Page, error) {
 	return pages, nil
 }
 
+func (r *PagePostgresRepo) Delete(ctx context.Context, tenantID kernel.TenantID, id kernel.PageID) error {
+	res, err := r.db.ExecContext(ctx, `
+		DELETE FROM pages WHERE id = $1 AND tenant_id = $2`,
+		string(id), string(tenantID),
+	)
+	if err != nil {
+		return errx.Wrap(err, "deleting page", errx.TypeInternal)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return errx.Wrap(err, "checking rows affected", errx.TypeInternal)
+	}
+	if n == 0 {
+		return storefront.ErrPageNotFound
+	}
+	return nil
+}
+
 // Ensure interface compliance.
 var _ storefront.PageRepository = (*PagePostgresRepo)(nil)
 

@@ -179,6 +179,24 @@ func (r *PostgresSessionRepo) ListActive(ctx context.Context, tenantID kernel.Te
 	return items, nil
 }
 
+func (r *PostgresSessionRepo) Delete(ctx context.Context, tenantID kernel.TenantID, id kernel.AgentSessionID) error {
+	res, err := r.db.ExecContext(ctx,
+		`DELETE FROM agent_sessions WHERE id=$1 AND tenant_id=$2`,
+		string(id), string(tenantID),
+	)
+	if err != nil {
+		return errx.Wrap(err, "delete agent session", errx.TypeInternal)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return errx.Wrap(err, "checking rows affected", errx.TypeInternal)
+	}
+	if n == 0 {
+		return agentsession.ErrSessionNotFound
+	}
+	return nil
+}
+
 // Ensure interface compliance.
 var _ agentsession.SessionRepository = (*PostgresSessionRepo)(nil)
 

@@ -34,6 +34,7 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 	admin.Post("/", h.create)
 	admin.Get("/", h.list)
 	admin.Get("/:id", h.getByID)
+	admin.Put("/:id", h.update)
 	admin.Post("/:id/deactivate", h.deactivate)
 
 	router.Post("/promos/validate", h.validate)
@@ -121,6 +122,60 @@ func (h *Handler) getByID(c *fiber.Ctx) error {
 	id := kernel.PromoID(c.Params("id"))
 
 	p, err := h.svc.GetByID(c.Context(), authCtx.TenantID, id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(p)
+}
+
+// updatePromoRequest is the JSON body for the update promo endpoint.
+// All fields are optional — only non-nil fields are applied.
+type updatePromoRequest struct {
+	Code           *string    `json:"code,omitempty"`
+	Value          *int64     `json:"value,omitempty"`
+	MinOrderAmount *int64     `json:"min_order_amount,omitempty"`
+	MaxUses        *int       `json:"max_uses,omitempty"`
+	StartsAt       *time.Time `json:"starts_at,omitempty"`
+	EndsAt         *time.Time `json:"ends_at,omitempty"`
+
+	// Targeting (all optional)
+	TargetProductIDs  []string `json:"target_product_ids,omitempty"`
+	TargetCategoryIDs []string `json:"target_category_ids,omitempty"`
+	CustomerGroupID   *string  `json:"customer_group_id,omitempty"`
+	Stackable         *bool    `json:"stackable,omitempty"`
+
+	// Buy X Get Y fields
+	BuyQuantity  *int    `json:"buy_quantity,omitempty"`
+	GetQuantity  *int    `json:"get_quantity,omitempty"`
+	GetProductID *string `json:"get_product_id,omitempty"`
+	GetDiscount  *int64  `json:"get_discount,omitempty"`
+}
+
+func (h *Handler) update(c *fiber.Ctx) error {
+	authCtx := c.Locals("auth").(*kernel.AuthContext)
+	id := kernel.PromoID(c.Params("id"))
+
+	var req updatePromoRequest
+	if err := c.BodyParser(&req); err != nil {
+		return errx.New("invalid request body", errx.TypeValidation)
+	}
+
+	p, err := h.svc.Update(c.Context(), authCtx.TenantID, id, promosrv.UpdateInput{
+		Code:              req.Code,
+		Value:             req.Value,
+		MinOrderAmount:    req.MinOrderAmount,
+		MaxUses:           req.MaxUses,
+		StartsAt:          req.StartsAt,
+		EndsAt:            req.EndsAt,
+		TargetProductIDs:  req.TargetProductIDs,
+		TargetCategoryIDs: req.TargetCategoryIDs,
+		CustomerGroupID:   req.CustomerGroupID,
+		Stackable:         req.Stackable,
+		BuyQuantity:       req.BuyQuantity,
+		GetQuantity:       req.GetQuantity,
+		GetProductID:      req.GetProductID,
+		GetDiscount:       req.GetDiscount,
+	})
 	if err != nil {
 		return err
 	}

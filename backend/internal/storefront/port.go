@@ -23,6 +23,8 @@ type PageRepository interface {
 	ListByStatus(ctx context.Context, tenantID kernel.TenantID, status PageStatus, p kernel.PaginationOptions) (kernel.Paginated[Page], error)
 	// List returns all pages for a tenant with pagination.
 	List(ctx context.Context, tenantID kernel.TenantID, p kernel.PaginationOptions) (kernel.Paginated[Page], error)
+	// Delete permanently removes a page and its version history by ID.
+	Delete(ctx context.Context, tenantID kernel.TenantID, id kernel.PageID) error
 }
 
 // PageVersionRepository defines persistence for immutable page version snapshots.

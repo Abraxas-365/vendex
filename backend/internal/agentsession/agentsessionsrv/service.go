@@ -217,6 +217,22 @@ func (s *Service) GetHistory(ctx context.Context, tenantID kernel.TenantID, sess
 	return s.chatRepo.ListMessages(ctx, sessionID, p)
 }
 
+// DeleteSession deletes a session record. If the session has a running container,
+// it is stopped first to avoid orphaned containers.
+func (s *Service) DeleteSession(ctx context.Context, tenantID kernel.TenantID, id kernel.AgentSessionID) error {
+	sess, err := s.sessionRepo.GetByID(ctx, tenantID, id)
+	if err != nil {
+		return err
+	}
+
+	// Stop the container if still running before deleting the record.
+	if sess.Status == agentsession.SessionStatusRunning && sess.ContainerID != "" {
+		_ = s.containers.Stop(ctx, containerx.ID(sess.ContainerID), 10*time.Second)
+	}
+
+	return s.sessionRepo.Delete(ctx, tenantID, id)
+}
+
 // markFailed updates a session's status to failed.
 func (s *Service) markFailed(ctx context.Context, sess agentsession.Session) error {
 	sess.Status = agentsession.SessionStatusFailed

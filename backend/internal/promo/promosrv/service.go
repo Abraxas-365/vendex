@@ -179,3 +179,81 @@ func (s *Service) List(ctx context.Context, tenantID kernel.TenantID, p kernel.P
 func (s *Service) GetByID(ctx context.Context, tenantID kernel.TenantID, id kernel.PromoID) (*promo.Promo, error) {
 	return s.repo.GetByID(ctx, tenantID, id)
 }
+
+// UpdateInput holds the fields that can be changed on an existing promo.
+type UpdateInput struct {
+	Code           *string
+	Value          *int64
+	MinOrderAmount *int64
+	MaxUses        *int
+	StartsAt       *time.Time
+	EndsAt         *time.Time
+
+	// Targeting
+	TargetProductIDs  []string
+	TargetCategoryIDs []string
+	CustomerGroupID   *string
+	Stackable         *bool
+
+	// Buy X Get Y
+	BuyQuantity  *int
+	GetQuantity  *int
+	GetProductID *string
+	GetDiscount  *int64
+}
+
+// Update applies a partial update to an existing promo.
+func (s *Service) Update(ctx context.Context, tenantID kernel.TenantID, id kernel.PromoID, input UpdateInput) (*promo.Promo, error) {
+	p, err := s.repo.GetByID(ctx, tenantID, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if input.Code != nil {
+		p.Code = *input.Code
+	}
+	if input.Value != nil {
+		p.Value = *input.Value
+	}
+	if input.MinOrderAmount != nil {
+		p.MinOrderAmount = input.MinOrderAmount
+	}
+	if input.MaxUses != nil {
+		p.MaxUses = input.MaxUses
+	}
+	if input.StartsAt != nil {
+		p.StartsAt = input.StartsAt
+	}
+	if input.EndsAt != nil {
+		p.EndsAt = input.EndsAt
+	}
+	if input.TargetProductIDs != nil {
+		p.TargetProductIDs = input.TargetProductIDs
+	}
+	if input.TargetCategoryIDs != nil {
+		p.TargetCategoryIDs = input.TargetCategoryIDs
+	}
+	if input.CustomerGroupID != nil {
+		p.CustomerGroupID = *input.CustomerGroupID
+	}
+	if input.Stackable != nil {
+		p.Stackable = *input.Stackable
+	}
+	if input.BuyQuantity != nil {
+		p.BuyQuantity = input.BuyQuantity
+	}
+	if input.GetQuantity != nil {
+		p.GetQuantity = input.GetQuantity
+	}
+	if input.GetProductID != nil {
+		p.GetProductID = *input.GetProductID
+	}
+	if input.GetDiscount != nil {
+		p.GetDiscount = input.GetDiscount
+	}
+
+	if err := s.repo.Update(ctx, p); err != nil {
+		return nil, errx.Wrap(err, "update promo", errx.TypeInternal)
+	}
+	return p, nil
+}
